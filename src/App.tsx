@@ -11,6 +11,7 @@ export function App() {
   const resetToDefaultView = useSolarStore((s) => s.resetToDefaultView);
   const showHeatmap = useSolarStore((s) => s.showHeatmap);
   const setShowHeatmap = useSolarStore((s) => s.setShowHeatmap);
+  const startDemoTour = useSolarStore((s) => s.startDemoTour);
 
   // Global keyboard shortcuts for pro demoing
   useEffect(() => {
@@ -24,12 +25,15 @@ export function App() {
         resetToDefaultView();
       } else if (e.key === 'h' || e.key === 'H') {
         setShowHeatmap(!showHeatmap);
+      } else if (e.code === 'Space') {
+        e.preventDefault();
+        startDemoTour();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [resetToDefaultView, showHeatmap, setShowHeatmap]);
+  }, [resetToDefaultView, showHeatmap, setShowHeatmap, startDemoTour]);
 
   return (
     <div className="w-screen h-screen flex flex-col bg-slate-950 text-slate-100 overflow-hidden font-sans">
