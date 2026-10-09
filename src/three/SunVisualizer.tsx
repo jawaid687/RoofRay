@@ -19,15 +19,35 @@ export function SunVisualizer() {
     return '#fffff5';   // bright daylight
   }, [sunState.elevationDeg]);
 
+  // Physically balanced ambient and sky illumination factors that prevent pitch-black surfaces
+  const ambientIntensity = useMemo(() => {
+    // Baseline ambient fill from 1.05 (dawn/dusk) to 1.35 (solar noon)
+    return Math.min(1.35, Math.max(1.05, (sunState.elevationDeg / 64) * 0.3 + 1.05));
+  }, [sunState.elevationDeg]);
+
+  const hemiIntensity = useMemo(() => {
+    // Hemispherical sky dome & ground bounce from 0.85 to 1.15
+    return Math.min(1.15, Math.max(0.85, (sunState.elevationDeg / 64) * 0.3 + 0.85));
+  }, [sunState.elevationDeg]);
+
+  // Position for soft diffuse skylight scattering from opposite sky quadrant
+  const skyFillPosition = useMemo<[number, number, number]>(() => {
+    return [
+      -sunState.lightPosition[0] * 0.6,
+      45,
+      -sunState.lightPosition[2] * 0.6,
+    ];
+  }, [sunState.lightPosition]);
+
   return (
     <group>
-      {/* Ambient Fill Light */}
-      <ambientLight intensity={sunState.ambientIntensity} color="#e0f2fe" />
+      {/* Omni-directional Ambient Fill Light (prevents pitch-black faces) */}
+      <ambientLight intensity={ambientIntensity} color="#e2e8f0" />
 
-      {/* Directional Sun Light with Shadows */}
+      {/* Primary Directional Sun Light with Crisp Dynamic Cast Shadows */}
       <directionalLight
         position={sunState.lightPosition}
-        intensity={sunState.sunIntensity * 2.2}
+        intensity={Math.max(1.8, sunState.sunIntensity * 3.0)}
         color={sunColor}
         castShadow={showShadows}
         shadow-mapSize-width={2048}
@@ -39,6 +59,19 @@ export function SunVisualizer() {
         shadow-camera-top={65}
         shadow-camera-bottom={-65}
         shadow-bias={-0.0004}
+      />
+
+      {/* Atmospheric Rayleigh Scattering Sky Fill (Opposite Sky Quadrant, Soft & Non-Casting) */}
+      <directionalLight
+        position={skyFillPosition}
+        intensity={0.65}
+        color="#bae6fd"
+        castShadow={false}
+      />
+
+      {/* Sky-to-Ground Hemispherical Fill (Natural gradient from blue sky to slate ground bounce) */}
+      <hemisphereLight
+        args={['#93c5fd', '#3b4d63', hemiIntensity]}
       />
 
       {/* Visible Celestial Sun Sphere */}
@@ -57,11 +90,6 @@ export function SunVisualizer() {
           side={THREE.BackSide}
         />
       </mesh>
-
-      {/* Secondary Sky Fill Light (Hemisphere) */}
-      <hemisphereLight
-        args={['#38bdf8', '#0f172a', sunState.ambientIntensity * 0.8]}
-      />
     </group>
   );
 }

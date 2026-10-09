@@ -26,22 +26,22 @@ export function Neighborhood() {
       {/* Surrounding Ground Plane (Muted charcoal grass/terrain) */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]} receiveShadow>
         <planeGeometry args={[160, 160]} />
-        <meshStandardMaterial color="#0f172a" roughness={0.9} />
+        <meshStandardMaterial color="#162032" roughness={0.88} />
       </mesh>
 
       {/* Urban Ground Grid Guide */}
-      <gridHelper args={[140, 70, '#334155', '#1e293b']} position={[0, -0.02, 0]} />
+      <gridHelper args={[140, 70, '#475569', '#253347']} position={[0, -0.02, 0]} />
 
       {/* Main East-West Asphalt Roadway */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 5]} receiveShadow>
         <planeGeometry args={[140, 12]} />
-        <meshStandardMaterial color="#1a2234" roughness={0.7} />
+        <meshStandardMaterial color="#212c40" roughness={0.7} />
       </mesh>
 
       {/* Main North-South Asphalt Roadway */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.015, 0]} receiveShadow>
         <planeGeometry args={[12, 140]} />
-        <meshStandardMaterial color="#1a2234" roughness={0.7} />
+        <meshStandardMaterial color="#212c40" roughness={0.7} />
       </mesh>
 
       {/* East-West Yellow Centerline Road Markings */}
@@ -75,19 +75,19 @@ export function Neighborhood() {
       {/* Concrete Sidewalk Curbs / Pedestrian Walkways */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-25, 0.04, -14]} receiveShadow>
         <planeGeometry args={[36, 18]} />
-        <meshStandardMaterial color="#334155" roughness={0.8} />
+        <meshStandardMaterial color="#475569" roughness={0.8} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[24, 0.04, -14]} receiveShadow>
         <planeGeometry args={[34, 18]} />
-        <meshStandardMaterial color="#334155" roughness={0.8} />
+        <meshStandardMaterial color="#475569" roughness={0.8} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-24, 0.04, 24]} receiveShadow>
         <planeGeometry args={[34, 22]} />
-        <meshStandardMaterial color="#334155" roughness={0.8} />
+        <meshStandardMaterial color="#475569" roughness={0.8} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[24, 0.04, 24]} receiveShadow>
         <planeGeometry args={[34, 22]} />
-        <meshStandardMaterial color="#334155" roughness={0.8} />
+        <meshStandardMaterial color="#475569" roughness={0.8} />
       </mesh>
 
       {/* Decorative Urban Trees */}

@@ -11,7 +11,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     height: 10,
     roofType: 'flat',
     defaultMonthlyKWh: 950,
-    color: '#334155', // Slate
+    color: '#55667b', // Neutral Slate
     description: '3-story residential complex located northwest of Meridian Tower. Demonstrates partial shading along its southern boundary.',
     roofObstacles: [
       {
@@ -56,7 +56,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     height: 26,
     roofType: 'flat',
     defaultMonthlyKWh: 3800,
-    color: '#1e293b', // Deep Slate
+    color: '#4c5d73', // Mid Slate
     description: '8-story commercial glass tower casting prominent dynamic shadows across the neighboring low-rise roofs.',
     roofObstacles: [
       {
@@ -91,7 +91,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     height: 11,
     roofType: 'flat',
     defaultMonthlyKWh: 1800,
-    color: '#2d3748',
+    color: '#5a6b80', // Neutral Slate Gray
     description: 'Corporate office with a broad rectangular roof and minimal obstruction, ideal for high solar yield demonstration.',
     roofObstacles: [
       {
@@ -126,7 +126,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     height: 13,
     roofType: 'flat',
     defaultMonthlyKWh: 2200,
-    color: '#1e293b',
+    color: '#506177', // Architectural Slate
     description: 'R&D facility with large unobstructed southern exposure ideal for commercial solar optimization modes.',
     roofObstacles: [
       {
@@ -161,7 +161,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     height: 8,
     roofType: 'flat',
     defaultMonthlyKWh: 800,
-    color: '#334155',
+    color: '#58697e', // Neutral Slate
     description: 'Municipal public archive with high sun clearance throughout midday.',
     roofObstacles: [
       {
@@ -186,7 +186,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     height: 15,
     roofType: 'flat',
     defaultMonthlyKWh: 1200,
-    color: '#263345',
+    color: '#526379', // Deep Slate Gray
     description: 'Multi-family residential building with rooftop water containment systems.',
     roofObstacles: [
       {
@@ -221,7 +221,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     height: 9,
     roofType: 'flat',
     defaultMonthlyKWh: 1100,
-    color: '#374151',
+    color: '#57677b', // Soft Slate
     description: 'Medical health clinic with flat unobstructed rooftop quadrants.',
     roofObstacles: [
       {
@@ -246,7 +246,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     height: 7.5,
     roofType: 'flat',
     defaultMonthlyKWh: 650,
-    color: '#374151',
+    color: '#56667a', // Warm Slate
     description: 'Low-rise suburban residential cluster with low power footprint.',
     roofObstacles: [
       {

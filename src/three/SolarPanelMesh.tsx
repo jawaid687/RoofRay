@@ -1,5 +1,4 @@
 import React from 'react';
-import * as THREE from 'three';
 import { PlacedPanel } from '../types';
 
 interface SolarPanelMeshProps {
@@ -17,28 +16,26 @@ export function SolarPanelMesh({ panel, roofHeight }: SolarPanelMeshProps) {
       position={[panel.localX, roofHeight + 0.14, panel.localZ]}
       rotation={[-tiltRad, 0, 0]}
     >
-      {/* Photovoltaic Active Cell Surface (Dark Monocrystalline Silicon) */}
-      <mesh castShadow receiveShadow position={[0, frameHeight / 2, 0]}>
-        <boxGeometry args={[panel.width - 0.04, 0.02, panel.length - 0.04]} />
-        <meshStandardMaterial
-          color="#0b1329"
-          roughness={0.18}
-          metalness={0.85}
-          envMapIntensity={1.2}
+      {/* Photovoltaic Active Cell Surface (Realistic Very Dark Blue Monocrystalline Silicon) */}
+      <mesh castShadow receiveShadow position={[0, frameHeight / 2 + 0.006, 0]}>
+        <boxGeometry args={[panel.width - 0.03, 0.016, panel.length - 0.03]} />
+        <meshPhysicalMaterial
+          color="#172b4c"
+          roughness={0.24}
+          metalness={0.42}
+          clearcoat={0.85}
+          clearcoatRoughness={0.15}
+          reflectivity={0.65}
         />
       </mesh>
 
-      {/* Protective Anti-Reflective Glass Layer */}
-      <mesh position={[0, frameHeight / 2 + 0.012, 0]}>
-        <planeGeometry args={[panel.width - 0.05, panel.length - 0.05]} />
-        <meshPhysicalMaterial
-          color="#1e293b"
-          transparent
-          opacity={0.35}
-          roughness={0.05}
-          transmission={0.6}
-          thickness={0.02}
-          side={THREE.DoubleSide}
+      {/* Subtle Photovoltaic Cell Silicon Wafer Depth Layer */}
+      <mesh position={[0, frameHeight / 2 + 0.015, 0]}>
+        <boxGeometry args={[panel.width - 0.05, 0.002, panel.length - 0.05]} />
+        <meshStandardMaterial
+          color="#1c345a"
+          roughness={0.22}
+          metalness={0.5}
         />
       </mesh>
 

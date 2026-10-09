@@ -53,9 +53,9 @@ export function BuildingMesh({ building }: BuildingMeshProps) {
       >
         <boxGeometry args={[width, height, length]} />
         <meshStandardMaterial
-          color={building.color || '#2d3748'}
-          roughness={0.7}
-          metalness={0.15}
+          color={building.color || '#55667b'}
+          roughness={0.65}
+          metalness={0.12}
           emissive={isSelected ? '#38bdf8' : hovered ? '#f59e0b' : '#000000'}
           emissiveIntensity={isSelected ? 0.08 : hovered ? 0.06 : 0}
         />
@@ -63,6 +63,7 @@ export function BuildingMesh({ building }: BuildingMeshProps) {
 
       {/* Rooftop Base Surface (Flat roof) */}
       <mesh
+        rotation={[-Math.PI / 2, 0, 0]}
         position={[0, height + 0.01, 0]}
         receiveShadow
         onClick={(e) => {
@@ -72,9 +73,9 @@ export function BuildingMesh({ building }: BuildingMeshProps) {
       >
         <planeGeometry args={[width, length]} />
         <meshStandardMaterial
-          color="#334155"
-          roughness={0.85}
-          metalness={0.05}
+          color="#3f5066"
+          roughness={0.8}
+          metalness={0.08}
         />
       </mesh>
 
@@ -83,22 +84,22 @@ export function BuildingMesh({ building }: BuildingMeshProps) {
         {/* North wall */}
         <mesh position={[0, 0, -length / 2 + 0.1]} castShadow receiveShadow>
           <boxGeometry args={[width, parapetHeight, 0.2]} />
-          <meshStandardMaterial color="#1e293b" roughness={0.8} />
+          <meshStandardMaterial color="#47586e" roughness={0.7} metalness={0.12} />
         </mesh>
         {/* South wall */}
         <mesh position={[0, 0, length / 2 - 0.1]} castShadow receiveShadow>
           <boxGeometry args={[width, parapetHeight, 0.2]} />
-          <meshStandardMaterial color="#1e293b" roughness={0.8} />
+          <meshStandardMaterial color="#47586e" roughness={0.7} metalness={0.12} />
         </mesh>
         {/* West wall */}
         <mesh position={[-width / 2 + 0.1, 0, 0]} castShadow receiveShadow>
           <boxGeometry args={[0.2, parapetHeight, length - 0.4]} />
-          <meshStandardMaterial color="#1e293b" roughness={0.8} />
+          <meshStandardMaterial color="#47586e" roughness={0.7} metalness={0.12} />
         </mesh>
         {/* East wall */}
         <mesh position={[width / 2 - 0.1, 0, 0]} castShadow receiveShadow>
           <boxGeometry args={[0.2, parapetHeight, length - 0.4]} />
-          <meshStandardMaterial color="#1e293b" roughness={0.8} />
+          <meshStandardMaterial color="#47586e" roughness={0.7} metalness={0.12} />
         </mesh>
       </group>
 
@@ -169,15 +170,15 @@ function ObstacleMesh({
     case 'hvac':
       return (
         <group position={[relX, posY, relZ]}>
-          {/* Main chiller housing */}
+          {/* Main chiller housing (Galvanized sheet metal) */}
           <mesh castShadow receiveShadow>
             <boxGeometry args={[width, height, length]} />
-            <meshStandardMaterial color="#64748b" roughness={0.4} metalness={0.7} />
+            <meshStandardMaterial color="#78889b" roughness={0.4} metalness={0.65} />
           </mesh>
           {/* Top exhaust fan grill */}
           <mesh position={[0, height / 2 + 0.05, 0]}>
             <cylinderGeometry args={[Math.min(width, length) * 0.35, Math.min(width, length) * 0.35, 0.1, 16]} />
-            <meshStandardMaterial color="#334155" metalness={0.8} roughness={0.3} />
+            <meshStandardMaterial color="#2d3748" metalness={0.8} roughness={0.3} />
           </mesh>
         </group>
       );
@@ -185,15 +186,15 @@ function ObstacleMesh({
     case 'water_tank':
       return (
         <group position={[relX, posY, relZ]}>
-          {/* Elevated Tank Support Frame */}
+          {/* Elevated Tank Support Frame (Structural dark steel) */}
           <mesh position={[0, -height * 0.35, 0]} castShadow>
             <boxGeometry args={[width * 0.9, height * 0.3, length * 0.9]} />
-            <meshStandardMaterial color="#475569" metalness={0.8} roughness={0.5} />
+            <meshStandardMaterial color="#475569" metalness={0.75} roughness={0.45} />
           </mesh>
-          {/* Cylindrical Storage Tank */}
+          {/* Cylindrical Storage Tank (Reflective stainless steel) */}
           <mesh position={[0, height * 0.15, 0]} castShadow receiveShadow>
             <cylinderGeometry args={[width * 0.45, width * 0.45, height * 0.7, 16]} />
-            <meshStandardMaterial color="#cbd5e1" metalness={0.6} roughness={0.3} />
+            <meshStandardMaterial color="#dbeafe" metalness={0.65} roughness={0.25} />
           </mesh>
         </group>
       );
@@ -202,20 +203,20 @@ function ObstacleMesh({
     default:
       return (
         <group position={[relX, posY, relZ]}>
-          {/* Concrete Penthouse Room */}
+          {/* Concrete Penthouse Room (Architectural concrete masonry) */}
           <mesh castShadow receiveShadow>
             <boxGeometry args={[width, height, length]} />
-            <meshStandardMaterial color="#475569" roughness={0.8} metalness={0.1} />
+            <meshStandardMaterial color="#54657a" roughness={0.75} metalness={0.1} />
           </mesh>
           {/* Rooftop access door */}
           <mesh position={[0, -height * 0.15, length / 2 + 0.02]}>
             <planeGeometry args={[1.0, 1.9]} />
-            <meshStandardMaterial color="#1e293b" metalness={0.8} roughness={0.4} />
+            <meshStandardMaterial color="#1e293b" metalness={0.8} roughness={0.35} />
           </mesh>
           {/* Roof coping slab */}
           <mesh position={[0, height / 2 + 0.05, 0]} castShadow>
             <boxGeometry args={[width + 0.2, 0.1, length + 0.2]} />
-            <meshStandardMaterial color="#334155" roughness={0.7} />
+            <meshStandardMaterial color="#3b4b5f" roughness={0.65} />
           </mesh>
         </group>
       );

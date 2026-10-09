@@ -16,9 +16,12 @@ export function Scene() {
         camera={{ position: [-38, 32, 22], fov: 42, near: 0.5, far: 600 }}
         gl={{ antialias: true, alpha: false }}
         className="w-full h-full bg-slate-950"
+        onCreated={({ scene, camera, gl }) => {
+          (window as any).__three = { scene, camera, gl };
+        }}
       >
-        <color attach="background" args={['#070b14']} />
-        <fog attach="fog" args={['#070b14', 120, 240]} />
+        <color attach="background" args={['#0a1120']} />
+        <fog attach="fog" args={['#0a1120', 140, 320]} />
 
         {/* Dynamic Sun Light, Realistic Shadows & Atmospheric Skylight */}
         <SunVisualizer />
