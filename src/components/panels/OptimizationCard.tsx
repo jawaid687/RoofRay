@@ -1,11 +1,21 @@
 import { useSolarStore } from '../../store/useSolarStore';
 import { OptimizationMode } from '../../types';
-import { Target, Zap, DollarSign, Scale, Sparkles } from 'lucide-react';
+import { Target, Zap, DollarSign, Scale, Sparkles, Loader2, CheckCircle2, AlertTriangle, Info } from 'lucide-react';
 
 export function OptimizationCard() {
   const optimizationMode = useSolarStore((s) => s.optimizationMode);
   const setOptimizationMode = useSolarStore((s) => s.setOptimizationMode);
   const generateSolarLayout = useSolarStore((s) => s.generateSolarLayout);
+  const layoutStatus = useSolarStore((s) => s.layoutStatus);
+  const layoutFeedback = useSolarStore((s) => s.layoutFeedback);
+  const layoutErrorMessage = useSolarStore((s) => s.layoutErrorMessage);
+  const analysisStatus = useSolarStore((s) => s.analysisStatus);
+  const placedPanels = useSolarStore((s) => s.placedPanels);
+
+  const isAnalysisReady = analysisStatus === 'analyzed';
+  const isGenerating = layoutStatus === 'generating';
+  const isGenerated = layoutStatus === 'generated' && placedPanels.length > 0;
+  const isOutdated = layoutStatus === 'outdated';
 
   const modes: {
     id: OptimizationMode;
@@ -93,13 +103,90 @@ export function OptimizationCard() {
         </div>
       </div>
 
-      {/* CTA Button to re-generate layout */}
+      {/* Prerequisite Check Banner if Analysis Not Done */}
+      {!isAnalysisReady && (
+        <div className="p-3 rounded-xl bg-amber-950/30 border border-amber-800/50 text-xs text-amber-300 flex items-start gap-2">
+          <Info className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+          <div className="space-y-0.5">
+            <span className="font-semibold">
+              Analyze the rooftop before generating a solar layout.
+            </span>
+            <p className="text-[11px] text-amber-400/80 leading-relaxed">
+              Raycast solar exposure metrics are required to determine optimal panel placement and exclude shaded roof zones.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Outdated Layout Warning */}
+      {isOutdated && isAnalysisReady && (
+        <div className="p-3 rounded-xl bg-amber-950/40 border border-amber-800/60 text-xs text-amber-200 flex items-start gap-2">
+          <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+          <div className="space-y-0.5">
+            <span className="font-bold">Settings or geometry changed — layout outdated.</span>
+            <p className="text-[11px] text-amber-300/80 leading-relaxed">
+              Click Regenerate Solar Layout to update 3D panel placement and recalculated economics.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Success Result Banner */}
+      {isGenerated && layoutFeedback && !isOutdated && (
+        <div className="p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-800/50 text-xs text-emerald-300 flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span className="font-medium text-[11px]">{layoutFeedback}</span>
+        </div>
+      )}
+
+      {/* Error Banner */}
+      {layoutErrorMessage && (
+        <div className="p-3 rounded-xl bg-red-950/40 border border-red-800 text-xs text-red-200 flex items-start gap-2">
+          <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+          <div>
+            <div className="font-bold">Layout Placement Notice</div>
+            <p className="text-[11px] text-red-300 mt-0.5">{layoutErrorMessage}</p>
+          </div>
+        </div>
+      )}
+
+      {/* CTA Button */}
       <button
-        onClick={generateSolarLayout}
-        className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 transition-all active:scale-[0.99]"
+        onClick={() => generateSolarLayout()}
+        disabled={isGenerating || !isAnalysisReady}
+        className={`w-full py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-lg transition-all ${
+          !isAnalysisReady
+            ? 'bg-slate-800/60 text-slate-500 cursor-not-allowed border border-slate-700/50'
+            : isGenerating
+            ? 'bg-amber-600/50 text-amber-200 cursor-wait'
+            : isOutdated
+            ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-amber-500/25 active:scale-[0.99]'
+            : isGenerated
+            ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-amber-500/20 active:scale-[0.99]'
+            : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-amber-500/20 active:scale-[0.99]'
+        }`}
       >
-        <Sparkles className="w-4 h-4 fill-current" />
-        <span>Generate Solar Layout</span>
+        {isGenerating ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span>Generating Solar Layout...</span>
+          </>
+        ) : isOutdated ? (
+          <>
+            <Sparkles className="w-4 h-4 fill-current" />
+            <span>Regenerate Solar Layout</span>
+          </>
+        ) : isGenerated ? (
+          <>
+            <Sparkles className="w-4 h-4 fill-current" />
+            <span>Regenerate Solar Layout</span>
+          </>
+        ) : (
+          <>
+            <Sparkles className="w-4 h-4 fill-current" />
+            <span>Generate Solar Layout</span>
+          </>
+        )}
       </button>
     </div>
   );

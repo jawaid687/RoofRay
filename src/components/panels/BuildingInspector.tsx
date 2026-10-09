@@ -5,7 +5,9 @@ import { Building2, Sliders, Plus, Trash2, Box } from 'lucide-react';
 import { ObstacleType } from '../../types';
 
 export function BuildingInspector() {
-  const building = useSolarStore((s) => s.getSelectedBuilding());
+  const selectedBuildingId = useSolarStore((s) => s.selectedBuildingId);
+  const buildings = useSolarStore((s) => s.buildings);
+  const building = buildings.find((b) => b.id === selectedBuildingId);
   const updateBuildingDimensions = useSolarStore((s) => s.updateBuildingDimensions);
   const addObstacle = useSolarStore((s) => s.addObstacle);
   const removeObstacle = useSolarStore((s) => s.removeObstacle);

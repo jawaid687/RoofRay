@@ -2,11 +2,12 @@ import { useSolarStore } from '../../store/useSolarStore';
 import { Sun, Play, RotateCcw, Building2 } from 'lucide-react';
 
 export function Header() {
-  const selectedBuilding = useSolarStore((s) => s.getSelectedBuilding());
+  const selectedBuildingId = useSolarStore((s) => s.selectedBuildingId);
+  const buildings = useSolarStore((s) => s.buildings);
+  const selectedBuilding = buildings.find((b) => b.id === selectedBuildingId);
   const resetToDefaultView = useSolarStore((s) => s.resetToDefaultView);
   const startDemoTour = useSolarStore((s) => s.startDemoTour);
   const isDemoPlaying = useSolarStore((s) => s.isDemoPlaying);
-  const buildings = useSolarStore((s) => s.buildings);
   const selectBuilding = useSolarStore((s) => s.selectBuilding);
 
   return (

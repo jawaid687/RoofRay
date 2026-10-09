@@ -7,7 +7,7 @@ export function PanelConfigCard() {
   const setSelectedPanelType = useSolarStore((s) => s.setSelectedPanelType);
   const placedPanels = useSolarStore((s) => s.placedPanels);
   const maxPossiblePanels = useSolarStore((s) => s.maxPossiblePanels);
-  const currentPanel = useSolarStore((s) => s.getCurrentPanelType());
+  const currentPanel = PANEL_TYPES.find((p) => p.id === selectedPanelTypeId) || PANEL_TYPES[0];
 
   const totalKW = Math.round((placedPanels.length * currentPanel.wattage) / 10) / 100;
   const orientation = placedPanels[0]?.orientation || 'portrait';

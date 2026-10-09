@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { BuildingInspector } from './BuildingInspector';
 import { SolarAnalysisCard } from './SolarAnalysisCard';
 import { PanelConfigCard } from './PanelConfigCard';
@@ -22,6 +22,8 @@ type SectionKey = 'building' | 'analysis' | 'panels' | 'demand' | 'optimization'
 
 export function ControlPanel() {
   const [activeTab, setActiveTab] = useState<'planner' | 'analytics' | 'rationale'>('planner');
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
   const [openSections, setOpenSections] = useState<Record<SectionKey, boolean>>({
     building: true,
     analysis: true,
@@ -36,16 +38,30 @@ export function ControlPanel() {
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
+  // Reset scroll container to top whenever active tab changes
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0;
+    }
+  }, [activeTab]);
+
+  const handleTabChange = (tab: 'planner' | 'analytics' | 'rationale') => {
+    setActiveTab(tab);
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0;
+    }
+  };
+
   return (
     <aside className="w-full lg:w-[440px] xl:w-[480px] h-[calc(100vh-4rem)] glass-panel border-l border-slate-800/80 flex flex-col shrink-0 z-10 overflow-hidden">
       {/* Top Tab Switcher */}
-      <div className="flex border-b border-slate-800/80 bg-slate-950/40 p-2 gap-1 shrink-0">
+      <div className="flex border-b border-slate-800/80 bg-slate-950/60 p-2 gap-1.5 shrink-0">
         <button
-          onClick={() => setActiveTab('planner')}
-          className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+          onClick={() => handleTabChange('planner')}
+          className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
             activeTab === 'planner'
-              ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30 shadow-sm'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
+              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm shadow-amber-500/10'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 border border-transparent'
           }`}
         >
           <Building2 className="w-3.5 h-3.5" />
@@ -53,11 +69,11 @@ export function ControlPanel() {
         </button>
 
         <button
-          onClick={() => setActiveTab('analytics')}
-          className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+          onClick={() => handleTabChange('analytics')}
+          className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
             activeTab === 'analytics'
-              ? 'bg-sky-500/15 text-sky-300 border border-sky-500/30 shadow-sm'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
+              ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 shadow-sm shadow-sky-500/10'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 border border-transparent'
           }`}
         >
           <BarChart3 className="w-3.5 h-3.5" />
@@ -65,11 +81,11 @@ export function ControlPanel() {
         </button>
 
         <button
-          onClick={() => setActiveTab('rationale')}
-          className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+          onClick={() => handleTabChange('rationale')}
+          className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
             activeTab === 'rationale'
-              ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shadow-sm'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
+              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm shadow-emerald-500/10'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 border border-transparent'
           }`}
         >
           <HelpCircle className="w-3.5 h-3.5" />
@@ -77,8 +93,11 @@ export function ControlPanel() {
         </button>
       </div>
 
-      {/* Scrollable Content Body */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* Scrollable Content Body with Guaranteed Scroll Reset */}
+      <div
+        ref={scrollContainerRef}
+        className="flex-1 overflow-y-auto p-4 space-y-4"
+      >
         {activeTab === 'planner' && (
           <>
             {/* Section 1: Building Inspector */}
@@ -200,7 +219,7 @@ export function ControlPanel() {
 
         {activeTab === 'analytics' && (
           <div className="space-y-4">
-            <FinancialSummary />
+            <FinancialSummary onNavigateToPlanner={() => handleTabChange('planner')} />
             <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 text-xs text-slate-400 space-y-1.5">
               <div className="font-semibold text-slate-300">Engineering Assumptions</div>
               <p className="text-[11px] leading-relaxed">
@@ -212,7 +231,7 @@ export function ControlPanel() {
 
         {activeTab === 'rationale' && (
           <div className="space-y-4">
-            <RecommendationCard />
+            <RecommendationCard onNavigateToPlanner={() => handleTabChange('planner')} />
           </div>
         )}
       </div>

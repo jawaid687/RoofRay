@@ -9,6 +9,9 @@ import {
   FinancialResult,
   EnvironmentalResult,
   SolarRecommendation,
+  AnalysisStatus,
+  LayoutStatus,
+  PanelType,
 } from '../types';
 import { INITIAL_BUILDINGS } from '../data/buildings';
 import { PANEL_TYPES } from '../data/panelTypes';
@@ -31,9 +34,17 @@ export interface SolarStoreState {
   showShadows: boolean;
   showObstacles: boolean;
 
-  // Analysis & Placement
+  // Analysis & Placement Lifecycles
+  analysisStatus: AnalysisStatus;
+  analysisSuccessMessage: string | null;
+  analysisErrorMessage: string | null;
+  analysisStaleMessage: string | null;
   isAnalyzing: boolean;
   analysisResults: Record<string, SolarAnalysisResult>;
+
+  layoutStatus: LayoutStatus;
+  layoutFeedback: string | null;
+  layoutErrorMessage: string | null;
   placedPanels: PlacedPanel[];
   maxPossiblePanels: number;
 
@@ -52,6 +63,12 @@ export interface SolarStoreState {
   demoStep: number;
   demoStatusText: string;
 
+  // Stable Derived State (Cached snapshots for React useSyncExternalStore)
+  energyProfile: EnergyResult;
+  financialResult: FinancialResult;
+  environmentalResult: EnvironmentalResult;
+  solarRecommendation: SolarRecommendation | null;
+
   // Actions
   selectBuilding: (id: string | null) => void;
   setHoveredBuilding: (id: string | null) => void;
@@ -64,43 +81,80 @@ export interface SolarStoreState {
   updateBuildingDimensions: (id: string, width: number, length: number, height: number) => void;
   addObstacle: (buildingId: string, obstacle: Omit<RoofObstacle, 'id'>) => void;
   removeObstacle: (buildingId: string, obstacleId: string) => void;
-  runAnalysisForSelectedBuilding: () => void;
-  generateSolarLayout: () => void;
+  runAnalysisForSelectedBuilding: () => Promise<void>;
+  generateSolarLayout: () => Promise<void>;
   resetToDefaultView: () => void;
   startDemoTour: () => void;
   stopDemoTour: () => void;
 
-  // Computed Accessors
+  // Internal Accessor Helpers
   getSelectedBuilding: () => Building | undefined;
   getCurrentAnalysis: () => SolarAnalysisResult | undefined;
-  getCurrentPanelType: () => typeof PANEL_TYPES[0];
+  getCurrentPanelType: () => PanelType;
   getEnergyProfile: () => EnergyResult;
   getFinancialResult: () => FinancialResult;
   getEnvironmentalResult: () => EnvironmentalResult;
   getSolarRecommendation: () => SolarRecommendation | null;
 }
 
+function computeDerivedSnapshots(
+  buildings: Building[],
+  selectedBuildingId: string | null,
+  analysisResults: Record<string, SolarAnalysisResult>,
+  placedPanels: PlacedPanel[],
+  selectedPanelTypeId: string,
+  monthlyConsumptionKWh: number,
+  optimizationMode: OptimizationMode,
+  maxPossiblePanels: number
+) {
+  const panelType = PANEL_TYPES.find((p) => p.id === selectedPanelTypeId) || PANEL_TYPES[0];
+  const bldg = buildings.find((b) => b.id === selectedBuildingId);
+  const analysis = selectedBuildingId ? analysisResults[selectedBuildingId] : undefined;
+
+  const energyProfile = calculateEnergyProfile(monthlyConsumptionKWh, placedPanels, panelType);
+  const financialResult = calculateFinancials(
+    energyProfile.installedCapacityKW,
+    energyProfile.panelCount,
+    panelType,
+    energyProfile.annualGenerationKWh,
+    energyProfile.annualConsumptionKWh
+  );
+  const environmentalResult = calculateEmissions(energyProfile.annualGenerationKWh);
+
+  const solarRecommendation =
+    bldg && analysis && placedPanels.length > 0
+      ? generateSolarRecommendation(
+          bldg,
+          analysis,
+          energyProfile,
+          financialResult,
+          panelType,
+          optimizationMode,
+          maxPossiblePanels
+        )
+      : null;
+
+  return {
+    energyProfile,
+    financialResult,
+    environmentalResult,
+    solarRecommendation,
+  };
+}
+
 export const useSolarStore = create<SolarStoreState>((set, get) => {
-  // Pre-run analysis for Apex Lofts so initial load has immediate rich data
   const initialBuildings = [...INITIAL_BUILDINGS];
   const initialTarget = initialBuildings[0]; // Apex Lofts
-  const initialGrid = generateRoofGrid(initialTarget);
-  const initialAnalyzedCells = analyzeRoofExposure(initialTarget, initialBuildings, initialGrid.cells);
-  const initialAnalysis = calculateSolarMetrics(
-    initialTarget,
-    initialAnalyzedCells,
-    initialGrid.cols,
-    initialGrid.rows,
-    initialGrid.cellWidth,
-    initialGrid.cellLength
-  );
 
-  const initialOpt = runOptimization(
-    initialTarget,
-    initialAnalysis,
-    PANEL_TYPES[0],
+  const initialDerived = computeDerivedSnapshots(
+    initialBuildings,
+    initialTarget.id,
+    {},
+    [],
+    PANEL_TYPES[0].id,
     initialTarget.defaultMonthlyKWh,
-    'balanced'
+    'balanced',
+    0
   );
 
   return {
@@ -112,10 +166,19 @@ export const useSolarStore = create<SolarStoreState>((set, get) => {
     showShadows: true,
     showObstacles: true,
 
+    // Initial lifecycle state: NOT analyzed and NOT generated
+    analysisStatus: 'not_analyzed',
+    analysisSuccessMessage: null,
+    analysisErrorMessage: null,
+    analysisStaleMessage: null,
     isAnalyzing: false,
-    analysisResults: { [initialTarget.id]: initialAnalysis },
-    placedPanels: initialOpt.placedPanels,
-    maxPossiblePanels: initialOpt.maxPossiblePanels,
+    analysisResults: {},
+
+    layoutStatus: 'not_generated',
+    layoutFeedback: null,
+    layoutErrorMessage: null,
+    placedPanels: [],
+    maxPossiblePanels: 0,
 
     selectedPanelTypeId: PANEL_TYPES[0].id,
     monthlyConsumptionKWh: initialTarget.defaultMonthlyKWh,
@@ -132,6 +195,9 @@ export const useSolarStore = create<SolarStoreState>((set, get) => {
     isDemoPlaying: false,
     demoStep: 0,
     demoStatusText: '',
+
+    // Cached snapshots for React
+    ...initialDerived,
 
     selectBuilding: (id: string | null) => {
       const state = get();
@@ -154,25 +220,37 @@ export const useSolarStore = create<SolarStoreState>((set, get) => {
         bldg.position[2] + Math.max(20, bldg.length * 1.3),
       ];
 
-      // Check if analysis already exists; if not, perform it
-      let analysis = state.analysisResults[bldg.id];
-      if (!analysis) {
-        const grid = generateRoofGrid(bldg);
-        const analyzedCells = analyzeRoofExposure(bldg, state.buildings, grid.cells);
-        analysis = calculateSolarMetrics(bldg, analyzedCells, grid.cols, grid.rows, grid.cellWidth, grid.cellLength);
-      }
+      const existingAnalysis = state.analysisResults[bldg.id];
+      const hasAnalysis = !!existingAnalysis;
 
-      const panelType = PANEL_TYPES.find((p) => p.id === state.selectedPanelTypeId) || PANEL_TYPES[0];
-      const opt = runOptimization(bldg, analysis, panelType, bldg.defaultMonthlyKWh, state.optimizationMode);
+      const derived = computeDerivedSnapshots(
+        state.buildings,
+        bldg.id,
+        state.analysisResults,
+        [],
+        state.selectedPanelTypeId,
+        bldg.defaultMonthlyKWh,
+        state.optimizationMode,
+        0
+      );
 
       set({
         selectedBuildingId: bldg.id,
         monthlyConsumptionKWh: bldg.defaultMonthlyKWh,
-        analysisResults: { ...state.analysisResults, [bldg.id]: analysis },
-        placedPanels: opt.placedPanels,
-        maxPossiblePanels: opt.maxPossiblePanels,
         cameraFocusTarget: targetPos,
         cameraPositionTarget: camPos,
+        analysisStatus: hasAnalysis ? 'analyzed' : 'not_analyzed',
+        analysisSuccessMessage: hasAnalysis
+          ? `Analysis active — ${Math.round((existingAnalysis.recommendedInstallationArea / existingAnalysis.totalRoofArea) * 100)}% of the rooftop is viable.`
+          : null,
+        analysisErrorMessage: null,
+        analysisStaleMessage: null,
+        layoutStatus: 'not_generated',
+        placedPanels: [],
+        maxPossiblePanels: 0,
+        layoutFeedback: null,
+        layoutErrorMessage: null,
+        ...derived,
       });
     },
 
@@ -185,18 +263,64 @@ export const useSolarStore = create<SolarStoreState>((set, get) => {
     setShowShadows: (show: boolean) => set({ showShadows: show }),
 
     setSelectedPanelType: (panelId: string) => {
-      set({ selectedPanelTypeId: panelId });
-      get().generateSolarLayout();
+      const state = get();
+      const derived = computeDerivedSnapshots(
+        state.buildings,
+        state.selectedBuildingId,
+        state.analysisResults,
+        state.placedPanels,
+        panelId,
+        state.monthlyConsumptionKWh,
+        state.optimizationMode,
+        state.maxPossiblePanels
+      );
+      set({
+        selectedPanelTypeId: panelId,
+        layoutStatus: state.layoutStatus === 'generated' ? 'outdated' : state.layoutStatus,
+        layoutFeedback: null,
+        ...derived,
+      });
     },
 
     setMonthlyConsumption: (kwh: number) => {
-      set({ monthlyConsumptionKWh: Math.max(100, Math.min(25000, kwh)) });
-      get().generateSolarLayout();
+      const state = get();
+      const targetKWh = Math.max(100, Math.min(25000, kwh));
+      const derived = computeDerivedSnapshots(
+        state.buildings,
+        state.selectedBuildingId,
+        state.analysisResults,
+        state.placedPanels,
+        state.selectedPanelTypeId,
+        targetKWh,
+        state.optimizationMode,
+        state.maxPossiblePanels
+      );
+      set({
+        monthlyConsumptionKWh: targetKWh,
+        layoutStatus: state.layoutStatus === 'generated' ? 'outdated' : state.layoutStatus,
+        layoutFeedback: null,
+        ...derived,
+      });
     },
 
     setOptimizationMode: (mode: OptimizationMode) => {
-      set({ optimizationMode: mode });
-      get().generateSolarLayout();
+      const state = get();
+      const derived = computeDerivedSnapshots(
+        state.buildings,
+        state.selectedBuildingId,
+        state.analysisResults,
+        state.placedPanels,
+        state.selectedPanelTypeId,
+        state.monthlyConsumptionKWh,
+        mode,
+        state.maxPossiblePanels
+      );
+      set({
+        optimizationMode: mode,
+        layoutStatus: state.layoutStatus === 'generated' ? 'outdated' : state.layoutStatus,
+        layoutFeedback: null,
+        ...derived,
+      });
     },
 
     updateBuildingDimensions: (id: string, width: number, length: number, height: number) => {
@@ -211,11 +335,32 @@ export const useSolarStore = create<SolarStoreState>((set, get) => {
         };
       });
 
-      set({ buildings: updated });
-      // Re-run analysis & layout for updated geometry
-      setTimeout(() => {
-        get().runAnalysisForSelectedBuilding();
-      }, 50);
+      const updatedAnalysisResults = { ...state.analysisResults };
+      delete updatedAnalysisResults[id];
+
+      const derived = computeDerivedSnapshots(
+        updated,
+        state.selectedBuildingId,
+        updatedAnalysisResults,
+        state.selectedBuildingId === id ? [] : state.placedPanels,
+        state.selectedPanelTypeId,
+        state.monthlyConsumptionKWh,
+        state.optimizationMode,
+        state.selectedBuildingId === id ? 0 : state.maxPossiblePanels
+      );
+
+      set({
+        buildings: updated,
+        analysisResults: updatedAnalysisResults,
+        analysisStatus: state.selectedBuildingId === id ? 'stale' : state.analysisStatus,
+        analysisStaleMessage: state.selectedBuildingId === id ? 'Roof geometry changed — re-analysis required.' : state.analysisStaleMessage,
+        analysisSuccessMessage: null,
+        layoutStatus: state.selectedBuildingId === id ? 'outdated' : state.layoutStatus,
+        placedPanels: state.selectedBuildingId === id ? [] : state.placedPanels,
+        maxPossiblePanels: state.selectedBuildingId === id ? 0 : state.maxPossiblePanels,
+        layoutFeedback: null,
+        ...derived,
+      });
     },
 
     addObstacle: (buildingId: string, obstacleData: Omit<RoofObstacle, 'id'>) => {
@@ -233,8 +378,32 @@ export const useSolarStore = create<SolarStoreState>((set, get) => {
         };
       });
 
-      set({ buildings: updated });
-      get().runAnalysisForSelectedBuilding();
+      const updatedAnalysisResults = { ...state.analysisResults };
+      delete updatedAnalysisResults[buildingId];
+
+      const derived = computeDerivedSnapshots(
+        updated,
+        state.selectedBuildingId,
+        updatedAnalysisResults,
+        state.selectedBuildingId === buildingId ? [] : state.placedPanels,
+        state.selectedPanelTypeId,
+        state.monthlyConsumptionKWh,
+        state.optimizationMode,
+        state.selectedBuildingId === buildingId ? 0 : state.maxPossiblePanels
+      );
+
+      set({
+        buildings: updated,
+        analysisResults: updatedAnalysisResults,
+        analysisStatus: state.selectedBuildingId === buildingId ? 'stale' : state.analysisStatus,
+        analysisStaleMessage: state.selectedBuildingId === buildingId ? 'Roof geometry changed — re-analysis required.' : state.analysisStaleMessage,
+        analysisSuccessMessage: null,
+        layoutStatus: state.selectedBuildingId === buildingId ? 'outdated' : state.layoutStatus,
+        placedPanels: state.selectedBuildingId === buildingId ? [] : state.placedPanels,
+        maxPossiblePanels: state.selectedBuildingId === buildingId ? 0 : state.maxPossiblePanels,
+        layoutFeedback: null,
+        ...derived,
+      });
     },
 
     removeObstacle: (buildingId: string, obstacleId: string) => {
@@ -247,65 +416,172 @@ export const useSolarStore = create<SolarStoreState>((set, get) => {
         };
       });
 
-      set({ buildings: updated });
-      get().runAnalysisForSelectedBuilding();
+      const updatedAnalysisResults = { ...state.analysisResults };
+      delete updatedAnalysisResults[buildingId];
+
+      const derived = computeDerivedSnapshots(
+        updated,
+        state.selectedBuildingId,
+        updatedAnalysisResults,
+        state.selectedBuildingId === buildingId ? [] : state.placedPanels,
+        state.selectedPanelTypeId,
+        state.monthlyConsumptionKWh,
+        state.optimizationMode,
+        state.selectedBuildingId === buildingId ? 0 : state.maxPossiblePanels
+      );
+
+      set({
+        buildings: updated,
+        analysisResults: updatedAnalysisResults,
+        analysisStatus: state.selectedBuildingId === buildingId ? 'stale' : state.analysisStatus,
+        analysisStaleMessage: state.selectedBuildingId === buildingId ? 'Roof geometry changed — re-analysis required.' : state.analysisStaleMessage,
+        analysisSuccessMessage: null,
+        layoutStatus: state.selectedBuildingId === buildingId ? 'outdated' : state.layoutStatus,
+        placedPanels: state.selectedBuildingId === buildingId ? [] : state.placedPanels,
+        maxPossiblePanels: state.selectedBuildingId === buildingId ? 0 : state.maxPossiblePanels,
+        layoutFeedback: null,
+        ...derived,
+      });
     },
 
-    runAnalysisForSelectedBuilding: () => {
+    runAnalysisForSelectedBuilding: async () => {
       const state = get();
       const bldg = state.getSelectedBuilding();
       if (!bldg) return;
 
-      set({ isAnalyzing: true });
-
-      // Run synchronous raytracing
-      const grid = generateRoofGrid(bldg);
-      const analyzedCells = analyzeRoofExposure(bldg, state.buildings, grid.cells);
-      const analysis = calculateSolarMetrics(
-        bldg,
-        analyzedCells,
-        grid.cols,
-        grid.rows,
-        grid.cellWidth,
-        grid.cellLength
-      );
-
-      const panelType = state.getCurrentPanelType();
-      const opt = runOptimization(
-        bldg,
-        analysis,
-        panelType,
-        state.monthlyConsumptionKWh,
-        state.optimizationMode
-      );
+      if (get().analysisStatus === 'analyzing') return;
 
       set({
-        isAnalyzing: false,
-        analysisResults: { ...state.analysisResults, [bldg.id]: analysis },
-        placedPanels: opt.placedPanels,
-        maxPossiblePanels: opt.maxPossiblePanels,
+        isAnalyzing: true,
+        analysisStatus: 'analyzing',
+        analysisErrorMessage: null,
+        analysisSuccessMessage: null,
+        analysisStaleMessage: null,
       });
+
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 450));
+
+        const currentBldg = get().getSelectedBuilding();
+        if (!currentBldg) return;
+
+        const grid = generateRoofGrid(currentBldg);
+        const analyzedCells = analyzeRoofExposure(currentBldg, get().buildings, grid.cells);
+        const analysis = calculateSolarMetrics(
+          currentBldg,
+          analyzedCells,
+          grid.cols,
+          grid.rows,
+          grid.cellWidth,
+          grid.cellLength
+        );
+
+        const suitabilityPercent = analysis.totalRoofArea > 0
+          ? Math.round((analysis.recommendedInstallationArea / analysis.totalRoofArea) * 100)
+          : 0;
+
+        const updatedAnalysisResults = { ...get().analysisResults, [currentBldg.id]: analysis };
+        const derived = computeDerivedSnapshots(
+          get().buildings,
+          get().selectedBuildingId,
+          updatedAnalysisResults,
+          get().placedPanels,
+          get().selectedPanelTypeId,
+          get().monthlyConsumptionKWh,
+          get().optimizationMode,
+          get().maxPossiblePanels
+        );
+
+        set({
+          isAnalyzing: false,
+          analysisStatus: 'analyzed',
+          analysisResults: updatedAnalysisResults,
+          showHeatmap: true,
+          analysisSuccessMessage: `Analysis complete — ${suitabilityPercent}% of the rooftop is viable.`,
+          analysisErrorMessage: null,
+          analysisStaleMessage: null,
+          layoutStatus: get().layoutStatus === 'generated' ? 'outdated' : get().layoutStatus,
+          ...derived,
+        });
+      } catch (err: unknown) {
+        console.error('Solar analysis failed:', err);
+        set({
+          isAnalyzing: false,
+          analysisStatus: 'not_analyzed',
+          analysisErrorMessage: err instanceof Error ? err.message : 'Solar analysis failed.',
+        });
+      }
     },
 
-    generateSolarLayout: () => {
+    generateSolarLayout: async () => {
       const state = get();
       const bldg = state.getSelectedBuilding();
       const analysis = state.getCurrentAnalysis();
-      const panelType = state.getCurrentPanelType();
-      if (!bldg || !analysis) return;
 
-      const opt = runOptimization(
-        bldg,
-        analysis,
-        panelType,
-        state.monthlyConsumptionKWh,
-        state.optimizationMode
-      );
+      if (!bldg) return;
+
+      if (!analysis || state.analysisStatus !== 'analyzed') {
+        set({
+          layoutErrorMessage: 'Analyze the rooftop before generating a solar layout.',
+        });
+        return;
+      }
+
+      if (get().layoutStatus === 'generating') return;
 
       set({
-        placedPanels: opt.placedPanels,
-        maxPossiblePanels: opt.maxPossiblePanels,
+        layoutStatus: 'generating',
+        layoutErrorMessage: null,
+        layoutFeedback: null,
       });
+
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 400));
+
+        const currentBldg = get().getSelectedBuilding();
+        const currentAnalysis = get().getCurrentAnalysis();
+        const currentPanel = get().getCurrentPanelType();
+        const currentState = get();
+
+        if (!currentBldg || !currentAnalysis) return;
+
+        const opt = runOptimization(
+          currentBldg,
+          currentAnalysis,
+          currentPanel,
+          currentState.monthlyConsumptionKWh,
+          currentState.optimizationMode
+        );
+
+        const panelCount = opt.placedPanels.length;
+        const installedKW = Math.round((panelCount * currentPanel.wattage) / 10) / 100;
+
+        const derived = computeDerivedSnapshots(
+          currentState.buildings,
+          currentState.selectedBuildingId,
+          currentState.analysisResults,
+          opt.placedPanels,
+          currentState.selectedPanelTypeId,
+          currentState.monthlyConsumptionKWh,
+          currentState.optimizationMode,
+          opt.maxPossiblePanels
+        );
+
+        set({
+          placedPanels: opt.placedPanels,
+          maxPossiblePanels: opt.maxPossiblePanels,
+          layoutStatus: 'generated',
+          layoutFeedback: `Layout generated — ${panelCount} panels, ${installedKW} kW system.`,
+          layoutErrorMessage: null,
+          ...derived,
+        });
+      } catch (err: unknown) {
+        console.error('Solar layout generation failed:', err);
+        set({
+          layoutStatus: 'not_generated',
+          layoutErrorMessage: err instanceof Error ? err.message : 'Layout generation failed.',
+        });
+      }
     },
 
     resetToDefaultView: () => {
@@ -319,11 +595,9 @@ export const useSolarStore = create<SolarStoreState>((set, get) => {
     },
 
     startDemoTour: () => {
-      // Step-by-step hackathon demo flow
       set({ isDemoPlaying: true, demoStep: 1, demoStatusText: '1/6 Selecting target building: Apex Lofts...' });
       get().selectBuilding('bldg-3');
 
-      // Step 2: Time of Day simulation (after 1.2s)
       setTimeout(() => {
         set({ demoStep: 2, demoStatusText: '2/6 Simulating diurnal sun path & Meridian Tower shadow...' });
         let currentHour = 8;
@@ -332,47 +606,43 @@ export const useSolarStore = create<SolarStoreState>((set, get) => {
           get().setTimeOfDay(currentHour);
           if (currentHour >= 15.5) {
             clearInterval(interval);
-            get().setTimeOfDay(12.5); // return to midday
+            get().setTimeOfDay(12.5);
           }
         }, 150);
       }, 1500);
 
-      // Step 3: Solar Potential Heatmap Analysis (after 4.2s)
-      setTimeout(() => {
+      setTimeout(async () => {
         set({ demoStep: 3, demoStatusText: '3/6 Raytracing rooftop grid & detecting shade exposure...' });
         get().setShowHeatmap(true);
-        get().runAnalysisForSelectedBuilding();
+        await get().runAnalysisForSelectedBuilding();
       }, 4200);
 
-      // Step 4: Configure Energy Demand & Panel Type (after 6.0s)
       setTimeout(() => {
         set({ demoStep: 4, demoStatusText: '4/6 Calibrating 950 kWh monthly demand & 450W bifacial modules...' });
         get().setSelectedPanelType('panel-450w');
         get().setMonthlyConsumption(950);
-      }, 6000);
+      }, 6200);
 
-      // Step 5: Run Automated Panel Placement (after 7.5s)
-      setTimeout(() => {
+      setTimeout(async () => {
         set({ demoStep: 5, demoStatusText: '5/6 Synthesizing optimal layout under "Demand Matching" mode...' });
         get().setOptimizationMode('need');
-        get().generateSolarLayout();
-      }, 7500);
+        await get().generateSolarLayout();
+      }, 7800);
 
-      // Step 6: Present Recommendation & Financial Payback (after 9.2s)
       setTimeout(() => {
         set({
           demoStep: 6,
           demoStatusText: '6/6 Demo complete! Solar plan generated with deterministic financials & explainability.',
           isDemoPlaying: false,
         });
-      }, 9200);
+      }, 9800);
     },
 
     stopDemoTour: () => {
       set({ isDemoPlaying: false, demoStep: 0, demoStatusText: '' });
     },
 
-    // Computed Selectors
+    // Internal Accessors
     getSelectedBuilding: () => {
       const state = get();
       return state.buildings.find((b) => b.id === state.selectedBuildingId);
@@ -389,50 +659,12 @@ export const useSolarStore = create<SolarStoreState>((set, get) => {
       return PANEL_TYPES.find((p) => p.id === state.selectedPanelTypeId) || PANEL_TYPES[0];
     },
 
-    getEnergyProfile: () => {
-      const state = get();
-      const panelType = state.getCurrentPanelType();
-      return calculateEnergyProfile(state.monthlyConsumptionKWh, state.placedPanels, panelType);
-    },
+    getEnergyProfile: () => get().energyProfile,
 
-    getFinancialResult: () => {
-      const state = get();
-      const energy = state.getEnergyProfile();
-      const panelType = state.getCurrentPanelType();
-      return calculateFinancials(
-        energy.installedCapacityKW,
-        energy.panelCount,
-        panelType,
-        energy.annualGenerationKWh,
-        energy.annualConsumptionKWh
-      );
-    },
+    getFinancialResult: () => get().financialResult,
 
-    getEnvironmentalResult: () => {
-      const state = get();
-      const energy = state.getEnergyProfile();
-      return calculateEmissions(energy.annualGenerationKWh);
-    },
+    getEnvironmentalResult: () => get().environmentalResult,
 
-    getSolarRecommendation: () => {
-      const state = get();
-      const bldg = state.getSelectedBuilding();
-      const analysis = state.getCurrentAnalysis();
-      if (!bldg || !analysis) return null;
-
-      const energy = state.getEnergyProfile();
-      const financial = state.getFinancialResult();
-      const panelType = state.getCurrentPanelType();
-
-      return generateSolarRecommendation(
-        bldg,
-        analysis,
-        energy,
-        financial,
-        panelType,
-        state.optimizationMode,
-        state.maxPossiblePanels
-      );
-    },
+    getSolarRecommendation: () => get().solarRecommendation,
   };
 });

@@ -111,6 +111,10 @@ export type OptimizationMode =
   | 'lowest_cost'      // Lowest Initial Cost
   | 'balanced';        // Best Value / Balanced
 
+export type AnalysisStatus = 'not_analyzed' | 'analyzing' | 'analyzed' | 'stale';
+
+export type LayoutStatus = 'not_generated' | 'generating' | 'generated' | 'outdated';
+
 export interface EnergyResult {
   monthlyConsumptionKWh: number;
   annualConsumptionKWh: number;

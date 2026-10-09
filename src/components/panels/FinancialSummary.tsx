@@ -1,17 +1,66 @@
 import { useSolarStore } from '../../store/useSolarStore';
 import { MetricCard } from '../ui/MetricCard';
-import { Zap } from 'lucide-react';
+import { Zap, BarChart3, Building2, AlertTriangle } from 'lucide-react';
 
-export function FinancialSummary() {
-  const energy = useSolarStore((s) => s.getEnergyProfile());
-  const financial = useSolarStore((s) => s.getFinancialResult());
-  const environmental = useSolarStore((s) => s.getEnvironmentalResult());
-  const analysis = useSolarStore((s) => s.getCurrentAnalysis());
+interface FinancialSummaryProps {
+  onNavigateToPlanner?: () => void;
+}
 
-  if (!analysis) return null;
+export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps) {
+  const energy = useSolarStore((s) => s.energyProfile);
+  const financial = useSolarStore((s) => s.financialResult);
+  const environmental = useSolarStore((s) => s.environmentalResult);
+  const selectedBuildingId = useSolarStore((s) => s.selectedBuildingId);
+  const analysisResults = useSolarStore((s) => s.analysisResults);
+  const placedPanels = useSolarStore((s) => s.placedPanels);
+  const layoutStatus = useSolarStore((s) => s.layoutStatus);
+  const analysisStatus = useSolarStore((s) => s.analysisStatus);
+
+  const analysis = selectedBuildingId ? analysisResults[selectedBuildingId] : undefined;
+  const hasPanels = placedPanels.length > 0 && !!analysis && analysisStatus === 'analyzed';
+  const isOutdated = layoutStatus === 'outdated';
+
+  // Empty state when no solar layout exists
+  if (!hasPanels) {
+    return (
+      <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 text-center space-y-4">
+        <div className="w-12 h-12 mx-auto rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+          <BarChart3 className="w-6 h-6 text-amber-400" />
+        </div>
+        <div className="space-y-1.5">
+          <h4 className="text-sm font-bold text-white">Financial Projections Unavailable</h4>
+          <p className="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
+            Generate a solar layout to view financial projections, capex estimations, payback periods, and utility tariff savings.
+          </p>
+        </div>
+        {onNavigateToPlanner && (
+          <button
+            onClick={onNavigateToPlanner}
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs inline-flex items-center gap-1.5 transition-all shadow-md shadow-amber-500/20 active:scale-95"
+          >
+            <Building2 className="w-3.5 h-3.5" />
+            <span>Go to Rooftop Planner</span>
+          </button>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3.5">
+      {/* Outdated Notice Banner if settings or geometry changed */}
+      {isOutdated && (
+        <div className="p-3 rounded-xl bg-amber-950/40 border border-amber-800/60 text-xs text-amber-200 flex items-start gap-2.5">
+          <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+          <div className="space-y-0.5">
+            <span className="font-bold text-amber-300">Layout Outdated with Current Settings</span>
+            <p className="text-[11px] text-amber-300/80 leading-relaxed">
+              Financial projections below reflect the last generated layout. Regenerate in Rooftop Planner to update calculations.
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <h3 className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
           <Zap className="w-3.5 h-3.5 text-amber-400" />
