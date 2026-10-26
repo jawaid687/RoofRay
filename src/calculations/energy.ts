@@ -26,22 +26,30 @@ export function calculateEnergyProfile(
     };
   }
 
-  // System Size in kW
-  const installedCapacityKW = Math.round((panelCount * panelType.wattage) / 10) / 100;
+  // System Size in kW: strictly sum of individual per-panel capacities (FR-8.1)
+  const installedCapacityKW = Math.round(
+    panels.reduce((sum, p) => sum + (p.wattage || panelType.wattage) / 1000, 0) * 100
+  ) / 100;
 
-  // Average exposure factor across all placed panels (e.g. 0.92)
-  const averageExposureFactor =
-    panels.reduce((sum, p) => sum + p.exposureScore, 0) / panelCount;
-
-  // Annual Generation Formula:
-  // annualGen = kW * peakSunHours * 365 * performanceRatio * exposureFactor
-  const baselineAnnualGen =
-    installedCapacityKW *
+  // Annual Generation Formula: strictly sum of per-panel annual yields (FR-8.1)
+  const defaultPanelBaseline =
+    (panelType.wattage / 1000) *
     SIMULATION_ASSUMPTIONS.peakSunHoursPerDay *
     365 *
     SIMULATION_ASSUMPTIONS.performanceRatio;
 
-  const annualGenerationKWh = Math.round(baselineAnnualGen * averageExposureFactor);
+  const annualGenerationKWh = panels.reduce((sum, p) => {
+    if (p.annualKWh !== undefined) {
+      return sum + p.annualKWh;
+    }
+    const baseline = p.wattage
+      ? (p.wattage / 1000) *
+        SIMULATION_ASSUMPTIONS.peakSunHoursPerDay *
+        365 *
+        SIMULATION_ASSUMPTIONS.performanceRatio
+      : defaultPanelBaseline;
+    return sum + Math.round(baseline * p.exposureScore);
+  }, 0);
 
   // Solar Coverage Percentage (capped at 100% for demand offset, surplus reported separately)
   const exactCoveragePercent = (annualGenerationKWh / annualConsumptionKWh) * 100;

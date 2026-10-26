@@ -3,30 +3,58 @@ export type RoofType = 'flat';
 export type ObstacleType = 'hvac' | 'water_tank' | 'utility_room' | 'skylight';
 
 export interface RoofObstacle {
-  id: string;
-  name: string;
-  type: ObstacleType;
+  readonly id: string;
+  readonly name: string;
+  readonly type: ObstacleType;
   /** Position relative to roof center: [-width/2 .. width/2, -length/2 .. length/2] in meters */
-  relX: number;
-  relZ: number;
-  width: number;
-  length: number;
-  height: number;
+  readonly relX: number;
+  readonly relZ: number;
+  readonly width: number;
+  readonly length: number;
+  readonly height: number;
 }
 
 export interface Building {
-  id: string;
-  name: string;
-  type: 'residential' | 'commercial' | 'mixed_use' | 'industrial';
-  position: [number, number, number]; // [x, y, z] in world coordinates (meters)
-  width: number;                      // X dimension (meters)
-  length: number;                     // Z dimension (meters)
-  height: number;                     // Y dimension (meters)
-  roofType: RoofType;
-  roofObstacles: RoofObstacle[];
-  defaultMonthlyKWh: number;
-  color?: string;
-  description?: string;
+  readonly id: string;
+  readonly name: string;
+  readonly type: 'residential' | 'commercial' | 'mixed_use' | 'industrial';
+  readonly position: readonly [number, number, number]; // [x, y, z] in world coordinates (meters)
+  readonly width: number;                               // X dimension (meters)
+  readonly length: number;                              // Z dimension (meters)
+  readonly height: number;                              // Y dimension (meters)
+  readonly roofType: RoofType;
+  readonly roofObstacles: readonly RoofObstacle[];
+  readonly defaultMonthlyKWh: number;
+  readonly color?: string;
+  readonly description?: string;
+}
+
+export type HeatmapMode = 'live' | 'annual' | 'monthly';
+
+export interface LocationState {
+  readonly city: string;
+  readonly country: string;
+  readonly latitude: number;
+  readonly longitude: number;
+  readonly timezone: string;
+  readonly northOffsetDeg: number;
+}
+
+export interface DateTimeState {
+  readonly year: number;
+  readonly month: number;
+  readonly day: number;
+  readonly timeDecimal: number; // e.g. 13.5 = 13:30
+}
+
+export interface LiveShadingResult {
+  readonly isSunUp: boolean;
+  readonly totalCells: number;
+  readonly litCellsCount: number;
+  readonly shadedCellsCount: number;
+  readonly obstacleCellsCount: number;
+  readonly litRatio: number; // 0.0 to 1.0 of available roof cells
+  readonly cellShading: readonly boolean[]; // true = lit, false = shaded or obstacle
 }
 
 export type CellExposureClassification = 'excellent' | 'good' | 'poor' | 'obstacle';
@@ -103,7 +131,10 @@ export interface PlacedPanel {
   tiltDegrees: number;
   wattage: number;
   exposureScore: number; // average exposure of cells covered by this panel
+  annualKWh?: number;    // per-panel estimated annual generation in kWh (FR-7.8)
 }
+
+export type PlacementMode = 'select' | 'place' | 'fill';
 
 export type OptimizationMode = 
   | 'need'             // Meet My Electricity Need

@@ -10,8 +10,38 @@ import { calculateSolarMetrics } from '../simulation/suitability';
 import { placeSolarPanels } from '../optimization/panelPlacement';
 import { runOptimization } from '../optimization/optimizationEngine';
 import { generateSolarRecommendation } from '../calculations/recommendation';
+import { runSunPositionTests } from '../../tests/sunPosition.test';
+import { runFixedBuildingsTests } from '../../tests/fixedBuildings.test';
+import { runAnnualAnalysisTests } from '../../tests/annualAnalysis.test';
+import { runPlacementTests } from '../../tests/placement.test';
+import { runM6AndPerformanceTests } from '../../tests/m6Performance.test';
 
 function runUnitTests() {
+  const sunResults = runSunPositionTests();
+  if (sunResults.failed > 0) {
+    process.exit(1);
+  }
+
+  const bldgResults = runFixedBuildingsTests();
+  if (bldgResults.failed > 0) {
+    process.exit(1);
+  }
+
+  const annualResults = runAnnualAnalysisTests();
+  if (annualResults.failed > 0) {
+    process.exit(1);
+  }
+
+  const placementResults = runPlacementTests();
+  if (placementResults.failed > 0) {
+    process.exit(1);
+  }
+
+  const m6Results = runM6AndPerformanceTests();
+  if (m6Results.failed > 0) {
+    process.exit(1);
+  }
+
   console.log('🧪 Starting deterministic unit test suite for RoofRay...\n');
 
   let passed = 0;
@@ -77,6 +107,14 @@ function runUnitTests() {
   assert(energy.annualConsumptionKWh === 9600, 'Energy: Annual consumption is monthly * 12');
   assert(energy.installedCapacityKW > 0, `Energy: Capacity is ${energy.installedCapacityKW} kW`);
   assert(energy.annualGenerationKWh > 0, `Energy: Annual generation is ${energy.annualGenerationKWh} kWh`);
+
+  // Verify per-panel yield sum invariant (PRD FR-8.1)
+  const sumPerPanelYield = placement.panels.reduce((sum, p) => sum + (p.annualKWh || 0), 0);
+  assert(energy.annualGenerationKWh === sumPerPanelYield, `Energy: Total generation (${energy.annualGenerationKWh} kWh) exactly matches sum of per-panel yields (${sumPerPanelYield} kWh)`);
+
+  const sumPerPanelCapacity = Math.round(placement.panels.reduce((sum, p) => sum + (p.wattage / 1000), 0) * 100) / 100;
+  assert(energy.installedCapacityKW === sumPerPanelCapacity, `Energy: Total capacity (${energy.installedCapacityKW} kW) exactly matches sum of per-panel capacities (${sumPerPanelCapacity} kW)`);
+
   assert(energy.solarCoveragePercent >= 0 && energy.solarCoveragePercent <= 100, 'Energy: Coverage capped at 100%');
 
   // Test 6: Financial Calculations
@@ -107,10 +145,11 @@ function runUnitTests() {
   assert(optBal.placedPanels.length > 0, 'Optimization: Balanced mode placed panels');
 
   // Test 9: Recommendation Narrative
-  const rec = generateSolarRecommendation(testBldg, metrics, energy, financial, panelType, 'balanced', placement.maxPossiblePanels);
+  const rec = generateSolarRecommendation(testBldg, metrics, energy, financial, panelType, 'balanced', placement.maxPossiblePanels, placement.panels);
   assert(rec.headline.includes('kW System Recommended'), 'Recommendation: Headline formatted correctly');
   assert(rec.narrative.length > 50, 'Recommendation: Narrative contains substantive explanation');
   assert(rec.keyPoints.length >= 3, 'Recommendation: Key points provide explainability');
+  assert(rec.keyPoints.some(kp => kp.includes('Placement Quality') || kp.includes('Placement Risk')), 'Recommendation: Key points include per-panel placement hints');
 
   console.log(`\n========================================`);
   console.log(`Test Results: ${passed} passed, ${failed} failed.`);

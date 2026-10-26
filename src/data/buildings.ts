@@ -261,4 +261,13 @@ export const INITIAL_BUILDINGS: Building[] = [
       },
     ],
   },
-];
+] as const;
+
+// Deeply freeze buildings and obstacles to enforce immutability at runtime (FR-1.1)
+INITIAL_BUILDINGS.forEach((bldg) => {
+  bldg.roofObstacles.forEach((obs) => Object.freeze(obs));
+  Object.freeze(bldg.roofObstacles);
+  Object.freeze(bldg.position);
+  Object.freeze(bldg);
+});
+Object.freeze(INITIAL_BUILDINGS);

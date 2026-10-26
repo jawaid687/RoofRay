@@ -5,8 +5,10 @@ import {
   EnergyResult,
   FinancialResult,
   PanelType,
+  PlacedPanel,
   SolarRecommendation,
 } from '../types';
+import { SIMULATION_ASSUMPTIONS } from '../config/assumptions';
 
 export function generateSolarRecommendation(
   building: Building,
@@ -15,7 +17,8 @@ export function generateSolarRecommendation(
   financial: FinancialResult,
   panelType: PanelType,
   mode: OptimizationMode,
-  maxPossiblePanels: number
+  maxPossiblePanels: number,
+  placedPanels?: PlacedPanel[]
 ): SolarRecommendation {
   const suitabilityPercent = analysis.totalRoofArea > 0
     ? Math.round((analysis.recommendedInstallationArea / analysis.totalRoofArea) * 100)
@@ -75,12 +78,60 @@ export function generateSolarRecommendation(
     );
   }
 
+  // Per-Panel placement hints (PRD FR-8.3)
+  const panelsList = placedPanels || [];
+  const unshadedGenPerPanel = Math.round(
+    (panelType.wattage / 1000) *
+      SIMULATION_ASSUMPTIONS.peakSunHoursPerDay *
+      365 *
+      SIMULATION_ASSUMPTIONS.performanceRatio
+  );
+
+  let totalLostKWh = 0;
+  if (panelsList.length > 0) {
+    const lowExposurePanels = panelsList.filter((p) => p.exposureScore < 0.60);
+    const lowExposureLostKWh = lowExposurePanels.reduce((sum, p) => {
+      const yieldKWh = p.annualKWh ?? Math.round(unshadedGenPerPanel * p.exposureScore);
+      return sum + Math.max(0, unshadedGenPerPanel - yieldKWh);
+    }, 0);
+
+    totalLostKWh = panelsList.reduce((sum, p) => {
+      const yieldKWh = p.annualKWh ?? Math.round(unshadedGenPerPanel * p.exposureScore);
+      return sum + Math.max(0, unshadedGenPerPanel - yieldKWh);
+    }, 0);
+
+    if (lowExposurePanels.length > 0) {
+      keyPoints.push(
+        `Placement Risk: ${lowExposurePanels.length} module(s) sit in low-exposure zones (<60% daylight), losing ~${lowExposureLostKWh.toLocaleString()} kWh/yr to structural shadow. Module-level power optimizers or repositioning recommended.`
+      );
+      exclusions.push(
+        `Shaded Module Warning: ${lowExposurePanels.length} module(s) sit in low-exposure spots, reducing potential string performance by ~${lowExposureLostKWh.toLocaleString()} kWh/yr.`
+      );
+    } else {
+      keyPoints.push(
+        `Placement Quality: 100% of the ${panelsList.length} modules sit in prime unshaded zones (≥60% daylight factor), capturing maximum insolation with zero low-exposure string penalties.`
+      );
+    }
+  }
+
   // Technical Highlights
   const technicalHighlights: string[] = [
     `Module Specifications: ${panelType.name} (${panelType.efficiencyPercent}% efficiency, ${panelType.wattage}W rated output).`,
     `Setbacks & Safety: 0.8m perimeter firefighting setback and 0.25m inter-row maintenance corridors strictly enforced.`,
     `Carbon Abatement: Displaces an estimated ${(energy.annualGenerationKWh * 0.42).toFixed(0)} kg CO₂ per annum (equivalent to ${Math.round(energy.annualGenerationKWh * 0.42 / 1000 * 45)} trees).`,
   ];
+
+  if (energy.panelCount > 0) {
+    technicalHighlights.push(
+      `Per-Panel Output: Average generation is ${Math.round(energy.annualGenerationKWh / energy.panelCount)} kWh/yr per module (${(energy.installedCapacityKW / energy.panelCount * 1000).toFixed(0)}W nominal).`
+    );
+  }
+
+  if (totalLostKWh > 0) {
+    technicalHighlights.push(
+      `Shading Derate: Total theoretical unshaded loss is ${totalLostKWh.toLocaleString()} kWh/yr across the array.`
+    );
+  }
 
   return {
     headline,

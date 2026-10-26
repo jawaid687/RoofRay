@@ -209,6 +209,12 @@ export function placeSolarPanels(
     : maxPossiblePanels;
 
   const selectedCandidates = candidates.slice(0, countToPlace);
+  const panelKW = panelType.wattage / 1000;
+  const baselineAnnualGen =
+    panelKW *
+    SIMULATION_ASSUMPTIONS.peakSunHoursPerDay *
+    365 *
+    SIMULATION_ASSUMPTIONS.performanceRatio;
 
   const placedPanels: PlacedPanel[] = selectedCandidates.map((cand, index) => ({
     id: `panel-${building.id}-${index + 1}`,
@@ -222,6 +228,7 @@ export function placeSolarPanels(
     tiltDegrees: 10, // 10° maintenance self-cleaning tilt toward south
     wattage: panelType.wattage,
     exposureScore: cand.exposureScore,
+    annualKWh: Math.round(baselineAnnualGen * cand.exposureScore),
   }));
 
   const totalCapacityKW = Math.round((placedPanels.length * panelType.wattage) / 10) / 100;
