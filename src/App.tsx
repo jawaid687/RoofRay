@@ -29,6 +29,7 @@ export function App() {
       const bldg = params.get('building');
       const mode = params.get('mode');
       const month = params.get('month');
+      const tour = params.get('tour');
 
       if (city) {
         setCityPreset(city);
@@ -50,6 +51,11 @@ export function App() {
       }
       if (month !== null && !Number.isNaN(parseInt(month, 10))) {
         setSelectedMonth(parseInt(month, 10));
+      }
+      if (tour === 'true') {
+        setTimeout(() => {
+          startDemoTour();
+        }, 500);
       }
     } catch (err) {
       console.warn('Failed to parse URL search params:', err);

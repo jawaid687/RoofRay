@@ -1,6 +1,8 @@
+import { useState, useEffect } from 'react';
 import { useSolarStore } from '../../store/useSolarStore';
-import { Sparkles, Loader2, AlertTriangle, CheckCircle2, Info, XCircle, Calendar } from 'lucide-react';
+import { Sparkles, Loader2, AlertTriangle, CheckCircle2, Info, XCircle, Calendar, CloudSun, ChevronDown, ChevronUp, Database } from 'lucide-react';
 import { MetricCard } from '../ui/MetricCard';
+import { fetchNasaSolarResource, SolarResourceData } from '../../services/solarResourceService';
 
 const MONTH_NAMES_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -21,6 +23,31 @@ export function SolarAnalysisCard() {
   const selectedMonth = useSolarStore((s) => s.selectedMonth);
   const setSelectedMonth = useSolarStore((s) => s.setSelectedMonth);
   const setHeatmapMode = useSolarStore((s) => s.setHeatmapMode);
+  const location = useSolarStore((s) => s.location);
+
+  const [nasaData, setNasaData] = useState<SolarResourceData | null>(null);
+  const [loadingNasa, setLoadingNasa] = useState(false);
+  const [showNasaCard, setShowNasaCard] = useState(true);
+
+  // Fetch NASA POWER climatology whenever coordinates change
+  useEffect(() => {
+    let isCurrent = true;
+    setLoadingNasa(true);
+    fetchNasaSolarResource(location.latitude, location.longitude)
+      .then((data) => {
+        if (isCurrent) {
+          setNasaData(data);
+          setLoadingNasa(false);
+        }
+      })
+      .catch(() => {
+        if (isCurrent) setLoadingNasa(false);
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [location.latitude, location.longitude]);
 
   const building = buildings.find((b) => b.id === selectedBuildingId);
   const analysis = selectedBuildingId ? analysisResults[selectedBuildingId] : undefined;
@@ -294,6 +321,75 @@ export function SolarAnalysisCard() {
               </div>
             </div>
           )}
+
+          {/* NASA POWER Real-World Climatology Comparison (Phase 5) */}
+          <div className="rounded-xl border border-slate-800/80 bg-slate-950/40 overflow-hidden">
+            <button
+              onClick={() => setShowNasaCard(!showNasaCard)}
+              className="w-full p-2.5 flex items-center justify-between text-xs font-semibold text-slate-300 hover:bg-slate-900/40 transition-colors"
+            >
+              <div className="flex items-center gap-1.5 text-sky-400">
+                <CloudSun className="w-3.5 h-3.5 text-sky-400" />
+                <span>Weather-Informed Resource (NASA POWER)</span>
+              </div>
+              <div className="flex items-center gap-1 text-[10px] text-slate-500">
+                <span>{showNasaCard ? 'Hide' : 'Inspect'}</span>
+                {showNasaCard ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              </div>
+            </button>
+
+            {showNasaCard && (
+              <div className="p-3 border-t border-slate-800/60 space-y-2.5 text-xs">
+                {loadingNasa ? (
+                  <div className="flex items-center justify-center gap-2 py-3 text-slate-400">
+                    <Loader2 className="w-4 h-4 animate-spin text-sky-400" />
+                    <span>Querying NASA LaRC satellite irradiance database...</span>
+                  </div>
+                ) : nasaData && nasaData.available ? (
+                  <>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800">
+                        <span className="text-[10px] text-slate-400 block font-mono">All-Sky Insolation</span>
+                        <div className="text-sm font-bold text-amber-300 mt-0.5">
+                          {nasaData.annualAverageAllSkyKWhM2Day} <span className="text-[10px] text-slate-400 font-normal">kWh/m²/day</span>
+                        </div>
+                        <span className="text-[9px] text-slate-500">Weather-adjusted (clouds included)</span>
+                      </div>
+
+                      <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800">
+                        <span className="text-[10px] text-slate-400 block font-mono">Cloud Attenuation</span>
+                        <div className="text-sm font-bold text-sky-300 mt-0.5">
+                          -{nasaData.averageCloudPenaltyPercent}% <span className="text-[10px] text-slate-400 font-normal">vs clear-sky</span>
+                        </div>
+                        <span className="text-[9px] text-slate-500">Historical cloud factor</span>
+                      </div>
+                    </div>
+
+                    <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800/80 space-y-1 text-[10px] text-slate-400 leading-relaxed font-sans">
+                      <div className="flex items-center gap-1 font-semibold text-slate-300">
+                        <Database className="w-3 h-3 text-sky-400" />
+                        <span>Source & Distinction Notice:</span>
+                      </div>
+                      <p>
+                        • <strong>Clear-Sky Raycasting:</strong> Pure geometric simulation of rooftop obstacles and surrounding towers.
+                      </p>
+                      <p>
+                        • <strong>Weather-Informed Estimate:</strong> Satellite multi-year observation from {nasaData.source} ({nasaData.retrievalDate}).
+                      </p>
+                      <p className="text-amber-400/90 font-medium">
+                        ⚠️ Simulated and climatological projections are non-metered engineering estimates.
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <div className="p-2 rounded-lg bg-slate-900/40 text-[11px] text-slate-400 flex items-center justify-between">
+                    <span>NASA POWER offline / cached fallback active.</span>
+                    <span className="text-[10px] text-slate-500">Deterministic Raycasting Active</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Metric Cards Grid */}
           <div className="grid grid-cols-2 gap-2">

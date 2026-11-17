@@ -15,8 +15,12 @@ import { runFixedBuildingsTests } from '../../tests/fixedBuildings.test';
 import { runAnnualAnalysisTests } from '../../tests/annualAnalysis.test';
 import { runPlacementTests } from '../../tests/placement.test';
 import { runM6AndPerformanceTests } from '../../tests/m6Performance.test';
+import { runBangladeshLocalizationTests } from '../../tests/bangladeshLocalization.test';
+import { runFinancialConfigTests } from '../../tests/financialConfig.test';
+import { runRagTests } from '../../tests/ragRetrieval.test';
+import { runAiAdvisorTests } from '../../tests/aiAdvisorSchema.test';
 
-function runUnitTests() {
+async function runUnitTests() {
   const sunResults = runSunPositionTests();
   if (sunResults.failed > 0) {
     process.exit(1);
@@ -39,6 +43,26 @@ function runUnitTests() {
 
   const m6Results = runM6AndPerformanceTests();
   if (m6Results.failed > 0) {
+    process.exit(1);
+  }
+
+  const bdResults = runBangladeshLocalizationTests();
+  if (bdResults.failed > 0) {
+    process.exit(1);
+  }
+
+  const finResults = runFinancialConfigTests();
+  if (finResults.failed > 0) {
+    process.exit(1);
+  }
+
+  const ragResults = runRagTests();
+  if (ragResults.failed > 0) {
+    process.exit(1);
+  }
+
+  const aiResults = await runAiAdvisorTests();
+  if (aiResults.failed > 0) {
     process.exit(1);
   }
 
@@ -160,4 +184,7 @@ function runUnitTests() {
   }
 }
 
-runUnitTests();
+runUnitTests().catch((err) => {
+  console.error('Fatal test error:', err);
+  process.exit(1);
+});

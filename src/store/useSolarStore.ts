@@ -17,6 +17,7 @@ import {
   LiveShadingResult,
   PanelOrientation,
   PlacementMode,
+  CurrencyCode,
 } from '../types';
 import { INITIAL_BUILDINGS } from '../data/buildings';
 import { PANEL_TYPES } from '../data/panelTypes';
@@ -149,6 +150,21 @@ export interface SolarStoreState {
   demoStep: number;
   demoStatusText: string;
 
+  // Financial & Currency Configuration (Phase 2)
+  currency: CurrencyCode;
+  customElectricityTariff: number | null;
+  customCostPerKW: number | null;
+  customBaseCost: number | null;
+  customGridEmissionFactor: number | null;
+  setCurrency: (c: CurrencyCode) => void;
+  setCustomFinancials: (inputs: {
+    tariff?: number | null;
+    costPerKW?: number | null;
+    baseCost?: number | null;
+    emissionFactor?: number | null;
+  }) => void;
+  resetFinancialDefaults: () => void;
+
   // Stable Derived State (Cached snapshots for React useSyncExternalStore)
   energyProfile: EnergyResult;
   financialResult: FinancialResult;
@@ -217,6 +233,20 @@ export interface SolarStoreState {
   getSolarRecommendation: () => SolarRecommendation | null;
 }
 
+let globalFinancialConfig: {
+  currency: CurrencyCode;
+  customTariff: number | null;
+  customCostPerKW: number | null;
+  customBaseCost: number | null;
+  customEmissionFactor: number | null;
+} = {
+  currency: 'USD',
+  customTariff: null,
+  customCostPerKW: null,
+  customBaseCost: null,
+  customEmissionFactor: null,
+};
+
 function computeDerivedSnapshots(
   buildings: readonly Building[],
   selectedBuildingId: string | null,
@@ -225,8 +255,19 @@ function computeDerivedSnapshots(
   selectedPanelTypeId: string,
   monthlyConsumptionKWh: number,
   optimizationMode: OptimizationMode,
-  maxPossiblePanels: number
+  maxPossiblePanels: number,
+  overrideCurrency?: CurrencyCode,
+  overrideTariff?: number | null,
+  overrideCostPerKW?: number | null,
+  overrideBaseCost?: number | null,
+  overrideEmissionFactor?: number | null
 ) {
+  const currency = overrideCurrency ?? globalFinancialConfig.currency;
+  const customTariff = overrideTariff !== undefined ? overrideTariff : globalFinancialConfig.customTariff;
+  const customCostPerKW = overrideCostPerKW !== undefined ? overrideCostPerKW : globalFinancialConfig.customCostPerKW;
+  const customBaseCost = overrideBaseCost !== undefined ? overrideBaseCost : globalFinancialConfig.customBaseCost;
+  const customEmissionFactor = overrideEmissionFactor !== undefined ? overrideEmissionFactor : globalFinancialConfig.customEmissionFactor;
+
   const panelType = PANEL_TYPES.find((p) => p.id === selectedPanelTypeId) || PANEL_TYPES[0];
   const bldg = buildings.find((b) => b.id === selectedBuildingId);
   const analysis = selectedBuildingId ? analysisResults[selectedBuildingId] : undefined;
@@ -237,9 +278,28 @@ function computeDerivedSnapshots(
     energyProfile.panelCount,
     panelType,
     energyProfile.annualGenerationKWh,
-    energyProfile.annualConsumptionKWh
+    energyProfile.annualConsumptionKWh,
+    {
+      currency,
+      customElectricityTariff: customTariff ?? undefined,
+      customCostPerKW: customCostPerKW ?? undefined,
+      customBaseCost: customBaseCost ?? undefined,
+    }
   );
-  const environmentalResult = calculateEmissions(energyProfile.annualGenerationKWh);
+
+  const defaultEmissionFactor = currency === 'BDT'
+    ? SIMULATION_ASSUMPTIONS.bangladeshGridEmissionFactorKgPerKWh
+    : SIMULATION_ASSUMPTIONS.gridEmissionFactorKgPerKWh;
+  const activeEmissionFactor = customEmissionFactor ?? defaultEmissionFactor;
+  const emissionSource = currency === 'BDT'
+    ? 'DoE & SREDA Bangladesh National Grid Factor (2023): 0.637 kg CO2/kWh'
+    : 'IEA Global Grid Average (2022): 0.420 kg CO2/kWh';
+
+  const environmentalResult = calculateEmissions(
+    energyProfile.annualGenerationKWh,
+    activeEmissionFactor,
+    emissionSource
+  );
 
   const solarRecommendation =
     bldg && analysis && placedPanels.length > 0
@@ -396,6 +456,13 @@ export const useSolarStore = create<SolarStoreState>((set, get) => {
     demoStep: 0,
     demoStatusText: '',
 
+    // Financial & Currency state
+    currency: 'USD',
+    customElectricityTariff: null,
+    customCostPerKW: null,
+    customBaseCost: null,
+    customGridEmissionFactor: null,
+
     // Cached snapshots for React
     ...initialDerived,
 
@@ -535,6 +602,101 @@ export const useSolarStore = create<SolarStoreState>((set, get) => {
         latitude: preset.latitude,
         longitude: preset.longitude,
         timezone: preset.timezone,
+      });
+
+      if (preset.country === 'Bangladesh' && get().currency !== 'BDT') {
+        get().setCurrency('BDT');
+      }
+    },
+
+    setCurrency: (c: CurrencyCode) => {
+      globalFinancialConfig.currency = c;
+      const state = get();
+      const derived = computeDerivedSnapshots(
+        state.buildings,
+        state.selectedBuildingId,
+        state.analysisResults,
+        state.placedPanels,
+        state.selectedPanelTypeId,
+        state.monthlyConsumptionKWh,
+        state.optimizationMode,
+        state.maxPossiblePanels,
+        c,
+        state.customElectricityTariff,
+        state.customCostPerKW,
+        state.customBaseCost,
+        state.customGridEmissionFactor
+      );
+      set({
+        currency: c,
+        ...derived,
+      });
+    },
+
+    setCustomFinancials: (inputs) => {
+      const state = get();
+      const updatedTariff = inputs.tariff !== undefined ? inputs.tariff : state.customElectricityTariff;
+      const updatedCostPerKW = inputs.costPerKW !== undefined ? inputs.costPerKW : state.customCostPerKW;
+      const updatedBaseCost = inputs.baseCost !== undefined ? inputs.baseCost : state.customBaseCost;
+      const updatedEmissionFactor = inputs.emissionFactor !== undefined ? inputs.emissionFactor : state.customGridEmissionFactor;
+
+      globalFinancialConfig.customTariff = updatedTariff;
+      globalFinancialConfig.customCostPerKW = updatedCostPerKW;
+      globalFinancialConfig.customBaseCost = updatedBaseCost;
+      globalFinancialConfig.customEmissionFactor = updatedEmissionFactor;
+
+      const derived = computeDerivedSnapshots(
+        state.buildings,
+        state.selectedBuildingId,
+        state.analysisResults,
+        state.placedPanels,
+        state.selectedPanelTypeId,
+        state.monthlyConsumptionKWh,
+        state.optimizationMode,
+        state.maxPossiblePanels,
+        state.currency,
+        updatedTariff,
+        updatedCostPerKW,
+        updatedBaseCost,
+        updatedEmissionFactor
+      );
+      set({
+        customElectricityTariff: updatedTariff,
+        customCostPerKW: updatedCostPerKW,
+        customBaseCost: updatedBaseCost,
+        customGridEmissionFactor: updatedEmissionFactor,
+        ...derived,
+      });
+    },
+
+    resetFinancialDefaults: () => {
+      globalFinancialConfig.customTariff = null;
+      globalFinancialConfig.customCostPerKW = null;
+      globalFinancialConfig.customBaseCost = null;
+      globalFinancialConfig.customEmissionFactor = null;
+
+      const state = get();
+      const derived = computeDerivedSnapshots(
+        state.buildings,
+        state.selectedBuildingId,
+        state.analysisResults,
+        state.placedPanels,
+        state.selectedPanelTypeId,
+        state.monthlyConsumptionKWh,
+        state.optimizationMode,
+        state.maxPossiblePanels,
+        state.currency,
+        null,
+        null,
+        null,
+        null
+      );
+      set({
+        customElectricityTariff: null,
+        customCostPerKW: null,
+        customBaseCost: null,
+        customGridEmissionFactor: null,
+        ...derived,
       });
     },
 

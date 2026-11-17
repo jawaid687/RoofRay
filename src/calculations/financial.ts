@@ -1,17 +1,37 @@
-import { FinancialResult, PanelType } from '../types';
+import { FinancialResult, PanelType, FinancialCustomInputs } from '../types';
 import { SIMULATION_ASSUMPTIONS } from '../config/assumptions';
+import { formatCurrency } from '../utils/currency';
 
 /**
  * Computes deterministic financial metrics including system capital cost,
  * annual electricity bill savings, payback period, and 20-year net cash return.
+ * Supports configurable tariffs, custom turnkey costs, and multi-currency (USD / BDT).
  */
 export function calculateFinancials(
   installedCapacityKW: number,
   panelCount: number,
   panelType: PanelType,
   annualGenerationKWh: number,
-  annualConsumptionKWh: number
+  annualConsumptionKWh: number,
+  customInputs?: FinancialCustomInputs
 ): FinancialResult {
+  const currency = customInputs?.currency || 'USD';
+  const isBDT = currency === 'BDT';
+
+  const defaultTariff = isBDT
+    ? SIMULATION_ASSUMPTIONS.bangladeshDefaultTariffBDT
+    : SIMULATION_ASSUMPTIONS.electricityPricePerKWh;
+  const defaultCostPerKW = isBDT
+    ? SIMULATION_ASSUMPTIONS.bangladeshCostPerKW_BDT
+    : SIMULATION_ASSUMPTIONS.costPerKW;
+  const defaultBaseCost = isBDT
+    ? SIMULATION_ASSUMPTIONS.bangladeshBaseCostBDT
+    : SIMULATION_ASSUMPTIONS.baseInstallationCost;
+
+  const tariff = customInputs?.customElectricityTariff ?? defaultTariff;
+  const costPerKW = customInputs?.customCostPerKW ?? defaultCostPerKW;
+  const baseInstallationCost = customInputs?.customBaseCost ?? defaultBaseCost;
+
   if (panelCount === 0 || installedCapacityKW <= 0) {
     return {
       totalSystemCost: 0,
@@ -21,49 +41,78 @@ export function calculateFinancials(
       paybackYears: null,
       twentyYearNetSavingsUSD: 0,
       roiPercent: 0,
+      currency,
+      annualSavingsFormatted: formatCurrency(0, currency),
+      totalSystemCostFormatted: formatCurrency(0, currency),
+      tariffPerKWh: tariff,
     };
   }
-
-  const baseInstallationCost = SIMULATION_ASSUMPTIONS.baseInstallationCost;
   
   // Total turnkey system cost: base engineering/permitting + capacity rate
   const totalSystemCost = Math.round(
-    baseInstallationCost + installedCapacityKW * SIMULATION_ASSUMPTIONS.costPerKW
+    baseInstallationCost + installedCapacityKW * costPerKW
   );
 
-  const equipmentCost = Math.round(panelCount * panelType.cost + installedCapacityKW * 450);
+  // Equipment cost: panels + inverter/racking
+  const panelUnitCost = isBDT
+    ? panelType.cost * SIMULATION_ASSUMPTIONS.usdToBdtExchangeRate
+    : panelType.cost;
+  const balanceCostPerKW = isBDT ? 450 * SIMULATION_ASSUMPTIONS.usdToBdtExchangeRate : 450;
+  const equipmentCost = Math.round(panelCount * panelUnitCost + installedCapacityKW * balanceCostPerKW);
 
-  // Self-consumed generation offsets retail grid tariff directly ($0.165/kWh)
+  // Missing or non-positive tariff prevents misleading payback calculation (PRD & Rule 4.B)
+  if (tariff <= 0 || costPerKW <= 0) {
+    return {
+      totalSystemCost,
+      baseInstallationCost,
+      equipmentCost,
+      annualSavingsUSD: 0,
+      paybackYears: null,
+      twentyYearNetSavingsUSD: -totalSystemCost,
+      roiPercent: -100,
+      currency,
+      annualSavingsFormatted: formatCurrency(0, currency),
+      totalSystemCostFormatted: formatCurrency(totalSystemCost, currency),
+      tariffPerKWh: tariff,
+    };
+  }
+
+  // Self-consumed generation offsets retail grid tariff directly
   const selfConsumedKWh = Math.min(annualGenerationKWh, annualConsumptionKWh);
-  const selfConsumedSavings = selfConsumedKWh * SIMULATION_ASSUMPTIONS.electricityPricePerKWh;
+  const selfConsumedSavings = selfConsumedKWh * tariff;
 
   // Surplus exported generation credits at wholesale/net-metering credit factor (~50%)
   const surplusKWh = Math.max(0, annualGenerationKWh - annualConsumptionKWh);
-  const exportCredit = surplusKWh * (SIMULATION_ASSUMPTIONS.electricityPricePerKWh * 0.5);
+  const exportCredit = surplusKWh * (tariff * 0.5);
 
-  const annualSavingsUSD = Math.round(selfConsumedSavings + exportCredit);
+  const annualSavings = Math.round(selfConsumedSavings + exportCredit);
 
-  // Payback period in years
+  // Payback period in years: Only compute when savings are non-negligible
+  const minThreshold = isBDT ? 500 : 50;
   let paybackYears: number | null = null;
-  if (annualSavingsUSD > 50) {
-    paybackYears = Math.round((totalSystemCost / annualSavingsUSD) * 10) / 10;
+  if (annualSavings > minThreshold) {
+    paybackYears = Math.round((totalSystemCost / annualSavings) * 10) / 10;
   }
 
-  // 20-Year cumulative net financial benefit (accounting for minimal inverter replacement reserve)
-  const twentyYearGrossSavings = annualSavingsUSD * 20;
-  const twentyYearNetSavingsUSD = Math.round(twentyYearGrossSavings - totalSystemCost);
+  // 20-Year cumulative net financial benefit
+  const twentyYearGrossSavings = annualSavings * 20;
+  const twentyYearNetSavings = Math.round(twentyYearGrossSavings - totalSystemCost);
 
   const roiPercent = totalSystemCost > 0
-    ? Math.round(((twentyYearNetSavingsUSD) / totalSystemCost) * 100)
+    ? Math.round((twentyYearNetSavings / totalSystemCost) * 100)
     : 0;
 
   return {
     totalSystemCost,
     baseInstallationCost,
     equipmentCost,
-    annualSavingsUSD,
+    annualSavingsUSD: annualSavings,
     paybackYears,
-    twentyYearNetSavingsUSD,
+    twentyYearNetSavingsUSD: twentyYearNetSavings,
     roiPercent,
+    currency,
+    annualSavingsFormatted: formatCurrency(annualSavings, currency),
+    totalSystemCostFormatted: formatCurrency(totalSystemCost, currency),
+    tariffPerKWh: tariff,
   };
 }

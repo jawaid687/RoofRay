@@ -158,6 +158,15 @@ export interface EnergyResult {
   averageCapacityFactorPercent: number;
 }
 
+export type CurrencyCode = 'USD' | 'BDT';
+
+export interface FinancialCustomInputs {
+  currency?: CurrencyCode;
+  customElectricityTariff?: number; // per kWh in selected currency
+  customCostPerKW?: number;          // turnkey per kW in selected currency
+  customBaseCost?: number;           // base fee in selected currency
+}
+
 export interface FinancialResult {
   totalSystemCost: number;
   baseInstallationCost: number;
@@ -166,6 +175,10 @@ export interface FinancialResult {
   paybackYears: number | null;
   twentyYearNetSavingsUSD: number;
   roiPercent: number;
+  currency?: CurrencyCode;
+  annualSavingsFormatted?: string;
+  totalSystemCostFormatted?: string;
+  tariffPerKWh?: number;
 }
 
 export interface EnvironmentalResult {
@@ -173,6 +186,8 @@ export interface EnvironmentalResult {
   annualCO2ReductionTonnes: number;
   equivalentTreesPlanted: number;
   equivalentMilesDriven: number;
+  gridEmissionFactorKgPerKWh?: number;
+  gridEmissionFactorSource?: string;
 }
 
 export interface SolarRecommendation {

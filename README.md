@@ -9,293 +9,201 @@
 ╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝        ╚═══╝  ╚══════╝
 ```
 
-### **Physically Grounded 3D Rooftop Solar Planner & Astronomical Shade Engine**
-*Accurate astronomical ephemeris, live raycast shadow mapping, annual clear-sky irradiance integration, and interactive manual panel placement in the browser.*
+### **AI-Powered 3D Rooftop Solar Planning, Simulation & Recommendation Platform**
+*International AI Builders Congress 2026 • Track: Idea to Unicorn • Domain: ClimateSphere AI*
 
 ---
 
-[![Tests: 129 Passed](https://img.shields.io/badge/Unit_Tests-129%2F129_Passing-10b981.svg?style=for-the-badge&logo=jest)](npm-run-test:calc)
+[![Tests: 222 Passed](https://img.shields.io/badge/Unit_Tests-222%2F222_Passing-10b981.svg?style=for-the-badge&logo=jest)](npm-run-test:calc)
 [![React 19](https://img.shields.io/badge/React-19.0.0-61dafb.svg?style=for-the-badge&logo=react)](https://react.dev/)
 [![Three.js](https://img.shields.io/badge/Three.js-r174-000000.svg?style=for-the-badge&logo=three.js)](https://threejs.org/)
 [![TypeScript 5.7](https://img.shields.io/badge/TypeScript-5.7-3178c6.svg?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
-[![Vite 6.2](https://img.shields.io/badge/Vite-6.2-646cff.svg?style=for-the-badge&logo=vite)](https://vitejs.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38bdf8.svg?style=for-the-badge&logo=tailwindcss)](https://tailwindcss.com/)
-[![Web Worker Multi-Threaded](https://img.shields.io/badge/Web_Worker-Multi--Threaded-8b5cf6.svg?style=for-the-badge)](#-annual-solar-analysis--web-worker-engine-fr-6)
-[![Zero External APIs](https://img.shields.io/badge/External_APIs-0_(100%25_Client--Side)-f59e0b.svg?style=for-the-badge)](#-core-engineering-principles)
+[![Google Gemini API](https://img.shields.io/badge/AI_Advisor-Google_Gemini-4285f4.svg?style=for-the-badge&logo=google)](https://aistudio.google.com)
+[![RAG Grounding](https://img.shields.io/badge/Knowledge_RAG-SREDA%20%7C%20BPDB%20%7C%20NREL-8b5cf6.svg?style=for-the-badge)](#-knowledge-retrieval-rag-architecture)
+[![NASA POWER](https://img.shields.io/badge/Solar_Data-NASA_POWER_API-f59e0b.svg?style=for-the-badge)](#-real-world-solar-data-nasa-power)
+[![Localization](https://img.shields.io/badge/Localization-English%20%7C%20%E0%A6%AC%E0%A6%BE%E0%A6%82%E0%A6%B2%E0%A6%BE-059669.svg?style=for-the-badge)](#-bangladesh-localization--bdt-currency)
 [![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg?style=for-the-badge)](LICENSE)
 
-[**Live Demo Tour**](#-guided-demo-tour) • [**v2 Architecture**](#-system-architecture--v2) • [**NOAA Sun Engine**](#-noaa-astronomical-sun-engine-fr-3) • [**Manual Studio**](#-manual-layout-studio--spatial-validation-fr-7) • [**Performance Benchmarks**](#-performance-pass-against-prd-budget-53--6) • [**Getting Started**](#-getting-started)
+[**Live Solar App (`/app`)**](#-route-structure) • [**Public Landing Page (`/`)**](#-professional-landing-page) • [**AI Solar Advisor**](#-ai-solar-advisor) • [**Bangladesh Localization**](#-bangladesh-localization--bdt-currency) • [**Documentation**](docs/) • [**Getting Started**](#-getting-started)
 
 </div>
 
 ---
 
-## ⚡ Executive Summary: RoofRay v2
+## ⚡ Executive Overview: RoofRay V3
 
-**RoofRay v2** upgrades the client-side 3D solar planner into a **physically grounded astronomical engine**. Rather than using synthetic sun arcs or static regional estimates, RoofRay v2 computes the exact astronomical sun position using the **NOAA Solar Position Algorithm** (accurate to **0.1°** of solar elevation and azimuth) driven by latitude, longitude, date, local wall-clock time, and IANA timezone with full daylight saving time (DST) support.
+**RoofRay V3** upgrades the platform into an enterprise-grade, competition-ready **ClimateSphere AI** product. RoofRay solves the multi-billion dollar urban solar planning bottleneck by combining **deterministic 3D physics simulation** with a **physics-grounded AI Solar Advisor**.
 
-All scene lighting, shadow casting, real-time roof raycasting, and annual yield calculations share **one single astronomical sun vector** as their single source of truth.
-
----
-
-## 🌟 Major Highlights in RoofRay v2
-
-<table>
-  <thead>
-    <tr>
-      <th width="25%">☀️ NOAA Sun Engine</th>
-      <th width="25%">⚡ Live & Annual Analysis</th>
-      <th width="25%">📐 Manual Layout Studio</th>
-      <th width="25%">🧭 3D SunPath & Animations</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td valign="top">
-        <ul>
-          <li><strong>Jean Meeus Astronomical Math</strong>: Julian Day/Century, Equation of Time, Declination, Hour Angle.</li>
-          <li><strong>NOAA-Calibrated Precision</strong>: Verified to within <strong>0.1°</strong> of official NOAA reference points.</li>
-          <li><strong>IANA Timezone Handling</strong>: Automatic DST spring-forward and fall-back conversions.</li>
-          <li><strong>Polar Day & Night Support</strong>: Midnight Sun and Polar Night without crashes.</li>
-        </ul>
-      </td>
-      <td valign="top">
-        <ul>
-          <li><strong>Real-Time Shading (FR-5)</strong>: 0.11 ms/frame ray-box intersection tests across all neighborhood occluders.</li>
-          <li><strong>Annual Web Worker (FR-6)</strong>: Multi-threaded background integration across 12 monthly days (~290 sun positions).</li>
-          <li><strong>Clear-Sky Irradiance Model</strong>: Kasten & Young air mass, Meinel DNI, and isotropic diffuse sky radiation.</li>
-          <li><strong>3-Way Heatmap Modes</strong>: Live Shading, Annual Exposure %, and Monthly kWh/m² Insolation.</li>
-        </ul>
-      </td>
-      <td valign="top">
-        <ul>
-          <li><strong>Ghost Cursor & 3D Tooltip</strong>: Snapped placement preview showing real-time exposure and kWh.</li>
-          <li><strong>Rigorous Spatial Validation</strong>: 0.8m perimeter setback, 0.5m obstacle clearance, and panel collision rejection.</li>
-          <li><strong>Full Undo / Redo</strong>: <code>Ctrl+Z</code> and <code>Ctrl+Y</code> transaction stack.</li>
-          <li><strong>Best Spots Overlay</strong>: Ranks free roof positions <code>#1..#10</code> by yield with 1-click "Suggest Next Panel".</li>
-        </ul>
-      </td>
-      <td valign="top">
-        <ul>
-          <li><strong>3D Sun Path Arcs (FR-4.6)</strong>: Diurnal arc with integer hour beads, June 21 Summer Solstice, and Dec 21 Winter Solstice.</li>
-          <li><strong>3D North Compass Rose</strong>: Architectural ground dial with cardinal badges ($N=-Z, E=+X, S=+Z, W=-X$).</li>
-          <li><strong>Play Day & Play Year (FR-2.4)</strong>: 60 FPS diurnal loop and 365-day seasonal cycle animations ($1\times, 2\times, 4\times$).</li>
-          <li><strong>129/129 Passing Tests</strong>: Complete automated unit test suite.</li>
-        </ul>
-      </td>
-    </tr>
-  </tbody>
-</table>
+Rather than using synthetic sun trajectories or treating generative AI as a calculator, RoofRay establishes a rigorous boundary:
+1. **Physical Engine as Single Source of Truth:** NOAA astronomical ephemeris and 0.8m line-of-sight raycasting compute exact solar hours, shadows, kW capacity, per-panel yields, and BDT/USD savings.
+2. **Lexical RAG Grounding:** An authentic BM25 retrieval engine indexes verified regulatory and technical documentation from **SREDA**, **BPDB**, **NREL**, and the **Department of Environment (DoE)**.
+3. **Server-Side AI Advisory:** Google Gemini synthesizes explainable engineering recommendations, risk alerts, and next steps without hallucinating numbers.
 
 ---
 
-## 🏛️ System Architecture & v2 Pipeline
+## 🌐 Route Structure & Architecture
 
-RoofRay maintains a strict architectural boundary: **pure mathematical modules contain zero Three.js or React code**, ensuring 100% deterministic testability in Node.js and complete isolation from WebGL rendering.
+RoofRay operates with a clean single-page application (SPA) routing structure:
 
-```mermaid
-flowchart TD
-    subgraph Geo["1. Astronomical Ephemeris (simulation/sunPosition.ts)"]
-        Loc["Geographic Coordinates\n(Lat, Lon, Tz)"] --> NOAA["NOAA Meeus Algorithm\n(Julian Day, EOT, Declination)"]
-        Time["Local Date & Time\n(Year, Month, Day, Time)"] --> NOAA
-        NOAA --> SunState["SunState Output\n(Azimuth, Elevation, VectorToSun)"]
-    end
+- **`/` (Public Marketing Landing Page):** Premium climate-tech SaaS presentation featuring hero interactive visuals, problem/solution comparisons, feature showcases, four-step workflow, AI technology explainers, national impact highlights, and full English / বাংলা localization.
+- **`/app` (Interactive Solar Studio):** The complete 3D digital twin planning workspace featuring Three.js orbit controls, live diurnal shadow raycasting, 12-month Web Worker analysis, manual layout studio, economics dashboard, AI Advisor panel, and exportable feasibility reports.
 
-    subgraph Scene["2. 3D Scene Coordinate System (three/Scene.tsx)"]
-        SunState --> Vector["Single Source of Truth\nSun Vector: [sin(az)cos(el), sin(el), -cos(az)cos(el)]"]
-        Vector --> Light["Direct DirectionalLight\n& Fitted Shadow Frustum"]
-        Vector --> SunPath["3D SunPath Arcs & Solstices\n(three/SunPath.tsx)"]
-        Vector --> Compass["3D North Compass Rose\n(three/Compass.tsx)"]
-    end
-
-    subgraph Shading["3. Raycasting & Shading Engine (simulation/shadowRaycaster.ts)"]
-        Vector --> LiveRay["Branchless Slab AABB Raycaster\n(0.11 ms/frame)"]
-        Buildings["Fixed Immutable Buildings\n& Rooftop Obstacles"] --> LiveRay
-        LiveRay --> LiveHeatmap["Live Shading Heatmap\n(Green = Lit, Red = Shaded)"]
-    end
-
-    subgraph Annual["4. Annual Clear-Sky Analysis (simulation/analysis.worker.ts)"]
-        Buildings --> Worker["Background Web Worker\n(12 Months x Daylight Samples)"]
-        Loc --> Worker
-        Worker --> Cache["L1 Cache\nKey: (Bldg, Lat, Lon, Tilt, Az, Year)"]
-        Cache --> AnnualHeatmap["Annual Solar Potential\n(kWh/m²/yr & Exposure %)"]
-    end
-
-    subgraph Studio["5. Manual Layout Studio (optimization/manualPlacement.ts)"]
-        AnnualHeatmap --> Ghost["Interactive Ghost Panel\n(0.8m Setback & 0.5m Buffer Checks)"]
-        Ghost --> Panels["Placed Panels\n(Undo/Redo, Rotate, Best Spots)"]
-        Panels --> Yield["Sum of Per-Panel Yields\n(FR-8 Derived System kW & kWh)"]
-    end
-```
+Direct navigation, page refreshes, and deep query parameters (e.g. `/app?city=dhaka&tour=true`) function seamlessly across both routes.
 
 ---
 
-## 📐 Coordinate & Spatial Rules (FR-4.1)
+## 🇧🇩 Bangladesh Localization & BDT Currency
 
-RoofRay adopts standard Three.js right-handed Cartesian coordinates:
-- **North = $-Z$** (0° Azimuth)
-- **East = $+X$** (90° Azimuth)
-- **South = $+Z$** (180° Azimuth)
-- **West = $-X$** (270° Azimuth)
-- **Zenith (Up) = $+Y$** (+90° Elevation)
+Bangladesh is a first-class supported region in RoofRay V3:
+- **Divisional Presets:** Verified geographical coordinates and `Asia/Dhaka` timezone for all 8 administrative divisions: **Dhaka, Chattogram, Sylhet, Rajshahi, Khulna, Barishal, Rangpur, and Mymensingh**.
+- **Currency Engine (BDT / ৳):** Multi-currency support with native Taka formatting (`formatCurrency`) and configurable economics:
+  - Retail Electricity Tariff (BPDB 2024 Gazette residential reference: ৳10.50/kWh; configurable).
+  - Turnkey EPC Installation Cost (SREDA accredited benchmark: ৳85,000/kW; configurable).
+  - Base Permitting & Net-Metering Fee: ৳25,000.
+  - **Missing Input Protection:** Zero or absent tariff inputs explicitly return `paybackYears: null` to avoid deceptive payback projections.
+- **Carbon Accounting:** National grid emission factor of **0.637 kg CO₂/kWh** (Department of Environment / SREDA 2023 National Study) alongside the global IEA baseline (0.420 kg CO₂/kWh).
+- **Bilingual Interface:** Real-time language switch between **English** and **বাংলা** with centralized translation dictionaries.
 
-Solar vector transformation from azimuth ($\alpha$) and elevation ($\theta$):
-$$\mathbf{V}_{\text{sun}} = \begin{pmatrix} \sin\alpha \cos\theta \\ \sin\theta \\ -\cos\alpha \cos\theta \end{pmatrix}$$
-
----
-
-## ☀️ NOAA Astronomical Sun Engine (FR-3)
-
-Located in [`src/simulation/sunPosition.ts`](src/simulation/sunPosition.ts) with timezone utilities in [`src/simulation/timezone.ts`](src/simulation/timezone.ts):
-
-1. **Julian Day & Century**: Converts UTC timestamp into Julian days relative to standard astronomical epoch J2000.0 ($2451545.0$).
-2. **Mean Longitude & Anomaly**: Evaluates geometric mean longitude and Keplerian orbital anomaly of the Earth.
-3. **Equation of Center & Apparent Longitude**: Corrects for orbital eccentricity and lunar perturbation.
-4. **Equation of Time (EOT)**: Calculates true solar time discrepancy against mean solar time in minutes.
-5. **Solar Declination ($\delta$)**: Determines the declination angle of the sun above or below the celestial equator.
-6. **Local Hour Angle ($H$)**: Computes solar angular distance from the local observer's meridian.
-7. **Elevation & Azimuth**:
-   $$\sin(\text{El}) = \sin(\phi)\sin(\delta) + \cos(\phi)\cos(\delta)\cos(H)$$
-   $$\cos(\text{Az}) = \frac{\sin(\delta) - \sin(\phi)\sin(\text{El})}{\cos(\phi)\cos(\text{El})}$$
-8. **Atmospheric Refraction**: Integrates Kasten & Young atmospheric refraction correction for elevation angles near the horizon.
-9. **Day Timeline Events**: Automatically derives Sunrise, Solar Noon, Sunset, and Day Length, with explicit handling for Polar Day (Midnight Sun) and Polar Night.
+> *Engineering Notice: 3D buildings represent simulated archetype geometries for raycasting; selecting a city updates astronomical ephemeris and solar irradiance calculations.*
 
 ---
 
-## ⚡ Annual Solar Analysis & Web Worker Engine (FR-6)
+## 🤖 AI Solar Advisor & Lexical RAG Architecture
 
-Located in [`src/simulation/annualAnalysis.ts`](src/simulation/annualAnalysis.ts) and [`src/simulation/analysis.worker.ts`](src/simulation/analysis.worker.ts):
+Located in `src/server/advisorService.ts`, `src/rag/retrievalEngine.ts`, and `src/components/panels/AiAdvisorPanel.tsx`:
 
-- **Multi-Threaded Execution**: Offloads 100,000+ raycast tests to a dedicated Web Worker, preventing any main-thread UI frame drops.
-- **Sampling Strategy**: Evaluates 12 representative monthly days (the 15th of each month) across daylight hours at 30-minute steps (~220–290 sun positions).
-- **Clear-Sky Irradiance Model**:
-  - Direct Normal Irradiance (DNI) via Meinel model:
-    $$I_{\text{DNI}} = I_0 \cdot 0.7^{\text{AM}^{0.678}}$$
-  - Relative optical air mass via Kasten & Young:
-    $$\text{AM} = \frac{1}{\sin\theta + 0.50572 \cdot (\theta + 6.07995)^{-1.6364}}$$
-  - Plane-of-array beam irradiance:
-    $$I_{\text{beam}} = I_{\text{DNI}} \cdot \max(0, \mathbf{V}_{\text{sun}} \cdot \mathbf{N}_{\text{panel}})$$
-  - Isotropic diffuse irradiance:
-    $$I_{\text{diffuse}} = I_{\text{global, diffuse}} \cdot \frac{1 + \cos(\text{tilt})}{2}$$
-- **Progress Reporting & Cancellation**: Posts progress at 10% steps and supports immediate cooperative cancellation via `AbortController`.
-- **LRU Analysis Cache**: Caches results using a composite key:
-  $$\text{Key} = (\text{buildingId}, \text{lat}, \text{lon}, \text{tilt}, \text{azimuth}, \text{year})$$
-
----
-
-## 📐 Manual Layout Studio & Spatial Validation (FR-7)
-
-Located in [`src/optimization/manualPlacement.ts`](src/optimization/manualPlacement.ts) and [`src/components/panels/ManualLayoutPanel.tsx`](src/components/panels/ManualLayoutPanel.tsx):
-
-- **Interactive Ghost Panel**: Follows cursor across the 3D roof plane, snapped to a 0.5m grid, colored dynamically:
-  - 🟢 **Green ($\ge 80\%$)**: High yield annual exposure
-  - 🟡 **Yellow ($60\% - 80\%$)**: Moderate exposure
-  - 🔴 **Red ($< 60\%$)**: Shaded zone (triggers string mismatch warning)
-- **3D Spatial Validation**:
-  - Rejects placement within the **0.8m perimeter setback** (fire/access code compliance).
-  - Rejects placement within **0.5m of rooftop obstacles** (HVAC chillers, water tanks, elevator penthouses).
-  - Rejects overlapping panels using 2D Separating Axis Theorem (SAT).
-- **Keyboard Shortcuts**:
-  - `Q` / `E`: Rotate panel by $90^\circ$
-  - `T`: Toggle Portrait $\leftrightarrow$ Landscape orientation
-  - `Delete` / `Backspace`: Remove selected panel(s)
-  - `Ctrl+Z` / `Ctrl+Y`: Undo and Redo transactions
-- **Optimization Tools**:
-  - **Show Best Spots**: Evaluates roof cells and ranks the top 10 best free locations with 3D badges `#1..#10`.
-  - **Suggest Next Panel**: Instantly places a module at the #1 ranked position.
-  - **Fill Area Tool**: Bounds a rectangular region and auto-fills valid spots while respecting setback and obstacle clearances.
+- **Grounded AI Pipeline:**
+  ```
+  User Query + Simulation State (kW, kWh, Capex, Shading %)
+            ↓
+  Lexical BM25 Retrieval Engine (SREDA, BPDB, NREL Corpus)
+            ↓
+  Context Injection with Strict "Single Source of Truth" Rules
+            ↓
+  Google Gemini API (JSON Output Mode)
+            ↓
+  Structured Response (Summary, Recommendations, Risks, Citations)
+  ```
+- **Verified Knowledge Corpus:**
+  - *SREDA Net-Metering Guidelines (2018/2021):* 70% sanctioned load cap, 3-phase connection rule, bi-directional meter testing.
+  - *BPDB Retail Tariff Schedule (2024):* LT-A progressive residential slabs and LT-E commercial rates.
+  - *NREL PV Fundamentals:* Optimal fixed tilt (~latitude facing South), bypass diode behavior under partial shading, and thermal derating.
+  - *NASA POWER Database:* South Asian horizontal irradiance benchmarks (4.5 to 5.2 kWh/m²/day) and monsoon cloud cover attenuation.
+  - *DoE Grid Factor:* Bangladesh national grid baseline (0.637 kg CO₂/kWh).
+- **Honest Unconfigured State:** If `GEMINI_API_KEY` is not configured on the server, the UI displays clear setup instructions rather than a deceptive mock response.
 
 ---
 
-## 💰 Per-Panel Yield & Financial Derivation (FR-8)
+## 🛰️ Real-World Solar Data (NASA POWER)
 
-All downstream financial and environmental figures derive **strictly from the sum of per-panel annual yields**:
-$$\text{Total kWh}_{\text{annual}} = \sum_{p=1}^{N} \text{AnnualKWh}_p$$
-$$\text{System kW} = N \times \text{PanelRating}_{\text{kW}}$$
-$$\text{Annual Savings} = \text{Total kWh}_{\text{annual}} \times \text{UtilityTariff}$$
-$$\text{Payback Period} = \frac{\text{Net System Cost}}{\text{Annual Savings}}$$
-$$\text{Emissions Avoided} = \text{Total kWh}_{\text{annual}} \times 0.420 \text{ kg } \text{CO}_2/\text{kWh}$$
-
-Natural language rationales ("Why This Plan") explain exact string mismatch risks when low-exposure panels are detected, detailing the exact kWh loss.
+Located in `src/services/solarResourceService.ts`:
+- Automated integration with the **NASA Langley Research Center POWER Climatology API v2.0**.
+- Fetches satellite-derived multi-year monthly insolation (GHI) and historical cloudiness attenuation index.
+- 7-day client-side caching in `localStorage`.
+- Explicit UI labels distinguishing **Clear-Sky Simulation** (geometric raycasting), **Weather-Informed Climatology** (satellite historical cloudiness), and **Metered Production** (requires physical sensors).
 
 ---
 
-## ⚡ Performance Pass Against PRD Budget (§5.3 & §6)
+## 📊 Feasibility Report Generator
 
-| Metric | PRD Budget | RoofRay v2 Measured | Status |
-|:---|:---:|:---:|:---:|
-| **Annual Analysis Execution** | $< 3.0\text{ seconds}$ | **~100 – 125 ms** | ✅ **25x faster than budget** |
-| **Live Shading Raycast** | $< 8.0\text{ ms / frame}$ | **0.11 – 0.12 ms** | ✅ **66x faster than budget** |
-| **Main Thread Block Time** | $< 50\text{ ms}$ | **$< 3\text{ ms}$ (Worker)** | ✅ **Zero frame freezing** |
-| **Viewport Framerate** | $60\text{ FPS}$ | **60 FPS locked** | ✅ **Smooth 3D interaction** |
-| **Automated Unit Tests** | All PRD acceptance tests | **129 / 129 Passing** | ✅ **0 failures** |
-| **Network Requests** | Offline after load | **0 external APIs** | ✅ **100% Client-Side** |
+Located in `src/components/ui/SolarReportModal.tsx`:
+- Exportable formal solar feasibility assessment report.
+- Summarizes building dimensions, 3D raycast metrics, system capacity, annual kWh generation, BDT/USD cash-flow, payback timeline, and CO₂ offset.
+- One-click **Print / Save to PDF** and **Copy Structured JSON** for commercial solar proposals.
 
 ---
 
-## 🧪 Automated Unit Test Suite
+## 🧪 Comprehensive Test Suite (222 Passing Assertions)
 
-Run the full deterministic unit test suite:
+RoofRay maintains an extensive automated test suite executed with TypeScript:
 
 ```bash
 npm run test:calc
 ```
 
-The test runner executes 129 assertions covering:
-1. **NOAA Sun Engine (30 tests)**: Reference checks for Equator, Tropic of Cancer, San Francisco, Sydney, Tromsø Polar Day/Night, and DST transitions within $\pm 0.1^\circ$.
-2. **Fixed Buildings (14 tests)**: Deep-freezing immutability assertions and live shadow lit-ratio verification.
-3. **Annual Solar Analysis (12 tests)**: Clear-sky irradiance, unshaded vs shaded contrast, worker cancellation, and cache hit verification.
-4. **Manual Placement (32 tests)**: Setbacks (0.8m), obstacle buffers (0.5m), panel overlaps, undo/redo stack, and best-spot ranking.
-5. **M6 & Performance (13 tests)**: Solstice arc elevations, compass coordinates ($N=-Z, E=+X, S=+Z, W=-X$), 24h & 365-day ticker arithmetic, and PRD performance benchmarks.
-6. **Core Calculations (28 tests)**: Energy profile summation, financial payback, emissions, and recommendation narrative assertions.
+### Verified Test Suites:
+1. **NOAA Astronomical Sun Engine (30 tests):** Solar noon, solstices, equinoxes, Sydney southern azimuth, Tromsø polar day/night within $\pm 0.1^\circ$.
+2. **Fixed Buildings & Live Shading (14 tests):** Immutability, ray-box intersection, diurnal shadow lit-ratios.
+3. **Annual Solar Analysis (12 tests):** 12-month integration, Web Worker cancellation, and cache hit latency.
+4. **Manual Placement & Setbacks (32 tests):** 0.8m perimeter setback, 0.5m obstacle buffer, SAT collision checks, undo/redo stack.
+5. **Milestone M6 & Performance (13 tests):** Solstice arc geometry, compass vectors ($N=-Z, E=+X, S=+Z, W=-X$), and frame budgets.
+6. **Bangladesh Localization (50 tests):** Verified coordinates for all 8 divisions, Dhaka equinox/solstice ephemeris, BDT formatting.
+7. **Financial Configuration (17 tests):** BDT/USD capex, slab savings, missing-tariff guard (`paybackYears: null`), DoE grid emission factor.
+8. **Lexical RAG Retrieval (13 tests):** BM25 term weighting, SREDA/BPDB/NREL chunk retrieval, metadata attribution.
+9. **AI Advisor Schema & Safety (13 tests):** Payload validator, 30 req/min rate limiter, unconfigured key handling.
+10. **Deterministic Calculations (28 tests):** Yield sum invariant, optimization modes, recommendation narrative.
+
+**Result: 222 Passed, 0 Failed, 0 Regressions.**
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Getting Started & Local Development
 
-### Prerequisites
-- Node.js 18+ (tested on Node.js 20 & 24)
-- npm 9+
+### 1. Prerequisites
+- **Node.js:** v18.0.0 or later (v20+ recommended)
+- **Package Manager:** npm or pnpm
 
-### Installation & Development
-
+### 2. Installation
 ```bash
-# Clone the repository
 git clone https://github.com/jawaid687/RoofRay.git
 cd RoofRay
-
-# Install dependencies
 npm install
+```
 
-# Start development server
+### 3. Environment Configuration
+Copy the environment template:
+```bash
+cp .env.example .env
+```
+Edit `.env` to configure your Gemini API key (optional for local physical simulation; required for live AI recommendations):
+```env
+GEMINI_API_KEY=your_actual_gemini_api_key_here
+GEMINI_MODEL=gemini-2.5-flash
+PORT=3001
+```
+
+### 4. Running the Development Server
+```bash
 npm run dev
 ```
+Open [http://localhost:3000](http://localhost:3000) in your browser:
+- Marketing Landing Page: [http://localhost:3000/](http://localhost:3000/)
+- Interactive Solar Studio: [http://localhost:3000/app](http://localhost:3000/app)
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+*In development mode, Vite middleware automatically handles `/api/ai/*` requests without needing a separate server process.*
 
-### Production Build
-
+### 5. Running Standalone Production Server
 ```bash
 npm run build
+npm run server
 ```
-
-The production bundle compiles cleanly with `tsc && vite build` in ~5 seconds with zero TypeScript warnings or errors.
-
----
-
-## 🎯 1-Click Guided Demo Tour
-
-For reviewers and judges seeking a quick walkthrough:
-1. Click the **"Start Demo Tour"** button in the header.
-2. Watch RoofRay automatically:
-   - Navigate the 3D neighborhood camera to Apex Lofts.
-   - Run the high-speed annual solar analysis worker.
-   - Demonstrate live shading diurnal shadows.
-   - Place optimal panels in high-exposure roof zones.
-   - Summarize the derived economic payback and $CO_2$ offsets.
+The server will start on port `3001` serving both the static production build and the live `/api/ai/*` endpoints.
 
 ---
 
-## 📄 License
+## 📚 Competition Documentation (`docs/`)
+
+Comprehensive competition documentation authored for the **Idea to Unicorn** track:
+
+- [`docs/problem-definition.md`](docs/problem-definition.md) — Problem statement, target personas & value proposition.
+- [`docs/product-overview.md`](docs/product-overview.md) — Complete product feature matrix.
+- [`docs/system-architecture.md`](docs/system-architecture.md) — High-level architecture, subsystems & WebGL engine.
+- [`docs/ai-architecture.md`](docs/ai-architecture.md) — Physics grounding, BM25 RAG engine & prompt engineering.
+- [`docs/data-flow.md`](docs/data-flow.md) — End-to-end data pipeline, transformations & state lifecycles.
+- [`docs/data-sources.md`](docs/data-sources.md) — Source registry (NOAA, SREDA, BPDB, NASA POWER, DoE).
+- [`docs/responsible-ai.md`](docs/responsible-ai.md) — Ethical AI principles, explainability & guardrails.
+- [`docs/privacy-and-security.md`](docs/privacy-and-security.md) — Server secret isolation & threat modeling.
+- [`docs/business-model.md`](docs/business-model.md) — SaaS monetization streams, unit economics & GTM.
+- [`docs/scalability-roadmap.md`](docs/scalability-roadmap.md) — Real-world GIS, LiDAR & Wasm scaling horizons.
+- [`docs/kpi-and-validation.md`](docs/kpi-and-validation.md) — Quality assurance metrics & test coverage report.
+- [`docs/team-roles.md`](docs/team-roles.md) — Team role assignment matrix.
+- [`docs/three-minute-pitch.md`](docs/three-minute-pitch.md) — Exact 3:00 minute competition pitch script.
+- [`docs/submission-checklist.md`](docs/submission-checklist.md) — Official competition readiness verification.
+
+---
+
+## ⚖️ Legal & Engineering Disclaimer
+
+RoofRay provides preliminary engineering feasibility estimates based on 3D geometric raycasting and astronomical ephemeris. Official rooftop structural audits, electrical distribution inspections, and utility net-metering interconnection applications must be conducted by licensed professionals prior to equipment procurement.
 
 RoofRay is open-source software licensed under the [MIT License](LICENSE).

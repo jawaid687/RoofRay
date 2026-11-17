@@ -148,15 +148,32 @@ export function LocationTimeCard() {
           }}
           className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 font-medium focus:outline-none focus:border-sky-500 cursor-pointer"
         >
-          {CITY_PRESETS.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name} ({c.latitude > 0 ? `+${c.latitude}°N` : `${c.latitude}°S`}, {c.longitude > 0 ? `+${c.longitude}°E` : `${c.longitude}°W`})
-            </option>
-          ))}
+          <optgroup label="🇧🇩 Bangladesh Divisions (Verified Coordinates)">
+            {CITY_PRESETS.filter((c) => c.country === 'Bangladesh').map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name} ({c.latitude > 0 ? `+${c.latitude}°N` : `${c.latitude}°S`}, {c.longitude > 0 ? `+${c.longitude}°E` : `${c.longitude}°W`})
+              </option>
+            ))}
+          </optgroup>
+          <optgroup label="🌐 Global & Reference Sites">
+            {CITY_PRESETS.filter((c) => c.country !== 'Bangladesh').map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name} ({c.latitude > 0 ? `+${c.latitude}°N` : `${c.latitude}°S`}, {c.longitude > 0 ? `+${c.longitude}°E` : `${c.longitude}°W`})
+              </option>
+            ))}
+          </optgroup>
           {!CITY_PRESETS.some((c) => c.name === location.city) && (
             <option value="">{location.city} (Custom Location)</option>
           )}
         </select>
+
+        {/* Illustrative Geometry Disclaimer (PRD & Rules 4.A, 10) */}
+        <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[10px] text-amber-300/90 leading-relaxed flex items-start gap-2">
+          <span className="shrink-0 text-xs">ℹ️</span>
+          <span>
+            <strong>Simulated Archetype:</strong> Current 3D buildings represent illustrative geometries for raycast shading analysis. City selection updates astronomical sun coordinates and irradiance ephemeris.
+          </span>
+        </div>
 
         {/* Advanced Coordinates Form */}
         {showAdvancedCoords && (

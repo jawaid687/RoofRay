@@ -8,6 +8,8 @@ import { OptimizationCard } from './OptimizationCard';
 import { FinancialSummary } from './FinancialSummary';
 import { RecommendationCard } from './RecommendationCard';
 import { ManualLayoutPanel } from './ManualLayoutPanel';
+import { AiAdvisorPanel } from './AiAdvisorPanel';
+import { SolarReportModal } from '../ui/SolarReportModal';
 import {
   Globe,
   Building2,
@@ -25,7 +27,8 @@ import {
 type SectionKey = 'location' | 'building' | 'analysis' | 'panels' | 'demand' | 'optimization' | 'financials' | 'recommendation';
 
 export function ControlPanel() {
-  const [activeTab, setActiveTab] = useState<'planner' | 'manual' | 'analytics' | 'rationale'>('planner');
+  const [activeTab, setActiveTab] = useState<'planner' | 'manual' | 'analytics' | 'advisor' | 'rationale'>('planner');
+  const [isReportOpen, setIsReportOpen] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const [openSections, setOpenSections] = useState<Record<SectionKey, boolean>>({
@@ -50,7 +53,7 @@ export function ControlPanel() {
     }
   }, [activeTab]);
 
-  const handleTabChange = (tab: 'planner' | 'manual' | 'analytics' | 'rationale') => {
+  const handleTabChange = (tab: 'planner' | 'manual' | 'analytics' | 'advisor' | 'rationale') => {
     setActiveTab(tab);
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTop = 0;
@@ -87,7 +90,7 @@ export function ControlPanel() {
 
         <button
           onClick={() => handleTabChange('analytics')}
-          className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
+          className={`flex-1 py-2 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
             activeTab === 'analytics'
               ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 shadow-sm shadow-sky-500/10'
               : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 border border-transparent'
@@ -98,8 +101,20 @@ export function ControlPanel() {
         </button>
 
         <button
+          onClick={() => handleTabChange('advisor')}
+          className={`flex-1 py-2 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
+            activeTab === 'advisor'
+              ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 shadow-sm shadow-indigo-500/10'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 border border-transparent'
+          }`}
+        >
+          <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+          <span>AI Advisor</span>
+        </button>
+
+        <button
           onClick={() => handleTabChange('rationale')}
-          className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
+          className={`flex-1 py-2 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
             activeTab === 'rationale'
               ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm shadow-emerald-500/10'
               : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 border border-transparent'
@@ -275,12 +290,24 @@ export function ControlPanel() {
           </div>
         )}
 
+        {activeTab === 'advisor' && (
+          <div className="space-y-4">
+            <AiAdvisorPanel onOpenReportModal={() => setIsReportOpen(true)} />
+          </div>
+        )}
+
         {activeTab === 'rationale' && (
           <div className="space-y-4">
             <RecommendationCard onNavigateToPlanner={() => handleTabChange('planner')} />
           </div>
         )}
       </div>
+
+      {/* Exportable Solar Recommendation Report Modal */}
+      <SolarReportModal
+        isOpen={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
+      />
     </aside>
   );
 }
