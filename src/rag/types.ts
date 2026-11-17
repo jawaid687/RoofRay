@@ -4,6 +4,7 @@ export interface KnowledgeChunk {
   authorOrg: string;
   officialUrl?: string;
   publicationYear: number;
+  section?: string;
   category: 'policy_bangladesh' | 'tariff_bangladesh' | 'pv_engineering' | 'climatology' | 'carbon_accounting';
   title: string;
   content: string;

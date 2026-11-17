@@ -157,7 +157,7 @@ export async function handleSolarAdvisorRequest(
         title: r.chunk.title,
         authorOrg: r.chunk.authorOrg,
         url: r.chunk.officialUrl,
-        relevance: `Grounding citation: ${r.chunk.sourceTitle} (${r.chunk.publicationYear})`,
+        relevance: `Lexical RAG Grounding: ${r.chunk.sourceTitle} (${r.chunk.publicationYear})${r.chunk.section ? ` [${r.chunk.section}]` : ''}`,
       })),
       timestamp: new Date().toISOString(),
       error: 'MISSING_API_KEY',
@@ -260,16 +260,13 @@ Provide a comprehensive, professional assessment formatted as valid JSON adherin
 
     const parsed = JSON.parse(candidateText);
 
-    // Merge retrieved knowledge sources into the response sources list
-    const combinedSources = [
-      ...retrievedSources.map((r) => ({
-        title: r.chunk.title,
-        authorOrg: r.chunk.authorOrg,
-        url: r.chunk.officialUrl,
-        relevance: `Knowledge Retrieval Grounding: ${r.chunk.sourceTitle} (${r.chunk.publicationYear})`,
-      })),
-      ...(parsed.sources || []),
-    ];
+    // Priority 4.4: Exclusively use verified retrieved knowledge sources — never display unverified LLM-generated sources
+    const verifiedSources = retrievedSources.map((r) => ({
+      title: r.chunk.title,
+      authorOrg: r.chunk.authorOrg,
+      url: r.chunk.officialUrl,
+      relevance: `Lexical RAG Grounding: ${r.chunk.sourceTitle} (${r.chunk.publicationYear})${r.chunk.section ? ` [${r.chunk.section}]` : ''}`,
+    }));
 
     return {
       configured: true,
@@ -279,7 +276,7 @@ Provide a comprehensive, professional assessment formatted as valid JSON adherin
       risks: Array.isArray(parsed.risks) ? parsed.risks : [],
       assumptions: Array.isArray(parsed.assumptions) ? parsed.assumptions : [],
       next_steps: Array.isArray(parsed.next_steps) ? parsed.next_steps : [],
-      sources: combinedSources.slice(0, 5),
+      sources: verifiedSources,
       timestamp: new Date().toISOString(),
       modelUsed: effectiveModel,
     };

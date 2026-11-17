@@ -150,18 +150,20 @@ export interface SolarStoreState {
   demoStep: number;
   demoStatusText: string;
 
-  // Financial & Currency Configuration (Phase 2)
+  // Financial & Currency Configuration (Phase 2 & Priority 2)
   currency: CurrencyCode;
   customElectricityTariff: number | null;
   customCostPerKW: number | null;
   customBaseCost: number | null;
   customGridEmissionFactor: number | null;
+  customExportCreditRatio: number | null;
   setCurrency: (c: CurrencyCode) => void;
   setCustomFinancials: (inputs: {
     tariff?: number | null;
     costPerKW?: number | null;
     baseCost?: number | null;
     emissionFactor?: number | null;
+    exportCreditRatio?: number | null;
   }) => void;
   resetFinancialDefaults: () => void;
 
@@ -239,12 +241,20 @@ let globalFinancialConfig: {
   customCostPerKW: number | null;
   customBaseCost: number | null;
   customEmissionFactor: number | null;
+  customExportCreditRatio: number | null;
+  location: { latitude: number; longitude: number; timezone: string };
 } = {
   currency: 'USD',
   customTariff: null,
   customCostPerKW: null,
   customBaseCost: null,
   customEmissionFactor: null,
+  customExportCreditRatio: null,
+  location: {
+    latitude: 37.7749,
+    longitude: -122.4194,
+    timezone: 'America/Los_Angeles',
+  },
 };
 
 function computeDerivedSnapshots(
@@ -260,13 +270,17 @@ function computeDerivedSnapshots(
   overrideTariff?: number | null,
   overrideCostPerKW?: number | null,
   overrideBaseCost?: number | null,
-  overrideEmissionFactor?: number | null
+  overrideEmissionFactor?: number | null,
+  overrideExportCreditRatio?: number | null,
+  overrideLocation?: { latitude: number; longitude: number; timezone: string }
 ) {
   const currency = overrideCurrency ?? globalFinancialConfig.currency;
   const customTariff = overrideTariff !== undefined ? overrideTariff : globalFinancialConfig.customTariff;
   const customCostPerKW = overrideCostPerKW !== undefined ? overrideCostPerKW : globalFinancialConfig.customCostPerKW;
   const customBaseCost = overrideBaseCost !== undefined ? overrideBaseCost : globalFinancialConfig.customBaseCost;
   const customEmissionFactor = overrideEmissionFactor !== undefined ? overrideEmissionFactor : globalFinancialConfig.customEmissionFactor;
+  const customExportCreditRatio = overrideExportCreditRatio !== undefined ? overrideExportCreditRatio : globalFinancialConfig.customExportCreditRatio;
+  const location = overrideLocation ?? globalFinancialConfig.location;
 
   const panelType = PANEL_TYPES.find((p) => p.id === selectedPanelTypeId) || PANEL_TYPES[0];
   const bldg = buildings.find((b) => b.id === selectedBuildingId);
@@ -284,14 +298,19 @@ function computeDerivedSnapshots(
       customElectricityTariff: customTariff ?? undefined,
       customCostPerKW: customCostPerKW ?? undefined,
       customBaseCost: customBaseCost ?? undefined,
+      customExportCreditRatio: customExportCreditRatio ?? undefined,
     }
   );
 
-  const defaultEmissionFactor = currency === 'BDT'
+  // Emission factor selection is dependent on GRID LOCATION, not display currency (Rule Priority 2.5)
+  const isBangladeshGrid = location.timezone === 'Asia/Dhaka' ||
+    (location.latitude >= 20.5 && location.latitude <= 26.7 && location.longitude >= 88.0 && location.longitude <= 92.7);
+
+  const defaultEmissionFactor = isBangladeshGrid
     ? SIMULATION_ASSUMPTIONS.bangladeshGridEmissionFactorKgPerKWh
     : SIMULATION_ASSUMPTIONS.gridEmissionFactorKgPerKWh;
   const activeEmissionFactor = customEmissionFactor ?? defaultEmissionFactor;
-  const emissionSource = currency === 'BDT'
+  const emissionSource = isBangladeshGrid
     ? 'DoE & SREDA Bangladesh National Grid Factor (2023): 0.637 kg CO2/kWh'
     : 'IEA Global Grid Average (2022): 0.420 kg CO2/kWh';
 
@@ -462,6 +481,7 @@ export const useSolarStore = create<SolarStoreState>((set, get) => {
     customCostPerKW: null,
     customBaseCost: null,
     customGridEmissionFactor: null,
+    customExportCreditRatio: null,
 
     // Cached snapshots for React
     ...initialDerived,
@@ -584,11 +604,37 @@ export const useSolarStore = create<SolarStoreState>((set, get) => {
         activeAnnual = state.annualAnalysisOutputs[cacheKey] || null;
       }
 
+      // Update global location for location-dependent grid emission calculations
+      globalFinancialConfig.location = {
+        latitude: updatedLocation.latitude,
+        longitude: updatedLocation.longitude,
+        timezone: updatedLocation.timezone,
+      };
+
+      const derived = computeDerivedSnapshots(
+        state.buildings,
+        state.selectedBuildingId,
+        state.analysisResults,
+        state.placedPanels,
+        state.selectedPanelTypeId,
+        state.monthlyConsumptionKWh,
+        state.optimizationMode,
+        state.maxPossiblePanels,
+        state.currency,
+        state.customElectricityTariff,
+        state.customCostPerKW,
+        state.customBaseCost,
+        state.customGridEmissionFactor,
+        state.customExportCreditRatio,
+        globalFinancialConfig.location
+      );
+
       set({
         location: updatedLocation,
         sunState: updatedSunState,
         liveShading: updatedLiveShading,
         annualAnalysisResult: activeAnnual,
+        ...derived,
       });
     },
 
@@ -639,11 +685,13 @@ export const useSolarStore = create<SolarStoreState>((set, get) => {
       const updatedCostPerKW = inputs.costPerKW !== undefined ? inputs.costPerKW : state.customCostPerKW;
       const updatedBaseCost = inputs.baseCost !== undefined ? inputs.baseCost : state.customBaseCost;
       const updatedEmissionFactor = inputs.emissionFactor !== undefined ? inputs.emissionFactor : state.customGridEmissionFactor;
+      const updatedExportCreditRatio = inputs.exportCreditRatio !== undefined ? inputs.exportCreditRatio : state.customExportCreditRatio;
 
       globalFinancialConfig.customTariff = updatedTariff;
       globalFinancialConfig.customCostPerKW = updatedCostPerKW;
       globalFinancialConfig.customBaseCost = updatedBaseCost;
       globalFinancialConfig.customEmissionFactor = updatedEmissionFactor;
+      globalFinancialConfig.customExportCreditRatio = updatedExportCreditRatio;
 
       const derived = computeDerivedSnapshots(
         state.buildings,
@@ -658,13 +706,15 @@ export const useSolarStore = create<SolarStoreState>((set, get) => {
         updatedTariff,
         updatedCostPerKW,
         updatedBaseCost,
-        updatedEmissionFactor
+        updatedEmissionFactor,
+        updatedExportCreditRatio
       );
       set({
         customElectricityTariff: updatedTariff,
         customCostPerKW: updatedCostPerKW,
         customBaseCost: updatedBaseCost,
         customGridEmissionFactor: updatedEmissionFactor,
+        customExportCreditRatio: updatedExportCreditRatio,
         ...derived,
       });
     },
@@ -674,6 +724,7 @@ export const useSolarStore = create<SolarStoreState>((set, get) => {
       globalFinancialConfig.customCostPerKW = null;
       globalFinancialConfig.customBaseCost = null;
       globalFinancialConfig.customEmissionFactor = null;
+      globalFinancialConfig.customExportCreditRatio = null;
 
       const state = get();
       const derived = computeDerivedSnapshots(
@@ -689,6 +740,7 @@ export const useSolarStore = create<SolarStoreState>((set, get) => {
         null,
         null,
         null,
+        null,
         null
       );
       set({
@@ -696,6 +748,7 @@ export const useSolarStore = create<SolarStoreState>((set, get) => {
         customCostPerKW: null,
         customBaseCost: null,
         customGridEmissionFactor: null,
+        customExportCreditRatio: null,
         ...derived,
       });
     },

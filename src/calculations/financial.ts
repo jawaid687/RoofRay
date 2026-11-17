@@ -31,6 +31,7 @@ export function calculateFinancials(
   const tariff = customInputs?.customElectricityTariff ?? defaultTariff;
   const costPerKW = customInputs?.customCostPerKW ?? defaultCostPerKW;
   const baseInstallationCost = customInputs?.customBaseCost ?? defaultBaseCost;
+  const exportCreditRatio = customInputs?.customExportCreditRatio ?? 0.5;
 
   if (panelCount === 0 || installedCapacityKW <= 0) {
     return {
@@ -45,6 +46,7 @@ export function calculateFinancials(
       annualSavingsFormatted: formatCurrency(0, currency),
       totalSystemCostFormatted: formatCurrency(0, currency),
       tariffPerKWh: tariff,
+      exportCreditRatio,
     };
   }
   
@@ -81,9 +83,9 @@ export function calculateFinancials(
   const selfConsumedKWh = Math.min(annualGenerationKWh, annualConsumptionKWh);
   const selfConsumedSavings = selfConsumedKWh * tariff;
 
-  // Surplus exported generation credits at wholesale/net-metering credit factor (~50%)
+  // Surplus exported generation credits at wholesale/net-metering credit factor (default 50%, configurable)
   const surplusKWh = Math.max(0, annualGenerationKWh - annualConsumptionKWh);
-  const exportCredit = surplusKWh * (tariff * 0.5);
+  const exportCredit = surplusKWh * (tariff * exportCreditRatio);
 
   const annualSavings = Math.round(selfConsumedSavings + exportCredit);
 
@@ -114,5 +116,6 @@ export function calculateFinancials(
     annualSavingsFormatted: formatCurrency(annualSavings, currency),
     totalSystemCostFormatted: formatCurrency(totalSystemCost, currency),
     tariffPerKWh: tariff,
+    exportCreditRatio,
   };
 }

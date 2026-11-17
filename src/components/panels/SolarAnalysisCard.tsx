@@ -322,7 +322,7 @@ export function SolarAnalysisCard() {
             </div>
           )}
 
-          {/* NASA POWER Real-World Climatology Comparison (Phase 5) */}
+          {/* NASA POWER Real-World Climatology Comparison (Phase 5 & Priority 3) */}
           <div className="rounded-xl border border-slate-800/80 bg-slate-950/40 overflow-hidden">
             <button
               onClick={() => setShowNasaCard(!showNasaCard)}
@@ -330,7 +330,7 @@ export function SolarAnalysisCard() {
             >
               <div className="flex items-center gap-1.5 text-sky-400">
                 <CloudSun className="w-3.5 h-3.5 text-sky-400" />
-                <span>Weather-Informed Resource (NASA POWER)</span>
+                <span>Satellite Climatology Resource (NASA POWER)</span>
               </div>
               <div className="flex items-center gap-1 text-[10px] text-slate-500">
                 <span>{showNasaCard ? 'Hide' : 'Inspect'}</span>
@@ -353,7 +353,7 @@ export function SolarAnalysisCard() {
                         <div className="text-sm font-bold text-amber-300 mt-0.5">
                           {nasaData.annualAverageAllSkyKWhM2Day} <span className="text-[10px] text-slate-400 font-normal">kWh/m²/day</span>
                         </div>
-                        <span className="text-[9px] text-slate-500">Weather-adjusted (clouds included)</span>
+                        <span className="text-[9px] text-slate-500">Multi-year satellite observation</span>
                       </div>
 
                       <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800">
@@ -361,9 +361,23 @@ export function SolarAnalysisCard() {
                         <div className="text-sm font-bold text-sky-300 mt-0.5">
                           -{nasaData.averageCloudPenaltyPercent}% <span className="text-[10px] text-slate-400 font-normal">vs clear-sky</span>
                         </div>
-                        <span className="text-[9px] text-slate-500">Historical cloud factor</span>
+                        <span className="text-[9px] text-slate-500">Historical cloud derating factor</span>
                       </div>
                     </div>
+
+                    {annualAnalysisResult && (
+                      <div className="p-2.5 rounded-lg bg-sky-950/30 border border-sky-800/50 space-y-1 text-xs">
+                        <div className="flex justify-between items-center text-slate-200">
+                          <span className="font-semibold text-sky-300">Weather-Informed Yield Estimate:</span>
+                          <span className="font-mono font-bold text-amber-300">
+                            {Math.round(annualAnalysisResult.averageAnnualKWhPerM2 * (1 - nasaData.averageCloudPenaltyPercent / 100))} kWh/m²/yr
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-slate-400">
+                          Derates clear-sky potential ({annualAnalysisResult.averageAnnualKWhPerM2} kWh/m²/yr) by NASA historical cloud factor (-{nasaData.averageCloudPenaltyPercent}%).
+                        </p>
+                      </div>
+                    )}
 
                     <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800/80 space-y-1 text-[10px] text-slate-400 leading-relaxed font-sans">
                       <div className="flex items-center gap-1 font-semibold text-slate-300">
@@ -371,20 +385,25 @@ export function SolarAnalysisCard() {
                         <span>Source & Distinction Notice:</span>
                       </div>
                       <p>
-                        • <strong>Clear-Sky Raycasting:</strong> Pure geometric simulation of rooftop obstacles and surrounding towers.
+                        • <strong>Clear-Sky Simulation:</strong> Pure geometric raycasting of rooftop obstacles and surrounding towers (NOAA ephemeris).
                       </p>
                       <p>
-                        • <strong>Weather-Informed Estimate:</strong> Satellite multi-year observation from {nasaData.source} ({nasaData.retrievalDate}).
+                        • <strong>Weather-Informed Climatology:</strong> 30-year satellite observations from {nasaData.source} (Retrieved: {nasaData.retrievalDate}, Lat: {nasaData.latitude}°, Lon: {nasaData.longitude}°).
                       </p>
                       <p className="text-amber-400/90 font-medium">
-                        ⚠️ Simulated and climatological projections are non-metered engineering estimates.
+                        ⚠️ Both clear-sky simulation and satellite climatology are engineering estimates, not metered production.
                       </p>
                     </div>
                   </>
                 ) : (
-                  <div className="p-2 rounded-lg bg-slate-900/40 text-[11px] text-slate-400 flex items-center justify-between">
-                    <span>NASA POWER offline / cached fallback active.</span>
-                    <span className="text-[10px] text-slate-500">Deterministic Raycasting Active</span>
+                  <div className="p-3 rounded-lg bg-slate-900/40 border border-slate-800 text-[11px] text-slate-400 space-y-1">
+                    <div className="text-amber-300 font-semibold flex items-center gap-1.5">
+                      <Database className="w-3.5 h-3.5" />
+                      <span>NASA POWER Service Offline / Unavailable</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 leading-relaxed">
+                      External satellite climatology could not be retrieved. The application continues running pure astronomical clear-sky raycasting simulation with zero interruption.
+                    </p>
                   </div>
                 )}
               </div>

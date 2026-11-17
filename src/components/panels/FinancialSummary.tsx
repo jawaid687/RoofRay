@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useSolarStore } from '../../store/useSolarStore';
 import { MetricCard } from '../ui/MetricCard';
 import { Zap, BarChart3, Building2, AlertTriangle, Settings2, RotateCcw, ChevronDown, ChevronUp, Info } from 'lucide-react';
-import { formatCurrency, getDefaultFinancialParams } from '../../utils/currency';
+import { formatCurrency, getDefaultFinancialParams, getCurrencySymbol } from '../../utils/currency';
 import { CurrencyCode } from '../../types';
 
 interface FinancialSummaryProps {
@@ -13,6 +13,7 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
   const energy = useSolarStore((s) => s.energyProfile);
   const financial = useSolarStore((s) => s.financialResult);
   const environmental = useSolarStore((s) => s.environmentalResult);
+  const location = useSolarStore((s) => s.location);
   const selectedBuildingId = useSolarStore((s) => s.selectedBuildingId);
   const analysisResults = useSolarStore((s) => s.analysisResults);
   const placedPanels = useSolarStore((s) => s.placedPanels);
@@ -25,6 +26,7 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
   const customCostPerKW = useSolarStore((s) => s.customCostPerKW);
   const customBaseCost = useSolarStore((s) => s.customBaseCost);
   const customGridEmissionFactor = useSolarStore((s) => s.customGridEmissionFactor);
+  const customExportCreditRatio = useSolarStore((s) => s.customExportCreditRatio);
   const setCustomFinancials = useSolarStore((s) => s.setCustomFinancials);
   const resetFinancialDefaults = useSolarStore((s) => s.resetFinancialDefaults);
 
@@ -35,7 +37,12 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
   const activeCostPerKW = customCostPerKW ?? defaults.costPerKW;
   const activeBaseCost = customBaseCost ?? defaults.baseInstallationCost;
   const activeEmissionFactor = customGridEmissionFactor ?? defaults.gridEmissionFactor;
+  const activeExportCreditRatio = customExportCreditRatio ?? 0.5;
 
+  const isBangladeshGrid = location.timezone === 'Asia/Dhaka' ||
+    (location.latitude >= 20.5 && location.latitude <= 26.7 && location.longitude >= 88.0 && location.longitude <= 92.7);
+
+  const currencySymbol = getCurrencySymbol(currency);
   const analysis = selectedBuildingId ? analysisResults[selectedBuildingId] : undefined;
   const hasPanels = placedPanels.length > 0 && !!analysis && analysisStatus === 'analyzed';
   const isOutdated = layoutStatus === 'outdated';
@@ -144,7 +151,7 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
           label="Annual Bill Savings"
           value={formatCurrency(financial.annualSavingsUSD, currency)}
           unit="/yr"
-          subtext={`At ${currency === 'BDT' ? `৳${activeTariff}` : `$${activeTariff}`}/kWh`}
+          subtext={`At ${currencySymbol}${activeTariff}/kWh`}
           variant="success"
         />
         <MetricCard
@@ -184,7 +191,9 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
         {energy.surplusKWh > 0 && (
           <div className="text-[11px] text-sky-400 font-mono pt-1 border-t border-slate-800 flex justify-between items-center">
             <span>+ {energy.surplusKWh.toLocaleString()} kWh/yr grid export</span>
-            <span className="text-[10px] text-slate-500">Net Metering Credit (50% wholesale)</span>
+            <span className="text-[10px] text-slate-500">
+              Net Metering Credit ({Math.round(activeExportCreditRatio * 100)}% wholesale rate)
+            </span>
           </div>
         )}
       </div>
@@ -258,6 +267,24 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
 
               <div>
                 <label className="text-[10px] text-slate-400 font-mono block mb-1">
+                  Export Credit Rate (% of tariff)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="5"
+                  value={Math.round(activeExportCreditRatio * 100)}
+                  onChange={(e) => setCustomFinancials({ exportCreditRatio: Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)) / 100 })}
+                  className="w-full px-2 py-1 bg-slate-900 border border-slate-700 rounded-lg text-slate-200 font-mono text-xs focus:outline-none focus:border-amber-400"
+                />
+                <span className="text-[9px] text-slate-500 block mt-0.5">
+                  {isBangladeshGrid ? 'SREDA Net Metering Rollover Policy' : 'Utility Wholesale Buyback Rate'}
+                </span>
+              </div>
+
+              <div className="col-span-2 sm:col-span-1">
+                <label className="text-[10px] text-slate-400 font-mono block mb-1">
                   Grid Emission Factor (kg CO₂/kWh)
                 </label>
                 <input
@@ -268,9 +295,16 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
                   className="w-full px-2 py-1 bg-slate-900 border border-slate-700 rounded-lg text-slate-200 font-mono text-xs focus:outline-none focus:border-emerald-400"
                 />
                 <span className="text-[9px] text-slate-500 block mt-0.5">
-                  {currency === 'BDT' ? 'DoE / SREDA 2023 Grid Factor' : 'IEA Global Baseline 2022'}
+                  {isBangladeshGrid ? 'DoE / SREDA 2023 Grid Factor (Bangladesh Grid)' : 'IEA Global Baseline 2022'}
                 </span>
               </div>
+            </div>
+
+            {/* Assumptions & Limitations Callout */}
+            <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800 text-[10px] text-slate-400 space-y-1 leading-relaxed">
+              <span className="font-semibold text-slate-300 block">Financial Assumptions & Boundaries:</span>
+              <p>• Simple payback does not compound annual PV degradation (~0.5%/yr), inverter overhaul at Year 10–12, or local utility tariff inflation.</p>
+              <p>• Net metering capacity in Bangladesh is restricted to 70% of sanctioned load under Section 5.1 of SREDA guidelines.</p>
             </div>
 
             <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between">

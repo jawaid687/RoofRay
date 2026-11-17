@@ -14,7 +14,8 @@
 
 ---
 
-[![Tests: 222 Passed](https://img.shields.io/badge/Unit_Tests-222%2F222_Passing-10b981.svg?style=for-the-badge&logo=jest)](npm-run-test:calc)
+[![Tests: 226 Passed](https://img.shields.io/badge/Unit_Tests-226%2F226_Passing-10b981.svg?style=for-the-badge&logo=jest)](npm-run-test:calc)
+[![Integration: 36 Passed](https://img.shields.io/badge/Integration_Tests-36%2F36_Passing-10b981.svg?style=for-the-badge)](npm-run-server)
 [![React 19](https://img.shields.io/badge/React-19.0.0-61dafb.svg?style=for-the-badge&logo=react)](https://react.dev/)
 [![Three.js](https://img.shields.io/badge/Three.js-r174-000000.svg?style=for-the-badge&logo=three.js)](https://threejs.org/)
 [![TypeScript 5.7](https://img.shields.io/badge/TypeScript-5.7-3178c6.svg?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
@@ -113,7 +114,7 @@ Located in `src/components/ui/SolarReportModal.tsx`:
 
 ---
 
-## 🧪 Comprehensive Test Suite (222 Passing Assertions)
+## 🧪 Comprehensive Test Suite (226 Passing Assertions)
 
 RoofRay maintains an extensive automated test suite executed with TypeScript:
 
@@ -128,12 +129,13 @@ npm run test:calc
 4. **Manual Placement & Setbacks (32 tests):** 0.8m perimeter setback, 0.5m obstacle buffer, SAT collision checks, undo/redo stack.
 5. **Milestone M6 & Performance (13 tests):** Solstice arc geometry, compass vectors ($N=-Z, E=+X, S=+Z, W=-X$), and frame budgets.
 6. **Bangladesh Localization (50 tests):** Verified coordinates for all 8 divisions, Dhaka equinox/solstice ephemeris, BDT formatting.
-7. **Financial Configuration (17 tests):** BDT/USD capex, slab savings, missing-tariff guard (`paybackYears: null`), DoE grid emission factor.
+7. **Financial Configuration (21 tests):** BDT/USD capex, slab savings, missing-tariff guard (`paybackYears: null`), configurable export credit ratio, DoE grid emission factor.
 8. **Lexical RAG Retrieval (13 tests):** BM25 term weighting, SREDA/BPDB/NREL chunk retrieval, metadata attribution.
 9. **AI Advisor Schema & Safety (13 tests):** Payload validator, 30 req/min rate limiter, unconfigured key handling.
 10. **Deterministic Calculations (28 tests):** Yield sum invariant, optimization modes, recommendation narrative.
 
-**Result: 222 Passed, 0 Failed, 0 Regressions.**
+**Result: 226 Passed, 0 Failed, 0 Regressions.**
+Plus **36 End-to-End Production & Integration Assertions** in `scripts/validateAll.js`.
 
 ---
 
@@ -159,7 +161,7 @@ Edit `.env` to configure your Gemini API key (optional for local physical simula
 ```env
 GEMINI_API_KEY=your_actual_gemini_api_key_here
 GEMINI_MODEL=gemini-2.5-flash
-PORT=3001
+PORT=3000
 ```
 
 ### 4. Running the Development Server
@@ -174,10 +176,28 @@ Open [http://localhost:3000](http://localhost:3000) in your browser:
 
 ### 5. Running Standalone Production Server
 ```bash
+# 1. Compile client assets to dist/
 npm run build
-npm run server
+
+# 2. Start genuine Node.js production server
+npm start
+# (or: npm run server)
 ```
-The server will start on port `3001` serving both the static production build and the live `/api/ai/*` endpoints.
+The server will start on port `3000` (or `process.env.PORT`) serving both static production assets from `dist/` with SPA routing and live `/api/ai/*` endpoints.
+
+### 6. Deployment on Render / Cloud PaaS
+RoofRay V3 is pre-configured for zero-friction cloud deployment on **Render**:
+1. Create a new **Web Service** on Render and connect this repository.
+2. Configure build and start settings:
+   - **Environment:** `Node`
+   - **Build Command:** `npm install && npm run build`
+   - **Start Command:** `npm start`
+3. Add Environment Variables:
+   - `GEMINI_API_KEY`: Your Gemini API key from Google AI Studio.
+   - `GEMINI_MODEL`: `gemini-2.5-flash` (default).
+   - `NODE_ENV`: `production`.
+   *(Render automatically assigns `PORT`)*.
+4. Deploy: The service serves the landing page at `/`, app at `/app`, and `/api/ai/*` with 100% server-side API key protection.
 
 ---
 

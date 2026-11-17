@@ -165,6 +165,7 @@ export interface FinancialCustomInputs {
   customElectricityTariff?: number; // per kWh in selected currency
   customCostPerKW?: number;          // turnkey per kW in selected currency
   customBaseCost?: number;           // base fee in selected currency
+  customExportCreditRatio?: number;  // wholesale export credit ratio (0.0 to 1.0, e.g. 0.5)
 }
 
 export interface FinancialResult {
@@ -179,6 +180,7 @@ export interface FinancialResult {
   annualSavingsFormatted?: string;
   totalSystemCostFormatted?: string;
   tariffPerKWh?: number;
+  exportCreditRatio?: number;
 }
 
 export interface EnvironmentalResult {

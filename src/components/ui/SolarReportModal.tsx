@@ -104,7 +104,7 @@ export function SolarReportModal({ isOpen, onClose }: SolarReportModalProps) {
               <h2 className="text-base font-bold text-white flex items-center gap-1.5">
                 <span>RoofRay Solar Feasibility Report</span>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
-                  VERIFIED SIMULATION
+                  SIMULATION ESTIMATE
                 </span>
               </h2>
               <span className="text-xs text-slate-400 font-mono">Date: {reportDate}</span>

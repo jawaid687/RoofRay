@@ -88,7 +88,24 @@ export function runFinancialConfigTests() {
   assert(customResult.tariffPerKWh === 14.50, 'Custom tariff of ৳14.50/kWh is respected');
   assert(customResult.paybackYears !== null && customResult.paybackYears < bdtResult.paybackYears!, 'Higher tariff yields faster payback period');
 
-  // Test 5: Carbon Emission Factor Configuration (Phase 2.C)
+  // Test 5: Configurable Export Credit Ratio (Priority 2.6)
+  const defaultCreditResult = calculateFinancials(
+    10, 25, panelType, 15000, 10000, // 5000 kWh surplus
+    { currency: 'BDT', customElectricityTariff: 10.0 }
+  );
+  // Surplus = 5000, self-consumed = 10000. Default credit = 50%: 10000*10 + 5000*(10*0.5) = 100000 + 25000 = 125000
+  assert(defaultCreditResult.annualSavingsUSD === 125000, 'Default 50% export credit calculates ৳125,000 savings');
+  assert(defaultCreditResult.exportCreditRatio === 0.5, 'Default export credit ratio is 0.5');
+
+  const customCreditResult = calculateFinancials(
+    10, 25, panelType, 15000, 10000,
+    { currency: 'BDT', customElectricityTariff: 10.0, customExportCreditRatio: 0.8 } // 80% export credit
+  );
+  // 10000*10 + 5000*(10*0.8) = 100000 + 40000 = 140000
+  assert(customCreditResult.annualSavingsUSD === 140000, 'Custom 80% export credit calculates ৳140,000 savings');
+  assert(customCreditResult.exportCreditRatio === 0.8, 'Custom export credit ratio is 0.8');
+
+  // Test 6: Carbon Emission Factor Configuration (Phase 2.C & Priority 2.5)
   const globalEmissions = calculateEmissions(annualGenerationKWh, SIMULATION_ASSUMPTIONS.gridEmissionFactorKgPerKWh);
   assert(globalEmissions.annualCO2ReductionKg === Math.round(annualGenerationKWh * 0.420), 'Global emissions use 0.420 kg CO2/kWh');
 

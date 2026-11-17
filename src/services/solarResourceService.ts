@@ -99,9 +99,18 @@ export async function fetchNasaSolarResource(
 
     for (let i = 0; i < 12; i++) {
       const key = monthKeys[i];
-      const valAll = typeof allSky[key] === 'number' && allSky[key] > 0 ? allSky[key] : 4.5;
-      const valClr = typeof clrSky[key] === 'number' && clrSky[key] > 0 ? clrSky[key] : Math.max(valAll, 5.5);
-      const temp = typeof t2m[key] === 'number' ? t2m[key] : 25.0;
+      const rawAll = allSky[key];
+      const rawClr = clrSky[key];
+      const rawTemp = t2m[key];
+
+      // Strictly validate: never fabricate default values for missing observations (Priority 3.2)
+      if (typeof rawAll !== 'number' || isNaN(rawAll) || rawAll <= 0) {
+        throw new Error(`Incomplete NASA POWER data: Missing or invalid ALLSKY_SFC_SW_DWN for month ${key}`);
+      }
+
+      const valAll = rawAll;
+      const valClr = typeof rawClr === 'number' && !isNaN(rawClr) && rawClr >= valAll ? rawClr : valAll;
+      const temp = typeof rawTemp === 'number' && !isNaN(rawTemp) ? rawTemp : 25.0;
 
       sumAllSky += valAll;
       sumClrSky += valClr;
@@ -111,7 +120,7 @@ export async function fetchNasaSolarResource(
         monthName: MONTH_NAMES[i],
         allSkyIrradianceKWhM2Day: Math.round(valAll * 100) / 100,
         clearSkyIrradianceKWhM2Day: Math.round(valClr * 100) / 100,
-        cloudinessClearnessIndex: Math.round((valAll / Math.max(0.1, valClr)) * 100) / 100,
+        cloudinessClearnessIndex: valClr > 0 ? Math.round((valAll / valClr) * 100) / 100 : 1,
         ambientTempC: Math.round(temp * 10) / 10,
       });
     }

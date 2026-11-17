@@ -1,6 +1,10 @@
 import { CurrencyCode } from '../types';
 import { SIMULATION_ASSUMPTIONS } from '../config/assumptions';
 
+export function getCurrencySymbol(currency: CurrencyCode = 'USD'): string {
+  return currency === 'BDT' ? '৳' : '$';
+}
+
 export function formatCurrency(amount: number, currency: CurrencyCode = 'USD', decimals: number = 0): string {
   if (isNaN(amount) || amount === null || amount === undefined) {
     return currency === 'BDT' ? '৳0' : '$0';

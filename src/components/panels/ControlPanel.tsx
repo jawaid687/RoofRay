@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useLanguage } from '../../i18n/useLanguage';
 import { LocationTimeCard } from './LocationTimeCard';
 import { BuildingInspector } from './BuildingInspector';
 import { SolarAnalysisCard } from './SolarAnalysisCard';
@@ -27,6 +28,7 @@ import {
 type SectionKey = 'location' | 'building' | 'analysis' | 'panels' | 'demand' | 'optimization' | 'financials' | 'recommendation';
 
 export function ControlPanel() {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'planner' | 'manual' | 'analytics' | 'advisor' | 'rationale'>('planner');
   const [isReportOpen, setIsReportOpen] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -73,7 +75,7 @@ export function ControlPanel() {
           }`}
         >
           <Building2 className="w-3.5 h-3.5" />
-          <span>Planner</span>
+          <span>{t.app.plannerTab}</span>
         </button>
 
         <button
@@ -85,7 +87,7 @@ export function ControlPanel() {
           }`}
         >
           <MousePointer className="w-3.5 h-3.5" />
-          <span>Manual Studio</span>
+          <span>{t.app.manualTab}</span>
         </button>
 
         <button
@@ -97,7 +99,7 @@ export function ControlPanel() {
           }`}
         >
           <BarChart3 className="w-3.5 h-3.5" />
-          <span>Economics</span>
+          <span>{t.app.analyticsTab}</span>
         </button>
 
         <button
@@ -109,7 +111,7 @@ export function ControlPanel() {
           }`}
         >
           <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-          <span>AI Advisor</span>
+          <span>{t.app.aiAdvisorTab}</span>
         </button>
 
         <button
@@ -121,7 +123,7 @@ export function ControlPanel() {
           }`}
         >
           <HelpCircle className="w-3.5 h-3.5" />
-          <span>Why Plan</span>
+          <span>{t.app.rationaleTab}</span>
         </button>
       </div>
 
