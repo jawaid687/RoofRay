@@ -61,8 +61,8 @@ export function SolarAnalysisCard() {
   const suitabilityPercent = analysis && analysis.totalRoofArea > 0
     ? Math.round((analysis.recommendedInstallationArea / analysis.totalRoofArea) * 100)
     : annualAnalysisResult && annualAnalysisResult.totalRoofArea > 0
-    ? Math.round((annualAnalysisResult.recommendedArea / annualAnalysisResult.totalRoofArea) * 100)
-    : 0;
+      ? Math.round((annualAnalysisResult.recommendedArea / annualAnalysisResult.totalRoofArea) * 100)
+      : 0;
 
   // Find max monthly kWh/m² for bar chart scaling
   const maxMonthlyVal = annualAnalysisResult
@@ -76,13 +76,12 @@ export function SolarAnalysisCard() {
         <button
           onClick={() => runAnalysis()}
           disabled={isBusy}
-          className={`flex-1 py-2.5 px-4 rounded-xl font-semibold text-xs flex items-center justify-center gap-2 shadow-lg transition-all ${
-            isBusy
+          className={`flex-1 py-2.5 px-4 rounded-xl font-semibold text-xs flex items-center justify-center gap-2 shadow-lg transition-all ${isBusy
               ? 'bg-sky-600/50 text-sky-200 cursor-wait'
               : isStale
-              ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-amber-500/25 active:scale-[0.99]'
-              : 'bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white shadow-sky-500/20 hover:shadow-sky-500/35 active:scale-[0.99]'
-          }`}
+                ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-amber-500/25 active:scale-[0.99]'
+                : 'bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white shadow-sky-500/20 hover:shadow-sky-500/35 active:scale-[0.99]'
+            }`}
         >
           {isBusy ? (
             <>
@@ -297,17 +296,15 @@ export function SolarAnalysisCard() {
                       <div className="w-full bg-slate-800 rounded-t-sm h-full flex items-end overflow-hidden">
                         <div
                           style={{ height: `${barHeight}%` }}
-                          className={`w-full rounded-t-sm transition-all duration-300 ${
-                            isSelected
+                          className={`w-full rounded-t-sm transition-all duration-300 ${isSelected
                               ? 'bg-amber-400 shadow-md shadow-amber-400/30'
                               : 'bg-sky-500/60 group-hover:bg-sky-400'
-                          }`}
+                            }`}
                         />
                       </div>
                       <span
-                        className={`text-[9px] font-mono transition-colors ${
-                          isSelected ? 'text-amber-300 font-bold' : 'text-slate-500 group-hover:text-slate-300'
-                        }`}
+                        className={`text-[9px] font-mono transition-colors ${isSelected ? 'text-amber-300 font-bold' : 'text-slate-500 group-hover:text-slate-300'
+                          }`}
                       >
                         {MONTH_NAMES_SHORT[mIdx]}
                       </span>
@@ -432,8 +429,8 @@ export function SolarAnalysisCard() {
                 annualAnalysisResult
                   ? `${Math.round(annualAnalysisResult.averageAnnualExposure * 100)}%`
                   : analysis
-                  ? `${Math.round(analysis.averageExposureScore * 100)}%`
-                  : '--'
+                    ? `${Math.round(analysis.averageExposureScore * 100)}%`
+                    : '--'
               }
               subtext="12-month daylight factor"
               variant="highlight"
