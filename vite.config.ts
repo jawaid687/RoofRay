@@ -1,5 +1,16 @@
 import { defineConfig, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
+import fs from 'fs';
+
+// Auto-load .env into process.env for dev server middleware
+if (fs.existsSync('.env')) {
+  try {
+    process.loadEnvFile?.('.env');
+  } catch {
+    // ignore
+  }
+}
+
 import { handleSolarAdvisorRequest, validateAdvisorPayload, checkRateLimit } from './src/server/advisorService';
 
 function solarAdvisorApiPlugin(): Plugin {

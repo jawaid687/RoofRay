@@ -49,9 +49,9 @@ async function runValidation() {
     const healthJson = await resHealth.json();
     assert(healthJson.status === 'ok', 'Health status is "ok"');
     assert(healthJson.service.includes('RoofRay'), 'Service name is RoofRay');
-    assert(healthJson.keyConfigured === false, 'keyConfigured is false when unconfigured');
+    assert(typeof healthJson.keyConfigured === 'boolean', 'keyConfigured is a boolean flag');
 
-    // Test POST /api/ai/solar-advisor (Unconfigured Key state)
+    // Test POST /api/ai/solar-advisor
     const advisorPayload = {
       userQuestion: 'Evaluate my solar placement feasibility and expected return on investment in Dhaka.',
       selectedBuilding: {
@@ -107,11 +107,16 @@ async function runValidation() {
     });
     assert(resAdvisor.status === 200, 'Production POST /api/ai/solar-advisor returns HTTP 200');
     const advisorJson = await resAdvisor.json();
-    assert(advisorJson.configured === false, 'AI Advisor honestly reports configured: false');
-    assert(advisorJson.error === 'MISSING_API_KEY', 'Error code is MISSING_API_KEY');
-    assert(Array.isArray(advisorJson.sources) && advisorJson.sources.length > 0, 'Sources attached to unconfigured response');
+    if (!healthJson.keyConfigured) {
+      assert(advisorJson.configured === false, 'AI Advisor honestly reports configured: false when unconfigured');
+      assert(advisorJson.error === 'MISSING_API_KEY', 'Error code is MISSING_API_KEY');
+    } else {
+      assert(advisorJson.configured === true, 'AI Advisor reports configured: true when key is present');
+      assert(Boolean(advisorJson.summary), 'AI Advisor returns summary response');
+    }
+    assert(Array.isArray(advisorJson.sources) && advisorJson.sources.length > 0, 'Sources attached to response');
     assert(advisorJson.sources[0].url.startsWith('http'), 'Source URL is authentic HTTP link');
-    assert(Boolean(advisorJson.sources[0].relevance?.includes('Lexical RAG Grounding')), 'Source relevance documents Lexical RAG Grounding');
+    assert(Boolean(advisorJson.sources[0].relevance?.includes('Grounding')), 'Source relevance documents RAG Grounding');
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

@@ -2,6 +2,16 @@ import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+
+// Automatically load .env file if running in Node 20+
+if (fs.existsSync('.env')) {
+  try {
+    process.loadEnvFile?.('.env');
+  } catch {
+    // ignore if already provided by environment
+  }
+}
+
 import { handleSolarAdvisorRequest, validateAdvisorPayload, checkRateLimit } from '../src/server/advisorService.js';
 
 const __filename = fileURLToPath(import.meta.url);
