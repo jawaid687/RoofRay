@@ -5,7 +5,7 @@
 **Domain:** ClimateSphere AI  
 **Repository:** https://github.com/jawaid687/RoofRay  
 **Audit Date:** Final Competition Stabilization Review (2026-11-18)  
-**Test Suite:** 235 Deterministic Unit & Calculation Assertions + 41 Production Integration Assertions = 276 Total (0 Failures, 0 Regressions)
+**Test Suite:** 260 Deterministic Unit & Calculation Assertions + 57 Production Integration Assertions + 20 Headless Chrome E2E Assertions = 337 Total (0 Failures, 0 Regressions)
 
 ---
 
@@ -18,7 +18,7 @@
 | **3. Do not rebuild solar simulation engine** | **COMPLETED** | Discretized 0.8m grid, shadow raycaster, and Web Worker calculations preserved. |
 | **4. Do not remove components without reason** | **COMPLETED** | All layout, panel, and UI components preserved and enhanced. |
 | **5. Do not break existing guided demo** | **COMPLETED** | 6-step hackathon demo tour functions smoothly via button or keyboard spacebar. |
-| **6. Do not remove or weaken tests** | **COMPLETED** | All baseline tests preserved; expanded to **235 calculation assertions + 41 integration assertions = 276 total passing assertions** (0 failures). |
+| **6. Do not remove or weaken tests** | **COMPLETED** | All baseline tests preserved; expanded to **260 calculation assertions + 57 integration assertions + 20 browser E2E assertions = 337 total passing assertions** (0 failures). |
 | **7. Do not hardcode API keys or credentials** | **COMPLETED** | `.env.example` created with placeholders; `.env` excluded via `.gitignore`; zero client-side keys; header-based `x-goog-api-key` transmission. |
 | **8. Never expose private API keys in frontend** | **COMPLETED** | AI gateway operates strictly server-side on Node.js (`process.env.GEMINI_API_KEY`); safe error codes returned without leaking credentials. |
 | **9. Do not fabricate weather/tariff/stats** | **COMPLETED** | Sourced tariffs (BPDB), benchmarks (SREDA, NREL), and satellite data (NASA); zero fabricated fallback temperature. |
@@ -59,11 +59,14 @@
 ### C. BLOCKED REQUIREMENTS (EXTERNAL ENVIRONMENT)
 - [x] **Live Gemini Synthesis with Active Secret:**
   - *Blocked by external credential configuration:* Key was revoked and never hardcoded in repository or terminal. Marked as BLOCKED awaiting user's private key insertion into server `.env`.
-- [x] **Interactive Chrome DevTools MCP Browser Testing:**
-  - *Blocked by external host environment:* Local Chrome was not launched with remote debugging port (`--remote-debugging-port=9222`), preventing the MCP browser subagent from attaching.
-  - *Mitigation & Full Alternative Execution:* Implemented and executed automated production integration suite (`scripts/validateAll.js`), verifying all 41 assertions across HTTP status, SPA fallback, API endpoints, NASA climatology, BDT formatting, and translations with 100% pass rate.
 
-### D. NOT IMPLEMENTED / DEFERRED POST-COMPETITION REQUIREMENTS
+### D. FULLY VERIFIED BROWSER-LEVEL TESTS (CDP)
+- [x] **Automated Headless Chrome DevTools Protocol (CDP) E2E Browser Testing:**
+  - *Fully operational & automated:* Implemented in `scripts/browserTest.js` using native WebSocket CDP on isolated headless Chrome.
+  - Verifies DOM hydration, platform branding markers, vertical scrolling on mouse-wheel, footer accessibility in viewport, competition track attribution, mobile responsive scrolling, bilingual EN $\leftrightarrow$ BN DOM toggling, route switching, `body.app-mode` locking (`overflow: hidden`), WebGL Three.js `<canvas>` mount with active dimensions, and 3D canvas mouse-wheel zoom reception with zero page bounce.
+  - All 20 browser assertions pass with 100% success rate.
+
+### E. NOT IMPLEMENTED / DEFERRED POST-COMPETITION REQUIREMENTS
 - [ ] **Automated Satellite GIS & LiDAR Ingestion:** Current 3D scene uses parametric archetype geometries for spatial raycasting. Automated building geometry acquisition from Google Solar API and aerial LiDAR is scheduled for Phase 11 on the commercial roadmap.
 - [ ] **Direct Utility Interconnection Portals:** Automated filing with BPDB/DPDC net metering billing systems is deferred to Phase 13.
 
@@ -71,14 +74,11 @@
 
 ## 3. Pre-Submission Quality Sign-Off
 
-- [x] `npm run test:calc` executed and verified: **235 passed, 0 failed**.
-- [x] `npx tsx scripts/validateAll.js` executed and verified: **41 passed, 0 failed**.
-- [x] `npm run test:all` executed and verified: **276 passed, 0 failed**.
-- [x] `npm run build` executed and verified: **Production bundle generated with 0 errors in 7.7s**.
-- [x] Production server verified on `npm start` and `npm run server`.
-- [x] Secrets excluded: `.env` strictly isolated server-side.
-- [x] Bilingual verification: English and বাংলা UI switches smoothly without layout clipping.
-- [x] Guided demo verified: Step 1 through Step 6 completes without interruption.
+- [x] `npm run test:calc` executed and verified: **260 passed, 0 failed**.
+- [x] `npx tsx scripts/validateAll.js` executed and verified: **57 passed, 0 failed**.
+- [x] `npx tsx scripts/browserTest.js` executed and verified: **20 passed, 0 failed**.
+- [x] `npm run test:all` executed and verified: **337 passed, 0 failed across all tiers**.
+- [x] `npm run build` executed and verified: **Production bundle generated with 0 errors in ~8.0s**.
 - [x] Production server verified on `npm start` and `npm run server`.
 - [x] Secrets excluded: `.env` strictly isolated server-side.
 - [x] Bilingual verification: English and বাংলা UI switches smoothly without layout clipping.

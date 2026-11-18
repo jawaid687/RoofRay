@@ -88,17 +88,17 @@ export function SolarAnalysisCard() {
           {isBusy ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Analyzing 12 Months ({analysisProgress}%)...</span>
+              <span>{t.solarAnalysis.analyzingProgress} ({analysisProgress}%)...</span>
             </>
           ) : isStale ? (
             <>
               <Sparkles className="w-4 h-4 fill-current" />
-              <span>Re-analyze Solar Potential</span>
+              <span>{t.solarAnalysis.reanalyzePotential}</span>
             </>
           ) : isAnalyzed ? (
             <>
               <Sparkles className="w-4 h-4" />
-              <span>Re-run Annual Analysis</span>
+              <span>{t.solarAnalysis.rerunAnalysis}</span>
             </>
           ) : (
             <>
@@ -115,7 +115,7 @@ export function SolarAnalysisCard() {
             className="py-2.5 px-3 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 text-xs font-semibold flex items-center gap-1 transition-all"
           >
             <XCircle className="w-4 h-4" />
-            <span>Cancel</span>
+            <span>{t.solarAnalysis.cancel}</span>
           </button>
         )}
       </div>
@@ -126,7 +126,7 @@ export function SolarAnalysisCard() {
           <div className="flex items-center justify-between text-sky-300">
             <span className="font-semibold flex items-center gap-1.5">
               <Loader2 className="w-3.5 h-3.5 animate-spin text-sky-400" />
-              Web Worker Solar Simulation
+              {t.solarAnalysis.webWorkerTitle}
             </span>
             <span className="text-[11px] font-mono font-bold text-sky-400">{analysisProgress}%</span>
           </div>
@@ -140,7 +140,7 @@ export function SolarAnalysisCard() {
           </div>
 
           <p className="text-[11px] text-sky-400/80 leading-relaxed">
-            Off-thread raycasting across 12 representative days and clear-sky plane-of-array irradiance models.
+            {t.solarAnalysis.webWorkerDesc}
           </p>
         </div>
       )}
@@ -208,13 +208,13 @@ export function SolarAnalysisCard() {
           <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-semibold text-slate-300">Rooftop Solar Suitability</span>
+                <span className="text-xs font-semibold text-slate-300">{t.solarAnalysis.roofSuitability}</span>
                 <span className="text-[10px] text-sky-400 font-mono px-1.5 py-0.2 rounded bg-sky-500/10 border border-sky-500/20">
-                  Clear-sky estimate
+                  {t.solarAnalysis.clearSkyEstimate}
                 </span>
               </div>
               <span className="text-sm font-bold font-mono text-emerald-400">
-                {suitabilityPercent}% Viable
+                {suitabilityPercent}% {t.solarAnalysis.viable}
               </span>
             </div>
 
@@ -272,7 +272,7 @@ export function SolarAnalysisCard() {
               <div className="flex items-center justify-between text-xs">
                 <span className="font-semibold text-slate-300 flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5 text-amber-400" />
-                  Monthly Solar Insolation (kWh/m²)
+                  {t.solarAnalysis.monthlyInsolation}
                 </span>
                 <span className="text-[10px] text-amber-300 font-mono font-bold">
                   {MONTH_NAMES_SHORT[selectedMonth]}: {annualAnalysisResult.monthlyAveragesKWhPerM2[selectedMonth]} kWh/m²
@@ -316,7 +316,7 @@ export function SolarAnalysisCard() {
               </div>
 
               <div className="text-[10px] text-slate-500 text-center font-sans">
-                Click any bar to inspect that month on the 3D rooftop heatmap.
+                {t.solarAnalysis.clickBarInspect}
               </div>
             </div>
           )}
@@ -329,7 +329,7 @@ export function SolarAnalysisCard() {
             >
               <div className="flex items-center gap-1.5 text-sky-400">
                 <CloudSun className="w-3.5 h-3.5 text-sky-400" />
-                <span>Satellite Climatology Resource (NASA POWER)</span>
+                <span>{t.solarAnalysis.satelliteClimatology}</span>
               </div>
               <div className="flex items-center gap-1 text-[10px] text-slate-500">
                 <span>{showNasaCard ? 'Hide' : 'Inspect'}</span>
@@ -348,7 +348,7 @@ export function SolarAnalysisCard() {
                   <>
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800">
-                        <span className="text-[10px] text-slate-400 block font-mono">All-Sky Insolation</span>
+                        <span className="text-[10px] text-slate-400 block font-mono">{t.solarAnalysis.allSkyInsolation}</span>
                         <div className="text-sm font-bold text-amber-300 mt-0.5">
                           {nasaData.annualAverageAllSkyKWhM2Day} <span className="text-[10px] text-slate-400 font-normal">kWh/m²/day</span>
                         </div>
@@ -356,7 +356,7 @@ export function SolarAnalysisCard() {
                       </div>
 
                       <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800">
-                        <span className="text-[10px] text-slate-400 block font-mono">Cloud Attenuation</span>
+                        <span className="text-[10px] text-slate-400 block font-mono">{t.solarAnalysis.cloudAttenuation}</span>
                         <div className="text-sm font-bold text-sky-300 mt-0.5">
                           -{nasaData.averageCloudPenaltyPercent}% <span className="text-[10px] text-slate-400 font-normal">vs clear-sky</span>
                         </div>
@@ -367,7 +367,7 @@ export function SolarAnalysisCard() {
                     {annualAnalysisResult && (
                       <div className="p-2.5 rounded-lg bg-sky-950/30 border border-sky-800/50 space-y-1 text-xs">
                         <div className="flex justify-between items-center text-slate-200">
-                          <span className="font-semibold text-sky-300">Weather-Informed Yield Estimate:</span>
+                          <span className="font-semibold text-sky-300">{t.solarAnalysis.weatherInformedYield}</span>
                           <span className="font-mono font-bold text-amber-300">
                             {Math.round(annualAnalysisResult.averageAnnualKWhPerM2 * (1 - nasaData.averageCloudPenaltyPercent / 100))} kWh/m²/yr
                           </span>
@@ -381,7 +381,7 @@ export function SolarAnalysisCard() {
                     <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800/80 space-y-1 text-[10px] text-slate-400 leading-relaxed font-sans">
                       <div className="flex items-center gap-1 font-semibold text-slate-300">
                         <Database className="w-3 h-3 text-sky-400" />
-                        <span>Source & Distinction Notice:</span>
+                        <span>{t.solarAnalysis.sourceDistinctionNotice}</span>
                       </div>
                       <p>
                         • <strong>Clear-Sky Simulation:</strong> Pure geometric raycasting of rooftop obstacles and surrounding towers (NOAA ephemeris).
@@ -450,7 +450,7 @@ export function SolarAnalysisCard() {
           {analysis?.recommendedZone && (
             <div className="p-3 rounded-xl bg-sky-950/20 border border-sky-800/40 text-xs text-sky-200">
               <div className="font-semibold flex items-center justify-between">
-                <span>Best Contiguous Placement Zone</span>
+                <span>{t.solarAnalysis.bestContiguousZone}</span>
                 <span className="font-mono text-sky-400">{analysis.recommendedZone.area} m²</span>
               </div>
               <p className="text-[11px] text-sky-300/80 mt-1">

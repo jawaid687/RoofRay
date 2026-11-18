@@ -41,6 +41,89 @@ const MONTH_NAMES = [
 
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
+const MONTH_KEYS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'] as const;
+
+export function parseNasaPowerPayload(
+  json: any,
+  latitude: number,
+  longitude: number
+): SolarResourceData {
+  const roundedLat = Math.round(latitude * 100) / 100;
+  const roundedLon = Math.round(longitude * 100) / 100;
+  const properties = json?.properties?.parameter;
+
+  if (!properties || !properties.ALLSKY_SFC_SW_DWN) {
+    throw new Error('Invalid NASA POWER payload format: missing parameters');
+  }
+
+  const allSky = properties.ALLSKY_SFC_SW_DWN;
+  const clrSky = properties.CLRSKY_SFC_SW_DWN;
+  const t2m = properties.T2M || {};
+
+  if (!clrSky) {
+    throw new Error('Incomplete NASA POWER data: CLRSKY_SFC_SW_DWN parameter is missing');
+  }
+
+  const monthly: MonthlyClimatology[] = [];
+  let sumAllSky = 0;
+  let sumClrSky = 0;
+
+  for (let i = 0; i < 12; i++) {
+    const key = MONTH_KEYS[i];
+    const rawAll = allSky[key];
+    const rawClr = clrSky[key];
+    const rawTemp = t2m[key];
+
+    // Strictly validate: never substitute missing clear-sky with all-sky irradiance
+    if (typeof rawAll !== 'number' || isNaN(rawAll) || rawAll <= 0) {
+      throw new Error(`Incomplete NASA POWER data: Missing or invalid ALLSKY_SFC_SW_DWN for month ${key}`);
+    }
+
+    if (typeof rawClr !== 'number' || isNaN(rawClr) || rawClr <= 0) {
+      throw new Error(`Incomplete NASA POWER data: Missing or invalid CLRSKY_SFC_SW_DWN for month ${key}`);
+    }
+
+    if (rawClr < rawAll) {
+      throw new Error(`Physically invalid NASA POWER data: Clear-sky (${rawClr}) is less than all-sky (${rawAll}) for month ${key}`);
+    }
+
+    const valAll = rawAll;
+    const valClr = rawClr;
+    // Real observed temperature or null if unrecorded (never default to 25.0)
+    const temp = typeof rawTemp === 'number' && !isNaN(rawTemp) ? Math.round(rawTemp * 10) / 10 : null;
+
+    sumAllSky += valAll;
+    sumClrSky += valClr;
+
+    monthly.push({
+      month: i + 1,
+      monthName: MONTH_NAMES[i],
+      allSkyIrradianceKWhM2Day: Math.round(valAll * 100) / 100,
+      clearSkyIrradianceKWhM2Day: Math.round(valClr * 100) / 100,
+      cloudinessClearnessIndex: valClr > 0 ? Math.round((valAll / valClr) * 100) / 100 : 1,
+      ambientTempC: temp,
+    });
+  }
+
+  const avgAll = Math.round((sumAllSky / 12) * 100) / 100;
+  const avgClr = Math.round((sumClrSky / 12) * 100) / 100;
+  const avgCloudPenalty = Math.max(0, Math.round(((avgClr - avgAll) / avgClr) * 100));
+
+  return {
+    available: true,
+    latitude: roundedLat,
+    longitude: roundedLon,
+    retrievalDate: new Date().toISOString().split('T')[0],
+    source: 'NASA POWER (Prediction of Worldwide Energy Resources) Climatology API v2.0',
+    license: 'NASA Open Data Policy (Public Domain)',
+    annualAverageAllSkyKWhM2Day: avgAll,
+    annualAverageClearSkyKWhM2Day: avgClr,
+    averageCloudPenaltyPercent: avgCloudPenalty,
+    monthly,
+    cached: false,
+  };
+}
+
 export async function fetchNasaSolarResource(
   latitude: number,
   longitude: number
@@ -81,67 +164,7 @@ export async function fetchNasaSolarResource(
     }
 
     const json = await res.json();
-    const properties = json?.properties?.parameter;
-
-    if (!properties || !properties.ALLSKY_SFC_SW_DWN) {
-      throw new Error('Invalid NASA POWER payload format');
-    }
-
-    const allSky = properties.ALLSKY_SFC_SW_DWN;
-    const clrSky = properties.CLRSKY_SFC_SW_DWN || {};
-    const t2m = properties.T2M || {};
-
-    const monthKeys = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-    const monthly: MonthlyClimatology[] = [];
-
-    let sumAllSky = 0;
-    let sumClrSky = 0;
-
-    for (let i = 0; i < 12; i++) {
-      const key = monthKeys[i];
-      const rawAll = allSky[key];
-      const rawClr = clrSky[key];
-      const rawTemp = t2m[key];
-
-      // Strictly validate: never fabricate default values for missing observations (Priority 3.2)
-      if (typeof rawAll !== 'number' || isNaN(rawAll) || rawAll <= 0) {
-        throw new Error(`Incomplete NASA POWER data: Missing or invalid ALLSKY_SFC_SW_DWN for month ${key}`);
-      }
-
-      const valAll = rawAll;
-      const valClr = typeof rawClr === 'number' && !isNaN(rawClr) && rawClr >= valAll ? rawClr : valAll;
-      const temp = typeof rawTemp === 'number' && !isNaN(rawTemp) ? Math.round(rawTemp * 10) / 10 : null;
-
-      sumAllSky += valAll;
-      sumClrSky += valClr;
-
-      monthly.push({
-        month: i + 1,
-        monthName: MONTH_NAMES[i],
-        allSkyIrradianceKWhM2Day: Math.round(valAll * 100) / 100,
-        clearSkyIrradianceKWhM2Day: Math.round(valClr * 100) / 100,
-        cloudinessClearnessIndex: valClr > 0 ? Math.round((valAll / valClr) * 100) / 100 : 1,
-        ambientTempC: temp,
-      });
-    }
-
-    const avgAll = Math.round((sumAllSky / 12) * 100) / 100;
-    const avgClr = Math.round((sumClrSky / 12) * 100) / 100;
-    const avgCloudPenalty = Math.max(0, Math.round(((avgClr - avgAll) / avgClr) * 100));
-
-    const resultData: SolarResourceData = {
-      available: true,
-      latitude: roundedLat,
-      longitude: roundedLon,
-      retrievalDate: new Date().toISOString().split('T')[0],
-      source: 'NASA POWER (Prediction of Worldwide Energy Resources) Climatology API v2.0',
-      license: 'NASA Open Data Policy (Public Domain)',
-      annualAverageAllSkyKWhM2Day: avgAll,
-      annualAverageClearSkyKWhM2Day: avgClr,
-      averageCloudPenaltyPercent: avgCloudPenalty,
-      monthly,
-      cached: false,
-    };
+    const resultData = parseNasaPowerPayload(json, roundedLat, roundedLon);
 
     // Cache to localStorage
     if (typeof window !== 'undefined') {

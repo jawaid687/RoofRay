@@ -3,14 +3,41 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// Automatically load .env file if running in Node 20+
-if (fs.existsSync('.env')) {
-  try {
-    process.loadEnvFile?.('.env');
-  } catch {
-    // ignore if already provided by environment
+// Robust, zero-dependency .env loader supporting Node 18+ (process.loadEnvFile is Node 20.6+)
+export function loadEnvFileCompat(filePath: string = '.env'): void {
+  if (typeof process.loadEnvFile === 'function') {
+    try {
+      process.loadEnvFile(filePath);
+      return;
+    } catch {
+      // Fall through to manual parsing if loadEnvFile fails
+    }
+  }
+  if (fs.existsSync(filePath)) {
+    try {
+      const content = fs.readFileSync(filePath, 'utf-8');
+      for (const line of content.split(/\r?\n/)) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+        const eqIdx = trimmed.indexOf('=');
+        if (eqIdx > 0) {
+          const key = trimmed.slice(0, eqIdx).trim();
+          let val = trimmed.slice(eqIdx + 1).trim();
+          if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+            val = val.slice(1, -1);
+          }
+          if (!(key in process.env)) {
+            process.env[key] = val;
+          }
+        }
+      }
+    } catch {
+      // Ignore read errors
+    }
   }
 }
+
+loadEnvFileCompat();
 
 import { handleSolarAdvisorRequest, validateAdvisorPayload, checkRateLimit } from '../src/server/advisorService.js';
 
@@ -86,11 +113,17 @@ export const server = http.createServer(async (req, res) => {
 
   // Configured CORS headers (no wildcards)
   const origin = req.headers.origin;
-  if (origin && isOriginAllowed(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Vary', 'Origin');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (origin) {
+    if (isOriginAllowed(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Vary', 'Origin');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    } else if (req.method === 'OPTIONS') {
+      res.writeHead(403, { 'Content-Type': 'application/json; charset=UTF-8' });
+      res.end(JSON.stringify({ error: 'CORS_FORBIDDEN', message: 'Disallowed CORS origin' }));
+      return;
+    }
   }
 
   if (req.method === 'OPTIONS') {
@@ -241,34 +274,44 @@ export const server = http.createServer(async (req, res) => {
       return;
     }
 
-    // Path traversal & null byte sanitization
+    // Null byte sanitization
     if (rawPath.includes('\0')) {
       res.writeHead(400, { 'Content-Type': 'application/json; charset=UTF-8' });
       res.end(JSON.stringify({ error: 'BAD_REQUEST', message: 'Null bytes are disallowed' }));
       return;
     }
 
+    // Explicit Directory Traversal Detection (both decoded segments and percent-encoded indicators)
+    const segments = rawPath.split(/[/\\]/);
+    if (segments.some(seg => seg === '..') || /%2e%2e/i.test(req.url || '') || rawPath.includes('..')) {
+      res.writeHead(403, { 'Content-Type': 'application/json; charset=UTF-8' });
+      res.end(JSON.stringify({ error: 'FORBIDDEN', message: 'Directory traversal is strictly forbidden' }));
+      return;
+    }
+
+    // Canonical path containment: resolve against DIST_DIR and ensure target strictly stays inside
+    const cleanRelative = path.normalize(rawPath).replace(/^([a-zA-Z]:)?[\/\\]+/, '');
+    const resolvedPath = path.resolve(DIST_DIR, cleanRelative);
+    const relFromDist = path.relative(DIST_DIR, resolvedPath);
+    const isInsideDist = !relFromDist.startsWith('..') && !path.isAbsolute(relFromDist);
+
+    // If canonical path attempts to escape DIST_DIR, strictly reject regardless of extension
+    if (!isInsideDist) {
+      res.writeHead(403, { 'Content-Type': 'application/json; charset=UTF-8' });
+      res.end(JSON.stringify({ error: 'FORBIDDEN', message: 'Directory traversal is strictly forbidden' }));
+      return;
+    }
+
     const hasExtension = path.extname(rawPath) !== '';
 
     if (hasExtension) {
-      // Normalize and safely resolve path inside DIST_DIR
-      const safeRelative = path.normalize(rawPath).replace(/^(\.\.[\/\\])+/, '');
-      const filePath = path.resolve(DIST_DIR, '.' + safeRelative);
-
-      // Verify the resolved file strictly resides inside DIST_DIR
-      if (!filePath.startsWith(DIST_DIR)) {
-        res.writeHead(403, { 'Content-Type': 'application/json; charset=UTF-8' });
-        res.end(JSON.stringify({ error: 'FORBIDDEN', message: 'Directory traversal is strictly forbidden' }));
-        return;
-      }
-
-      if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-        const ext = path.extname(filePath).toLowerCase();
+      if (fs.existsSync(resolvedPath) && fs.statSync(resolvedPath).isFile()) {
+        const ext = path.extname(resolvedPath).toLowerCase();
         const mime = MIME_TYPES[ext] || 'application/octet-stream';
         const isHashedAsset = rawPath.startsWith('/assets/');
         res.setHeader('Cache-Control', isHashedAsset ? 'public, max-age=31536000, immutable' : 'no-cache');
         res.writeHead(200, { 'Content-Type': mime });
-        fs.createReadStream(filePath).pipe(res);
+        fs.createReadStream(resolvedPath).pipe(res);
         return;
       }
 

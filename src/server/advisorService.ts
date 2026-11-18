@@ -181,6 +181,123 @@ export function validateAdvisorPayload(body: any): { valid: boolean; error?: str
   return { valid: true };
 }
 
+export interface AdvisorResponseSchemaValidationResult {
+  valid: boolean;
+  error?: string;
+  data?: {
+    summary: string;
+    recommendations: string[];
+    advantages: string[];
+    risks: string[];
+    assumptions: string[];
+    next_steps: string[];
+  };
+}
+
+/**
+ * Validates the parsed AI Advisor response against the strict expected schema.
+ * Rejects non-string array items (does not silently convert [object Object]).
+ */
+export function validateAdvisorResponseSchema(parsed: unknown): AdvisorResponseSchemaValidationResult {
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return { valid: false, error: 'Root must be a non-null JSON object' };
+  }
+
+  const obj = parsed as Record<string, unknown>;
+
+  // 1. summary validation
+  if (typeof obj.summary !== 'string' || obj.summary.trim().length === 0) {
+    return { valid: false, error: 'Property "summary" must be a non-empty string' };
+  }
+  if (obj.summary.length > 3000) {
+    return { valid: false, error: 'Property "summary" exceeds maximum allowed length of 3000 characters' };
+  }
+
+  // 2. Validate string arrays
+  function validateStringArray(
+    fieldName: string,
+    required: boolean,
+    maxItems: number = 20
+  ): { valid: boolean; error?: string; items: string[] } {
+    const val = obj[fieldName];
+    if (val === undefined || val === null) {
+      if (required) {
+        return { valid: false, error: `Property "${fieldName}" is required and cannot be omitted`, items: [] };
+      }
+      return { valid: true, items: [] };
+    }
+
+    if (!Array.isArray(val)) {
+      return { valid: false, error: `Property "${fieldName}" must be an array of strings`, items: [] };
+    }
+
+    if (required && val.length === 0) {
+      return { valid: false, error: `Property "${fieldName}" must contain at least one recommendation`, items: [] };
+    }
+
+    if (val.length > maxItems) {
+      return { valid: false, error: `Property "${fieldName}" exceeds maximum allowed item count of ${maxItems}`, items: [] };
+    }
+
+    const items: string[] = [];
+    for (let i = 0; i < val.length; i++) {
+      const item = val[i];
+      // Reject non-string array items (never silently convert [object Object] into string)
+      if (typeof item !== 'string') {
+        return {
+          valid: false,
+          error: `Item at index ${i} in "${fieldName}" must be a string; received ${typeof item}`,
+          items: [],
+        };
+      }
+      if (item.trim().length === 0) {
+        return {
+          valid: false,
+          error: `Item at index ${i} in "${fieldName}" cannot be an empty or whitespace string`,
+          items: [],
+        };
+      }
+      if (item.length > 1500) {
+        return {
+          valid: false,
+          error: `Item at index ${i} in "${fieldName}" exceeds maximum length of 1500 characters`,
+          items: [],
+        };
+      }
+      items.push(item.trim());
+    }
+
+    return { valid: true, items };
+  }
+
+  const recs = validateStringArray('recommendations', true);
+  if (!recs.valid) return { valid: false, error: recs.error };
+
+  const advs = validateStringArray('advantages', false);
+  if (!advs.valid) return { valid: false, error: advs.error };
+
+  const risks = validateStringArray('risks', false);
+  if (!risks.valid) return { valid: false, error: risks.error };
+
+  const assumptions = validateStringArray('assumptions', false);
+  if (!assumptions.valid) return { valid: false, error: assumptions.error };
+
+  const nextSteps = validateStringArray('next_steps', false);
+  if (!nextSteps.valid) return { valid: false, error: nextSteps.error };
+
+  return {
+    valid: true,
+    data: {
+      summary: obj.summary.trim(),
+      recommendations: recs.items,
+      advantages: advs.items,
+      risks: risks.items,
+      assumptions: assumptions.items,
+      next_steps: nextSteps.items,
+    },
+  };
+}
+
 export async function handleSolarAdvisorRequest(
   payload: SolarAdvisorRequest,
   apiKey?: string,
@@ -353,17 +470,13 @@ Provide a comprehensive, professional assessment formatted as valid JSON adherin
       throw new Error('MALFORMED_AI_RESPONSE: Failed to parse AI response as JSON');
     }
 
-    // Strict schema validation for response structure
-    const summary = typeof parsed.summary === 'string' && parsed.summary.trim().length > 0
-      ? parsed.summary
-      : 'Solar configuration analysis generated successfully.';
-    const recommendations = Array.isArray(parsed.recommendations) && parsed.recommendations.length > 0
-      ? parsed.recommendations.map(String)
-      : ['Conduct an on-site structural and shading assessment prior to installation.'];
-    const advantages = Array.isArray(parsed.advantages) ? parsed.advantages.map(String) : [];
-    const risks = Array.isArray(parsed.risks) ? parsed.risks.map(String) : [];
-    const assumptions = Array.isArray(parsed.assumptions) ? parsed.assumptions.map(String) : [];
-    const next_steps = Array.isArray(parsed.next_steps) ? parsed.next_steps.map(String) : [];
+    // Strict schema validation for response structure (rejects malformed types, rejects [object Object])
+    const schemaValidation = validateAdvisorResponseSchema(parsed);
+    if (!schemaValidation.valid || !schemaValidation.data) {
+      throw new Error(`MALFORMED_AI_RESPONSE: ${schemaValidation.error || 'Failed schema validation'}`);
+    }
+
+    const { summary, recommendations, advantages, risks, assumptions, next_steps } = schemaValidation.data;
 
     return {
       configured: true,

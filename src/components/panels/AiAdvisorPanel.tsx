@@ -45,10 +45,10 @@ export function AiAdvisorPanel({ onOpenReportModal }: AiAdvisorPanelProps) {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const quickPrompts = [
-    'Analyze my rooftop solar viability & payback',
-    'Will shading from nearby towers or obstacles penalize yield?',
-    'Check SREDA 70% net-metering limit for Bangladesh',
-    'Suggest optimal panel orientation and safety setbacks',
+    t.aiAdvisor.quickPrompt1,
+    t.aiAdvisor.quickPrompt2,
+    t.aiAdvisor.quickPrompt3,
+    t.aiAdvisor.quickPrompt4,
   ];
 
   const handleConsultAdvisor = async (customQuery?: string) => {
@@ -142,8 +142,8 @@ export function AiAdvisorPanel({ onOpenReportModal }: AiAdvisorPanelProps) {
     return (
       <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 text-center space-y-2">
         <Bot className="w-8 h-8 text-slate-500 mx-auto" />
-        <h4 className="text-xs font-bold text-slate-300">Select a Building</h4>
-        <p className="text-[11px] text-slate-500">Please choose a rooftop in the Planner tab to consult the AI Advisor.</p>
+        <h4 className="text-xs font-bold text-slate-300">{t.aiAdvisor.selectBuildingPrompt}</h4>
+        <p className="text-[11px] text-slate-500">{t.aiAdvisor.selectBuildingDesc}</p>
       </div>
     );
   }
@@ -177,7 +177,7 @@ export function AiAdvisorPanel({ onOpenReportModal }: AiAdvisorPanelProps) {
               title="Generate comprehensive exportable PDF/printable report"
             >
               <FileText className="w-3 h-3 text-sky-400" />
-              <span>Full Report</span>
+              <span>{t.aiAdvisor.fullReport}</span>
             </button>
           )}
         </div>
@@ -225,7 +225,7 @@ export function AiAdvisorPanel({ onOpenReportModal }: AiAdvisorPanelProps) {
         <div className="p-3 rounded-xl bg-red-950/40 border border-red-800/60 text-xs text-red-200 flex items-start gap-2">
           <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
           <div className="space-y-0.5">
-            <span className="font-bold">Consultation Error</span>
+            <span className="font-bold">{t.aiAdvisor.consultationError}</span>
             <p className="text-[11px] text-red-300/80">{errorMsg}</p>
           </div>
         </div>
@@ -236,10 +236,10 @@ export function AiAdvisorPanel({ onOpenReportModal }: AiAdvisorPanelProps) {
         <div className="p-4 rounded-2xl bg-amber-950/30 border border-amber-800/50 space-y-3 text-xs">
           <div className="flex items-center gap-2 text-amber-300 font-bold">
             <Key className="w-4 h-4 text-amber-400" />
-            <span>Gemini API Key Setup Required</span>
+            <span>{t.aiAdvisor.keySetupRequired}</span>
           </div>
           <p className="text-[11px] text-amber-200/90 leading-relaxed font-sans">
-            The AI Solar Advisor runs server-side to protect secret credentials. To activate live generative responses from Google Gemini:
+            {t.aiAdvisor.keySetupDesc}
           </p>
           <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-[10px] font-mono text-slate-300 space-y-1">
             <div>1. Get an API key: <a href="https://aistudio.google.com" target="_blank" rel="noopener noreferrer" className="text-sky-400 underline">aistudio.google.com</a></div>
@@ -247,7 +247,7 @@ export function AiAdvisorPanel({ onOpenReportModal }: AiAdvisorPanelProps) {
             <div>3. Restart RoofRay</div>
           </div>
           <div className="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1.5">
-            <span className="text-[10px] font-bold text-slate-300 block">Verified Technical Grounding Citations:</span>
+            <span className="text-[10px] font-bold text-slate-300 block">{t.aiAdvisor.citationsGrounding}:</span>
             {advisorData.sources.map((src, i) => (
               <div key={i} className="text-[10px] text-slate-400 flex items-center justify-between">
                 <span>• {src.title} ({src.authorOrg})</span>
@@ -270,7 +270,7 @@ export function AiAdvisorPanel({ onOpenReportModal }: AiAdvisorPanelProps) {
           <div className="p-3.5 rounded-xl bg-slate-900/70 border border-slate-800 space-y-1.5">
             <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-400">
               <ShieldCheck className="w-4 h-4" />
-              <span>Executive Advisory Synthesis</span>
+              <span>{t.aiAdvisor.executiveSummary}</span>
             </div>
             <p className="text-xs text-slate-200 leading-relaxed font-sans">
               {advisorData.summary}
@@ -282,7 +282,7 @@ export function AiAdvisorPanel({ onOpenReportModal }: AiAdvisorPanelProps) {
             <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2 text-xs">
               <span className="font-bold text-amber-300 flex items-center gap-1.5">
                 <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" />
-                Engineering Recommendations
+                {t.aiAdvisor.engineeringRecommendations}
               </span>
               <ul className="space-y-1.5 text-slate-300 text-[11px] pl-2">
                 {advisorData.recommendations.map((rec, i) => (
@@ -299,7 +299,7 @@ export function AiAdvisorPanel({ onOpenReportModal }: AiAdvisorPanelProps) {
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="p-3 rounded-xl bg-emerald-950/20 border border-emerald-800/40 space-y-1.5">
               <span className="font-bold text-emerald-300 flex items-center gap-1 text-[11px]">
-                <span>Key Advantages</span>
+                <span>{t.aiAdvisor.keyAdvantages}</span>
               </span>
               <ul className="space-y-1 text-slate-300 text-[10px]">
                 {advisorData.advantages.map((adv, i) => (
@@ -314,7 +314,7 @@ export function AiAdvisorPanel({ onOpenReportModal }: AiAdvisorPanelProps) {
             <div className="p-3 rounded-xl bg-amber-950/20 border border-amber-800/40 space-y-1.5">
               <span className="font-bold text-amber-300 flex items-center gap-1 text-[11px]">
                 <AlertTriangle className="w-3 h-3 text-amber-400" />
-                <span>Risks & Limitations</span>
+                <span>{t.aiAdvisor.risksLimitations}</span>
               </span>
               <ul className="space-y-1 text-slate-300 text-[10px]">
                 {advisorData.risks.map((risk, i) => (
@@ -333,7 +333,7 @@ export function AiAdvisorPanel({ onOpenReportModal }: AiAdvisorPanelProps) {
               <div className="flex items-center justify-between text-slate-400">
                 <span className="text-[10px] font-bold text-slate-300 flex items-center gap-1">
                   <Info className="w-3 h-3 text-sky-400" />
-                  <span>Technical & Policy Citations Grounding</span>
+                  <span>{t.aiAdvisor.citationsGrounding}</span>
                 </span>
                 <span className="text-[9px] font-mono text-slate-500">
                   {advisorData.modelUsed || 'Gemini'}

@@ -127,7 +127,7 @@ export function LocationTimeCard() {
             onClick={() => setShowAdvancedCoords(!showAdvancedCoords)}
             className="text-[11px] font-mono text-sky-400 hover:text-sky-300 flex items-center gap-1"
           >
-            <span>{showAdvancedCoords ? 'Simple' : t.locationTime.customCoordinates}</span>
+            <span>{showAdvancedCoords ? t.locationTime.simple : t.locationTime.customCoordinates}</span>
             {showAdvancedCoords ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </button>
         </div>
@@ -150,14 +150,14 @@ export function LocationTimeCard() {
           }}
           className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 font-medium focus:outline-none focus:border-sky-500 cursor-pointer"
         >
-          <optgroup label="🇧🇩 Bangladesh Divisions (Verified Coordinates)">
+          <optgroup label={t.locationTime.bdDivisionsLabel}>
             {CITY_PRESETS.filter((c) => c.country === 'Bangladesh').map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name} ({c.latitude > 0 ? `+${c.latitude}°N` : `${c.latitude}°S`}, {c.longitude > 0 ? `+${c.longitude}°E` : `${c.longitude}°W`})
               </option>
             ))}
           </optgroup>
-          <optgroup label="🌐 Global & Reference Sites">
+          <optgroup label={t.locationTime.globalSitesLabel}>
             {CITY_PRESETS.filter((c) => c.country !== 'Bangladesh').map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name} ({c.latitude > 0 ? `+${c.latitude}°N` : `${c.latitude}°S`}, {c.longitude > 0 ? `+${c.longitude}°E` : `${c.longitude}°W`})
@@ -165,16 +165,14 @@ export function LocationTimeCard() {
             ))}
           </optgroup>
           {!CITY_PRESETS.some((c) => c.name === location.city) && (
-            <option value="">{location.city} (Custom Location)</option>
+            <option value="">{location.city} ({t.locationTime.customLocation})</option>
           )}
         </select>
 
         {/* Illustrative Geometry Disclaimer (PRD & Rules 4.A, 10) */}
         <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[10px] text-amber-300/90 leading-relaxed flex items-start gap-2">
           <span className="shrink-0 text-xs">ℹ️</span>
-          <span>
-            <strong>Simulated Archetype:</strong> Current 3D buildings represent illustrative geometries for raycast shading analysis. City selection updates astronomical sun coordinates and irradiance ephemeris.
-          </span>
+          <span>{t.locationTime.simulatedArchetypeNotice}</span>
         </div>
 
         {/* Advanced Coordinates Form */}
@@ -182,7 +180,7 @@ export function LocationTimeCard() {
           <form onSubmit={handleApplyCoordinates} className="pt-2 border-t border-slate-800/80 space-y-2">
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div>
-                <label className="text-[10px] text-slate-400 font-mono">Latitude (-90 to +90)</label>
+                <label className="text-[10px] text-slate-400 font-mono">{t.locationTime.latLabel}</label>
                 <input
                   type="text"
                   value={manualLat}
@@ -191,7 +189,7 @@ export function LocationTimeCard() {
                 />
               </div>
               <div>
-                <label className="text-[10px] text-slate-400 font-mono">Longitude (-180 to +180)</label>
+                <label className="text-[10px] text-slate-400 font-mono">{t.locationTime.lonLabel}</label>
                 <input
                   type="text"
                   value={manualLon}
@@ -202,7 +200,7 @@ export function LocationTimeCard() {
             </div>
 
             <div>
-              <label className="text-[10px] text-slate-400 font-mono">IANA Timezone (Handles DST)</label>
+              <label className="text-[10px] text-slate-400 font-mono">{t.locationTime.tzLabel}</label>
               <input
                 type="text"
                 value={manualTz}
@@ -222,7 +220,7 @@ export function LocationTimeCard() {
               type="submit"
               className="w-full py-1.5 px-3 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 text-xs font-semibold transition-colors"
             >
-              Apply Custom Coordinates
+              {t.locationTime.applyCoordinates}
             </button>
           </form>
         )}

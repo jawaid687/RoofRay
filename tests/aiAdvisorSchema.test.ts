@@ -1,5 +1,6 @@
 import {
   validateAdvisorPayload,
+  validateAdvisorResponseSchema,
   checkRateLimit,
   handleSolarAdvisorRequest,
   SolarAdvisorRequest,
@@ -124,6 +125,45 @@ export async function runAiAdvisorTests() {
   assert(fallbackSafe.configured === true, 'Treated as configured attempt');
   assert(Boolean(fallbackSafe.error), 'Safe error code returned without throwing unhandled exception');
   assert(!JSON.stringify(fallbackSafe).includes('invalid_key_for_testing'), 'API secret is NEVER leaked in response text');
+
+  // Test 6: AI Response Schema Validation (Priority 5)
+  const validAiResponse = {
+    summary: 'Strong rooftop solar potential with 8.5 kW peak capacity.',
+    recommendations: ['Install 21 high-efficiency panels.', 'Maintain 0.8m perimeter setback.'],
+    advantages: ['High solar demand coverage.'],
+    risks: ['Minor morning shadow from eastern parapet.'],
+    assumptions: ['Clear-sky geometric calculation.'],
+    next_steps: ['Conduct licensed electrical inspection.'],
+  };
+  const validSchemaRes = validateAdvisorResponseSchema(validAiResponse);
+  assert(validSchemaRes.valid === true, 'Strict response schema validator accepts compliant AI JSON');
+  assert(validSchemaRes.data?.recommendations.length === 2, 'Parsed recommendations extracted cleanly');
+
+  // Reject non-object root
+  assert(!validateAdvisorResponseSchema('not an object').valid, 'Non-object root response rejected');
+  assert(!validateAdvisorResponseSchema([]).valid, 'Array root response rejected');
+
+  // Reject missing/empty summary
+  assert(!validateAdvisorResponseSchema({ ...validAiResponse, summary: '' }).valid, 'Empty summary rejected');
+  assert(!validateAdvisorResponseSchema({ ...validAiResponse, summary: 123 }).valid, 'Non-string summary rejected');
+
+  // Reject empty recommendations array
+  assert(!validateAdvisorResponseSchema({ ...validAiResponse, recommendations: [] }).valid, 'Empty recommendations array rejected');
+
+  // REJECT non-string items in arrays (strictly prevents [object Object] conversion)
+  const objectInArray = {
+    ...validAiResponse,
+    recommendations: [{ title: 'Malformed object recommendation' }],
+  };
+  const objectRejectRes = validateAdvisorResponseSchema(objectInArray);
+  assert(!objectRejectRes.valid, 'Arbitrary object inside array rejected (no silent [object Object] conversion)');
+  assert(Boolean(objectRejectRes.error?.includes('must be a string')), 'Descriptive type mismatch error returned');
+
+  const numberInArray = {
+    ...validAiResponse,
+    risks: [12345],
+  };
+  assert(!validateAdvisorResponseSchema(numberInArray).valid, 'Numeric item inside string array rejected');
 
   console.log(`\n========================================`);
   console.log(`AI Advisor Schema Tests: ${passed} passed, ${failed} failed.`);

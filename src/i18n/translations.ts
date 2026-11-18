@@ -28,6 +28,13 @@ export interface TranslationSchema {
     stat2Value: string;
     stat3Label: string;
     stat3Value: string;
+    simulatedEphemerisBadge: string;
+    heroEngineTitle: string;
+    heroEngineDesc: string;
+    launchStudio: string;
+    startTour: string;
+    diurnalBadge: string;
+    netMeteringBadge: string;
   };
   problemSolution: {
     badge: string;
@@ -121,6 +128,11 @@ export interface TranslationSchema {
     disclaimer: string;
     copyright: string;
     github: string;
+    footerFeatures: string;
+    footerWorkflow: string;
+    footerAiTech: string;
+    footerGithub: string;
+    targetTrack: string;
   };
   // App UI
   app: {
@@ -160,6 +172,15 @@ export interface TranslationSchema {
     apply: string;
     diurnalPlayback: string;
     speed: string;
+    simple: string;
+    bdDivisionsLabel: string;
+    globalSitesLabel: string;
+    customLocation: string;
+    simulatedArchetypeNotice: string;
+    latLabel: string;
+    lonLabel: string;
+    tzLabel: string;
+    applyCoordinates: string;
   };
   buildingInspector: {
     title: string;
@@ -183,6 +204,23 @@ export interface TranslationSchema {
     clearSkyNotice: string;
     offlineNotice: string;
     viewHeatmap: string;
+    rerunAnalysis: string;
+    reanalyzePotential: string;
+    analyzingProgress: string;
+    cancel: string;
+    webWorkerTitle: string;
+    webWorkerDesc: string;
+    roofSuitability: string;
+    clearSkyEstimate: string;
+    viable: string;
+    monthlyInsolation: string;
+    clickBarInspect: string;
+    satelliteClimatology: string;
+    allSkyInsolation: string;
+    cloudAttenuation: string;
+    weatherInformedYield: string;
+    sourceDistinctionNotice: string;
+    bestContiguousZone: string;
   };
   panelConfig: {
     title: string;
@@ -265,6 +303,21 @@ export interface TranslationSchema {
     risks: string;
     assumptions: string;
     nextSteps: string;
+    quickPrompt1: string;
+    quickPrompt2: string;
+    quickPrompt3: string;
+    quickPrompt4: string;
+    selectBuildingPrompt: string;
+    selectBuildingDesc: string;
+    fullReport: string;
+    consultationError: string;
+    keySetupRequired: string;
+    keySetupDesc: string;
+    executiveSummary: string;
+    engineeringRecommendations: string;
+    keyAdvantages: string;
+    risksLimitations: string;
+    citationsGrounding: string;
   };
   solarReportModal: {
     title: string;
@@ -326,6 +379,13 @@ export const translations: Record<Language, TranslationSchema> = {
       stat2Value: 'NOAA Ephemeris',
       stat3Label: 'AI Grounding',
       stat3Value: 'SREDA & NREL RAG',
+      simulatedEphemerisBadge: '⚡ 3D RAYCASTING & LIVE SOLAR EPHEMERIS',
+      heroEngineTitle: 'Real-Time Shading & Solar Potential Engine',
+      heroEngineDesc: 'Discretized 0.8m rooftop raycast grid, NOAA astronomical sun ephemeris, automated panel layout, and Gemini-grounded advisory.',
+      launchStudio: 'Launch Interactive 3D Studio',
+      startTour: 'Start Automated Tour',
+      diurnalBadge: 'Live Diurnal Solar Engine',
+      netMeteringBadge: 'SREDA & BPDB Net-Metering Compatible',
     },
     problemSolution: {
       badge: 'Challenges & Technological Solution',
@@ -420,6 +480,11 @@ export const translations: Record<Language, TranslationSchema> = {
       disclaimer: 'RoofRay provides engineering simulation estimates for solar planning. Official rooftop structural audits and utility interconnection assessments must be performed prior to installation.',
       copyright: 'RoofRay. Developed for AI Builders Congress 2026. All rights reserved.',
       github: 'GitHub Repository',
+      footerFeatures: 'Features',
+      footerWorkflow: 'How It Works',
+      footerAiTech: 'AI Architecture',
+      footerGithub: 'GitHub Repository',
+      targetTrack: 'Target Track: Idea to Unicorn • ClimateSphere AI',
     },
     app: {
       plannerTab: 'Planner',
@@ -458,6 +523,15 @@ export const translations: Record<Language, TranslationSchema> = {
       apply: 'Apply Coordinates',
       diurnalPlayback: 'Diurnal Sun Simulation',
       speed: 'Playback Speed',
+      simple: 'Simple',
+      bdDivisionsLabel: '🇧🇩 Bangladesh Divisions (Verified Coordinates)',
+      globalSitesLabel: '🌐 Global & Reference Sites',
+      customLocation: 'Custom Location',
+      simulatedArchetypeNotice: 'Simulated Archetype: Current 3D buildings represent illustrative geometries for raycast shading analysis. City selection updates astronomical sun coordinates and irradiance ephemeris.',
+      latLabel: 'Latitude (-90 to +90)',
+      lonLabel: 'Longitude (-180 to +180)',
+      tzLabel: 'IANA Timezone (Handles DST)',
+      applyCoordinates: 'Apply Custom Coordinates',
     },
     buildingInspector: {
       title: 'Target Building Geometry',
@@ -481,6 +555,23 @@ export const translations: Record<Language, TranslationSchema> = {
       clearSkyNotice: 'Pure astronomical clear-sky simulation via NOAA ephemeris.',
       offlineNotice: 'NASA service offline. Running pure geometric raycasting.',
       viewHeatmap: 'Toggle Solar Heatmap',
+      rerunAnalysis: 'Re-run Annual Analysis',
+      reanalyzePotential: 'Re-analyze Solar Potential',
+      analyzingProgress: 'Analyzing 12 Months',
+      cancel: 'Cancel',
+      webWorkerTitle: 'Web Worker Solar Simulation',
+      webWorkerDesc: 'Off-thread raycasting across 12 representative days and clear-sky plane-of-array irradiance models.',
+      roofSuitability: 'Rooftop Solar Suitability',
+      clearSkyEstimate: 'Clear-sky estimate',
+      viable: 'Viable',
+      monthlyInsolation: 'Monthly Solar Insolation (kWh/m²)',
+      clickBarInspect: 'Click any bar to inspect that month on the 3D rooftop heatmap.',
+      satelliteClimatology: 'Satellite Climatology Resource (NASA POWER)',
+      allSkyInsolation: 'All-Sky Insolation',
+      cloudAttenuation: 'Cloud Attenuation',
+      weatherInformedYield: 'Weather-Informed Yield Estimate',
+      sourceDistinctionNotice: 'Source & Distinction Notice:',
+      bestContiguousZone: 'Best Contiguous Placement Zone',
     },
     panelConfig: {
       title: 'PV Module Specifications',
@@ -563,6 +654,21 @@ export const translations: Record<Language, TranslationSchema> = {
       risks: 'Operational & Shading Risks',
       assumptions: 'Engineering & Economic Assumptions',
       nextSteps: 'Actionable Next Steps',
+      quickPrompt1: 'Analyze my rooftop solar viability & payback',
+      quickPrompt2: 'Will shading from nearby towers or obstacles penalize yield?',
+      quickPrompt3: 'Check SREDA 70% net-metering limit for Bangladesh',
+      quickPrompt4: 'Suggest optimal panel orientation and safety setbacks',
+      selectBuildingPrompt: 'Select a Building',
+      selectBuildingDesc: 'Please choose a rooftop in the Planner tab to consult the AI Advisor.',
+      fullReport: 'Full Report',
+      consultationError: 'Consultation Error',
+      keySetupRequired: 'Gemini API Key Setup Required',
+      keySetupDesc: 'The AI Solar Advisor runs server-side to protect secret credentials. To activate live generative responses from Google Gemini:',
+      executiveSummary: 'Executive Advisory Synthesis',
+      engineeringRecommendations: 'Engineering Recommendations',
+      keyAdvantages: 'Key Advantages',
+      risksLimitations: 'Risks & Limitations',
+      citationsGrounding: 'Technical & Policy Citations Grounding',
     },
     solarReportModal: {
       title: 'RoofRay Feasibility & Engineering Report',
@@ -622,6 +728,13 @@ export const translations: Record<Language, TranslationSchema> = {
       stat2Value: 'নোয়া (NOAA) পজিশন',
       stat3Label: 'এআই গ্রাউন্ডিং',
       stat3Value: 'শ্রেডা ও এনআরইএল র্যাগ',
+      simulatedEphemerisBadge: '⚡ ৩ডি রে-কাস্টিং এবং লাইভ সৌর অবস্থান',
+      heroEngineTitle: 'রিয়েল-টাইম শেডিং এবং সৌর সম্ভাবনা ইঞ্জিন',
+      heroEngineDesc: '০.৮ মিটার গ্রিড রে-কাস্টিং, নোয়া জ্যোতির্বিজ্ঞান সূর্য অবস্থান, স্বয়ংক্রিয় প্যানেল বিন্যাস এবং জেমিনি এআই উপদেষ্টা।',
+      launchStudio: 'ইন্টারেক্টিভ ৩ডি স্টুডিও চালু করুন',
+      startTour: 'স্বয়ংক্রিয় ট্যুর শুরু করুন',
+      diurnalBadge: 'লাইভ দৈনিক সৌর ইঞ্জিন',
+      netMeteringBadge: 'স্রেডা ও বিপিডিবি নেট-মিটারিং উপযোগী',
     },
     problemSolution: {
       badge: 'সমস্যা ও প্রযুক্তিগত সমাধান',
@@ -716,6 +829,11 @@ export const translations: Record<Language, TranslationSchema> = {
       disclaimer: 'রূফরে প্রযুক্তিগত সিমুলেশন প্রদান করে। সৌর প্রকল্প বাস্তবায়নের পূর্বে পেশাদার স্ট্রাকচারাল অডিট ও বিদ্যুৎ বিতরণ কর্তৃপক্ষের অনুমতি আবশ্যক।',
       copyright: 'রূফরে (RoofRay)। এআই বিল্ডার্স কংগ্রেস ২০২৬-এর জন্য নির্মিত। সর্বস্বত্ব সংরক্ষিত।',
       github: 'গিটহাব রিপোজিটরি',
+      footerFeatures: 'বৈশিষ্ট্যসমূহ',
+      footerWorkflow: 'কীভাবে কাজ করে',
+      footerAiTech: 'এআই আর্কিটেকচার',
+      footerGithub: 'গিটহাব রিপোজিটরি',
+      targetTrack: 'লক্ষ্য ট্র্যাক: আইডিয়া টু ইউনিকর্ন • ক্লাইমেটস্ফিয়ার এআই',
     },
     app: {
       plannerTab: 'প্ল্যানার',
@@ -754,6 +872,15 @@ export const translations: Record<Language, TranslationSchema> = {
       apply: 'স্থানাঙ্ক প্রয়োগ করুন',
       diurnalPlayback: '২৪ ঘণ্টার সৌর সিমুলেশন',
       speed: 'গতিবেগ',
+      simple: 'সহজ',
+      bdDivisionsLabel: '🇧🇩 বাংলাদেশ বিভাগসমূহ (যাচাইকৃত স্থানাঙ্ক)',
+      globalSitesLabel: '🌐 বৈশ্বিক ও রেফারেন্স সাইট',
+      customLocation: 'কাস্টম অবস্থান',
+      simulatedArchetypeNotice: 'সিমুলেটেড আর্কিটাইপ: বর্তমান ৩ডি ভবনগুলি রে-কাস্ট শেডিং বিশ্লেষণের জন্য দৃষ্টান্তমূলক জ্যামিতি উপস্থাপন করে। শহর নির্বাচন জ্যোতির্বিজ্ঞান সূর্য স্থানাঙ্ক ও বিকিরণ আপডেট করে।',
+      latLabel: 'অক্ষাংশ (-৯০ থেকে +৯০)',
+      lonLabel: 'দ্রাঘিমাংশ (-১৮০ থেকে +১৮০)',
+      tzLabel: 'আইএএনএ টাইমজোন (ডিএসটি সমর্থন)',
+      applyCoordinates: 'কাস্টম স্থানাঙ্ক প্রয়োগ করুন',
     },
     buildingInspector: {
       title: 'ভবন ও ছাদের জ্যামিতি',
@@ -777,6 +904,23 @@ export const translations: Record<Language, TranslationSchema> = {
       clearSkyNotice: 'নোয়া সূত্র অনুযায়ী ক্লিয়ার-স্কাই জ্যামিতিক সিমুলেশন।',
       offlineNotice: 'নাসা সার্ভিস অফলাইন। পিউর রে-কাস্টিং চলছে।',
       viewHeatmap: 'সৌর হিটম্যাপ পরিবর্তন',
+      rerunAnalysis: 'বার্ষিক বিশ্লেষণ পুনরায় চালান',
+      reanalyzePotential: 'সৌর সম্ভাবনা পুনরায় বিশ্লেষণ করুন',
+      analyzingProgress: '১২ মাসের বিশ্লেষণ চলছে',
+      cancel: 'বাতিল',
+      webWorkerTitle: 'ওয়েব ওয়ার্কার সৌর সিমুলেশন',
+      webWorkerDesc: '১২টি প্রতিনিধিত্বমূলক দিন ও ক্লিয়ার-স্কাই বিকিরণ মডেলে অফ-থ্রেড রে-কাস্টিং।',
+      roofSuitability: 'ছাদের সৌর উপযোগিতা',
+      clearSkyEstimate: 'পরিষ্কার আকাশ অনুমান',
+      viable: 'কার্যোপযোগী',
+      monthlyInsolation: 'মাসিক সৌর বিকিরণ (kWh/m²)',
+      clickBarInspect: '৩ডি ছাদের হিটম্যাপে সেই মাসটি পরীক্ষা করতে যেকোনো বারে ক্লিক করুন।',
+      satelliteClimatology: 'স্যাটেলাইট জলবায়ু সম্পদ (নাসা পাওয়ার)',
+      allSkyInsolation: 'অল-স্কাই সৌর বিকিরণ',
+      cloudAttenuation: 'মেঘের বাধা (হ্রাস)',
+      weatherInformedYield: 'আবহাওয়া-নির্ভর উৎপাদন অনুমান',
+      sourceDistinctionNotice: 'উৎস ও পার্থক্য বিজ্ঞপ্তি:',
+      bestContiguousZone: 'সেরা অবিচ্ছিন্ন স্থাপন অঞ্চল',
     },
     panelConfig: {
       title: 'পিভি মডিউল স্পেসিফিকেশন',
@@ -859,6 +1003,21 @@ export const translations: Record<Language, TranslationSchema> = {
       risks: 'ছায়াজনিত ও প্রযুক্তিগত ঝুঁকি',
       assumptions: 'প্রকৌশল ও আর্থিক অনুমানসমূহ',
       nextSteps: 'পরবর্তী কার্যকর পদক্ষেপ',
+      quickPrompt1: 'আমার ছাদের সৌর কার্যক্ষমতা ও পে-ব্যাক বিশ্লেষণ করুন',
+      quickPrompt2: 'কাছের টাওয়ার বা বাধার ছায়া কি উৎপাদনে ক্ষতি করবে?',
+      quickPrompt3: 'বাংলাদেশের জন্য স্রেডা ৭০% নেট-মিটারিং সীমা যাচাই করুন',
+      quickPrompt4: 'অনুকূল প্যানেল ওরিয়েন্টেশন এবং সুরক্ষা সেটব্যাকের পরামর্শ দিন',
+      selectBuildingPrompt: 'একটি ভবন নির্বাচন করুন',
+      selectBuildingDesc: 'এআই উপদেষ্টার সাথে পরামর্শ করতে প্ল্যানার ট্যাবে একটি ছাদ নির্বাচন করুন।',
+      fullReport: 'সম্পূর্ণ রিপোর্ট',
+      consultationError: 'পরামর্শ ত্রুটি',
+      keySetupRequired: 'জেমিনি এপিআই কি সেটআপ প্রয়োজন',
+      keySetupDesc: 'গোপন তথ্য সুরক্ষার জন্য এআই সোলার অ্যাডভাইজার সার্ভার-সাইডে চলে। গুগল জেমিনি থেকে লাইভ উত্তর পেতে:',
+      executiveSummary: 'কার্যনির্বাহী উপদেষ্টা সংশ্লেষণ',
+      engineeringRecommendations: 'প্রকৌশলগত সুপারিশমালা',
+      keyAdvantages: 'প্রধান সুবিধাসমূহ',
+      risksLimitations: 'ঝুঁকি ও সীমাবদ্ধতা',
+      citationsGrounding: 'প্রযুক্তিগত ও নীতিগত তথ্যসূত্র',
     },
     solarReportModal: {
       title: 'রূফরে সৌর সম্ভাব্যতা ও প্রকৌশল রিপোর্ট',

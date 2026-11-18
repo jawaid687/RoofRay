@@ -2,12 +2,33 @@ import { defineConfig, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import fs from 'fs';
 
-// Auto-load .env into process.env for dev server middleware
+// Auto-load .env into process.env for dev server middleware (Node 18+ compatible)
 if (fs.existsSync('.env')) {
-  try {
-    process.loadEnvFile?.('.env');
-  } catch {
-    // ignore
+  if (typeof process.loadEnvFile === 'function') {
+    try {
+      process.loadEnvFile('.env');
+    } catch {
+      // ignore
+    }
+  } else {
+    try {
+      const content = fs.readFileSync('.env', 'utf-8');
+      for (const line of content.split(/\r?\n/)) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+        const eqIdx = trimmed.indexOf('=');
+        if (eqIdx > 0) {
+          const key = trimmed.slice(0, eqIdx).trim();
+          let val = trimmed.slice(eqIdx + 1).trim();
+          if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+            val = val.slice(1, -1);
+          }
+          if (!(key in process.env)) process.env[key] = val;
+        }
+      }
+    } catch {
+      // ignore
+    }
   }
 }
 

@@ -14,8 +14,10 @@
 
 ---
 
-[![Tests: 235 Passed](https://img.shields.io/badge/Unit_Tests-235%2F235_Passing-10b981.svg?style=for-the-badge&logo=jest)](npm-run-test:calc)
-[![Integration: 41 Passed](https://img.shields.io/badge/Integration_Tests-41%2F41_Passing-10b981.svg?style=for-the-badge)](npm-run-server)
+[![Tests: 260 Passed](https://img.shields.io/badge/Unit_Tests-260%2F260_Passing-10b981.svg?style=for-the-badge&logo=jest)](npm-run-test:calc)
+[![Integration: 57 Passed](https://img.shields.io/badge/Integration_Tests-57%2F57_Passing-10b981.svg?style=for-the-badge)](npm-run-test:integration)
+[![Browser E2E: 20 Passed](https://img.shields.io/badge/Browser_E2E-20%2F20_Passing-10b981.svg?style=for-the-badge&logo=googlechrome)](npm-run-test:browser)
+[![Total: 337 Passing](https://img.shields.io/badge/All_Tests-337%2F337_Passing-10b981.svg?style=for-the-badge)](npm-run-test:all)
 [![React 19](https://img.shields.io/badge/React-19.0.0-61dafb.svg?style=for-the-badge&logo=react)](https://react.dev/)
 [![Three.js](https://img.shields.io/badge/Three.js-r174-000000.svg?style=for-the-badge&logo=three.js)](https://threejs.org/)
 [![TypeScript 5.7](https://img.shields.io/badge/TypeScript-5.7-3178c6.svg?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
@@ -119,36 +121,53 @@ Located in `src/components/ui/SolarReportModal.tsx`:
 
 ---
 
-## 🧪 Comprehensive Test Suite (276 Passing Assertions)
+## 🧪 Comprehensive Test Suite (337 Passing Assertions)
 
-RoofRay maintains an extensive automated test suite executed with TypeScript:
+RoofRay maintains an extensive three-tiered automated test suite executed with TypeScript:
 
 ```bash
-# Run calculation and logic unit test suites (235 tests)
+# 1. Run physical simulation, astronomical ephemeris, and financial unit tests (260 assertions)
 npm run test:calc
 
-# Run production server, security, and localization integration tests (41 tests)
+# 2. Run production server, security containment, and RAG integration tests (57 assertions)
 npm run test:integration
 
-# Run all suites together (276 tests)
+# 3. Run headless Chrome CDP browser-level E2E tests (20 assertions)
+npm run test:browser
+
+# 4. Run entire pipeline: build + calc + integration + browser (337 assertions)
 npm run test:all
 ```
 
-### Verified Test Suites:
-1. **NOAA Astronomical Sun Engine (30 tests):** Solar noon, solstices, equinoxes, Sydney southern azimuth, Tromsø polar day/night within $\pm 0.1^\circ$.
-2. **Fixed Buildings & Live Shading (14 tests):** Immutability, ray-box intersection, diurnal shadow lit-ratios.
-3. **Annual Solar Analysis (12 tests):** 12-month integration, Web Worker cancellation, and cache hit latency.
-4. **Manual Placement & Setbacks (32 tests):** 0.8m perimeter setback, 0.5m obstacle buffer, SAT collision checks, undo/redo stack.
-5. **Milestone M6 & Performance (13 tests):** Solstice arc geometry, compass vectors ($N=-Z, E=+X, S=+Z, W=-X$), and frame budgets.
-6. **Bangladesh Localization (50 tests):** Verified coordinates for all 8 divisions, Dhaka equinox/solstice ephemeris, BDT formatting.
-7. **Financial Configuration (21 tests):** BDT/USD capex, slab savings, missing-tariff guard (`paybackYears: null`), configurable export credit ratio, DoE grid emission factor.
-8. **Lexical RAG Retrieval (13 tests):** BM25 term weighting, SREDA/BPDB/NREL chunk retrieval, metadata attribution.
-9. **AI Advisor Schema & Safety (22 tests):** Coordinate bounds, dimension checks, wattage limits, prompt bounds, header auth, traversal defense, unconfigured key handling, secret leakage prevention.
-10. **Deterministic Calculations (28 tests):** Yield sum invariant, optimization modes, recommendation narrative.
+### Verified Test Suites & Coverage:
+1. **NOAA Astronomical Sun Engine (30 assertions):** Solar noon, solstices, equinoxes, Sydney southern azimuth, Tromsø polar day/night within $\pm 0.1^\circ$.
+2. **Fixed Buildings & Live Shading (14 assertions):** Immutability, ray-box intersection, diurnal shadow lit-ratios.
+3. **Annual Solar Analysis (12 assertions):** 12-month integration, Web Worker cancellation, and cache hit latency.
+4. **Manual Placement & Setbacks (32 assertions):** 0.8m perimeter setback, 0.5m obstacle buffer, SAT collision checks, undo/redo stack.
+5. **Milestone M6 & Performance (13 assertions):** Solstice arc geometry, compass vectors ($N=-Z, E=+X, S=+Z, W=-X$), and 60 FPS budgets.
+6. **Bangladesh Localization (50 assertions):** Verified coordinates for all 8 divisions, Dhaka equinox/solstice ephemeris, BDT formatting.
+7. **Financial Configuration (21 assertions):** BDT/USD capex, flat-tariff savings, missing-tariff guard (`paybackYears: null`), configurable export credit ratio, DoE grid emission factor.
+8. **Lexical RAG Retrieval (13 assertions):** BM25 term weighting, SREDA/BPDB/NREL chunk retrieval, official document links.
+9. **Deterministic NASA POWER Climatology (15 assertions):** Strict offline fixtures, physical invariant ($\text{ClearSky} \ge \text{AllSky}$), missing clear-sky rejection (never substituted), null ambient temperatures.
+10. **AI Advisor Schema & Safety (32 assertions):** Coordinate bounds, dimension checks, wattage limits, prompt bounds, strict response schema validator, rejection of arbitrary objects in arrays (no silent `[object Object]`), secret leakage prevention.
+11. **Deterministic Calculations & Narrative (28 assertions):** Per-panel yield sum invariant, optimization modes, recommendation narrative.
+12. **Production Server & Security Controls (57 assertions):** Canonical path containment against `dist/`, traversal blocking (`/..%2f..%2fpackage.json`, `/%2e%2e/%2e%2e/`), sibling directory attack defense (`/dist_sibling/`), malformed encoding rejection (`/%FF` $\to$ 400), CORS origin whitelist (403 on disallowed preflight), 100KB body limit (413), rate limiting, daily quota tracking (500 req/day), unmatched `/api/*` 404 defense.
+13. **Headless Chrome Browser E2E Tests (20 assertions):** Live Chrome DevTools Protocol (CDP) verification:
+    - DOM hydration and unique platform branding markers.
+    - Initial top scroll verification (`scrollY === 0`).
+    - Real mouse-wheel event dispatch causing natural vertical scrolling (`scrollY > 0`).
+    - Scrolling to bottom and footer visibility verification (`rect.top < window.innerHeight`).
+    - Competition track attribution ("Idea to Unicorn" / "ClimateSphere AI").
+    - Mobile responsive viewport scrolling (375x667).
+    - Real-time bilingual localization DOM toggle (English $\leftrightarrow$ বাংলা).
+    - Route switching to `/app`, dynamic `body.app-mode` locking (`overflow: hidden`).
+    - Three.js WebGL `<canvas>` mount and active render dimensions ($>800\times600$).
+    - 3D canvas mouse-wheel zoom event handling without window scroll leakage.
 
-**Result: 235 Calculation Suite Assertions Passed, 0 Failed, 0 Regressions.**  
-Plus **41 End-to-End Production & Integration Assertions** in `scripts/validateAll.js`.  
-**Grand Total: 276 Passing Automated Assertions.**
+**Tier 1: 260 Unit & Calculation Assertions Passed.**  
+**Tier 2: 57 Server & Security Integration Assertions Passed.**  
+**Tier 3: 20 Headless Chrome E2E Assertions Passed.**  
+**Grand Total: 337 Passing Automated Assertions (0 Failed, 0 Regressions).**
 
 ---
 

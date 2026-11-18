@@ -218,13 +218,13 @@ export function LandingPage() {
 
               <div className="space-y-1.5 max-w-md">
                 <span className="text-xs font-mono text-emerald-400 bg-emerald-950/60 px-2.5 py-1 rounded-full border border-emerald-500/30">
-                  ⚡ 3D RAYCASTING & LIVE SOLAR EPHEMERIS
+                  {t.hero.simulatedEphemerisBadge}
                 </span>
                 <h3 className="text-lg sm:text-xl font-bold text-white">
-                  Real-Time Shading & Solar Potential Engine
+                  {t.hero.heroEngineTitle}
                 </h3>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Discretized 0.8m rooftop raycast grid, NOAA astronomical sun ephemeris, automated panel layout, and Gemini-grounded advisory.
+                  {t.hero.heroEngineDesc}
                 </p>
               </div>
 
@@ -234,13 +234,13 @@ export function LandingPage() {
                   className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-2 transition-all shadow-lg shadow-amber-500/25"
                 >
                   <Play className="w-3.5 h-3.5 fill-current" />
-                  <span>Launch Interactive 3D Studio</span>
+                  <span>{t.hero.launchStudio}</span>
                 </button>
                 <button
                   onClick={() => handleLaunchApp(true)}
                   className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-xs font-medium transition-all"
                 >
-                  Start Automated Tour
+                  {t.hero.startTour}
                 </button>
               </div>
             </div>
@@ -248,12 +248,12 @@ export function LandingPage() {
             {/* Simulated Corner Badges */}
             <div className="absolute top-4 left-4 z-20 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800 text-[10px] font-mono text-slate-300">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-              <span>Live Diurnal Solar Engine</span>
+              <span>{t.hero.diurnalBadge}</span>
             </div>
 
             <div className="absolute bottom-4 right-4 z-20 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800 text-[10px] font-mono text-slate-300">
               <Scale className="w-3.5 h-3.5 text-sky-400" />
-              <span>SREDA & BPDB Net-Metering Compatible</span>
+              <span>{t.hero.netMeteringBadge}</span>
             </div>
           </div>
         </div>
@@ -626,10 +626,10 @@ export function LandingPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-6 text-xs text-slate-400">
-              <button onClick={() => scrollToSection('features')} className="hover:text-amber-400 transition-colors">Features</button>
-              <button onClick={() => scrollToSection('workflow')} className="hover:text-amber-400 transition-colors">How It Works</button>
-              <button onClick={() => scrollToSection('ai-tech')} className="hover:text-amber-400 transition-colors">AI Architecture</button>
-              <a href="https://github.com/jawaid687/RoofRay" target="_blank" rel="noopener noreferrer" className="hover:text-amber-400 transition-colors">GitHub Repository</a>
+              <button onClick={() => scrollToSection('features')} className="hover:text-amber-400 transition-colors">{t.footer.footerFeatures}</button>
+              <button onClick={() => scrollToSection('workflow')} className="hover:text-amber-400 transition-colors">{t.footer.footerWorkflow}</button>
+              <button onClick={() => scrollToSection('ai-tech')} className="hover:text-amber-400 transition-colors">{t.footer.footerAiTech}</button>
+              <a href="https://github.com/jawaid687/RoofRay" target="_blank" rel="noopener noreferrer" className="hover:text-amber-400 transition-colors">{t.footer.footerGithub}</a>
             </div>
           </div>
 
@@ -639,7 +639,7 @@ export function LandingPage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-800/60 pt-6 text-[11px]">
             <span>© 2026 {t.footer.copyright}</span>
-            <span>Target Track: Idea to Unicorn • ClimateSphere AI</span>
+            <span>{t.footer.targetTrack}</span>
           </div>
         </div>
       </footer>

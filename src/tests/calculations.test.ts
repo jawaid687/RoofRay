@@ -19,6 +19,7 @@ import { runBangladeshLocalizationTests } from '../../tests/bangladeshLocalizati
 import { runFinancialConfigTests } from '../../tests/financialConfig.test';
 import { runRagTests } from '../../tests/ragRetrieval.test';
 import { runAiAdvisorTests } from '../../tests/aiAdvisorSchema.test';
+import { runNasaResourceTests } from '../../tests/nasaResource.test';
 
 async function runUnitTests() {
   const sunResults = runSunPositionTests();
@@ -58,6 +59,11 @@ async function runUnitTests() {
 
   const ragResults = runRagTests();
   if (ragResults.failed > 0) {
+    process.exit(1);
+  }
+
+  const nasaResults = runNasaResourceTests();
+  if (nasaResults.failed > 0) {
     process.exit(1);
   }
 

@@ -12,7 +12,11 @@
     "test": "tsx src/tests/calculations.test.ts",
     "test:calc": "tsx src/tests/calculations.test.ts",
     "test:integration": "tsx scripts/validateAll.js",
-    "test:all": "tsx src/tests/calculations.test.ts && tsx scripts/validateAll.js"
+    "test:browser": "tsx scripts/browserTest.js",
+    "test:all": "npm run build && tsx src/tests/calculations.test.ts && tsx scripts/validateAll.js && tsx scripts/browserTest.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   },
   "dependencies": {
     "@google/genai": "^3.6.0",
