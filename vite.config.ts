@@ -30,11 +30,12 @@ function solarAdvisorApiPlugin(): Plugin {
             JSON.stringify({
               status: 'ok',
               service: 'RoofRay AI Solar Advisor (Vite Dev Server)',
-              version: '3.0.0',
+              version: '3.3.0',
               timestamp: new Date().toISOString(),
               aiProvider: 'Google Gemini',
               modelConfigured: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
-              keyConfigured: Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'your_gemini_api_key_here'),
+              keyConfigured: Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'your_gemini_api_key_here' && process.env.GEMINI_API_KEY.trim().length > 10),
+              authMethod: 'x-goog-api-key header (secured)',
             })
           );
           return;

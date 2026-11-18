@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSolarStore } from '../../store/useSolarStore';
+import { useLanguage } from '../../i18n/useLanguage';
 import { Sparkles, Loader2, AlertTriangle, CheckCircle2, Info, XCircle, Calendar, CloudSun, ChevronDown, ChevronUp, Database } from 'lucide-react';
 import { MetricCard } from '../ui/MetricCard';
 import { fetchNasaSolarResource, SolarResourceData } from '../../services/solarResourceService';
@@ -7,6 +8,7 @@ import { fetchNasaSolarResource, SolarResourceData } from '../../services/solarR
 const MONTH_NAMES_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export function SolarAnalysisCard() {
+  const { t } = useLanguage();
   const selectedBuildingId = useSolarStore((s) => s.selectedBuildingId);
   const buildings = useSolarStore((s) => s.buildings);
   const analysisResults = useSolarStore((s) => s.analysisResults);
@@ -101,7 +103,7 @@ export function SolarAnalysisCard() {
           ) : (
             <>
               <Sparkles className="w-4 h-4" />
-              <span>Analyze Solar Potential</span>
+              <span>{t.solarAnalysis.runAnalysis}</span>
             </>
           )}
         </button>
@@ -410,21 +412,21 @@ export function SolarAnalysisCard() {
           {/* Metric Cards Grid */}
           <div className="grid grid-cols-2 gap-2">
             <MetricCard
-              label="Recommended Area"
+              label={t.solarAnalysis.recommendedArea}
               value={annualAnalysisResult ? annualAnalysisResult.recommendedArea : (analysis?.recommendedInstallationArea ?? 0)}
               unit="m²"
               subtext="Contiguous unshaded zone"
               variant="success"
             />
             <MetricCard
-              label="Annual Insolation"
+              label={t.solarAnalysis.annualInsolation}
               value={annualAnalysisResult ? annualAnalysisResult.averageAnnualKWhPerM2 : '--'}
               unit={annualAnalysisResult ? 'kWh/m²' : ''}
               subtext="Clear-sky estimate"
               variant="highlight"
             />
             <MetricCard
-              label="Avg Exposure Score"
+              label={t.solarAnalysis.exposureScore}
               value={
                 annualAnalysisResult
                   ? `${Math.round(annualAnalysisResult.averageAnnualExposure * 100)}%`
@@ -436,7 +438,7 @@ export function SolarAnalysisCard() {
               variant="highlight"
             />
             <MetricCard
-              label="Obstacle Footprint"
+              label={t.solarAnalysis.obstacleFootprint}
               value={annualAnalysisResult ? annualAnalysisResult.obstacleArea : (analysis?.obstacleArea ?? 0)}
               unit="m²"
               subtext="Physical HVAC & tanks"

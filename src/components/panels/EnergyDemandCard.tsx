@@ -1,7 +1,9 @@
 import { useSolarStore } from '../../store/useSolarStore';
+import { useLanguage } from '../../i18n/useLanguage';
 import { Zap, Home, Building2 } from 'lucide-react';
 
 export function EnergyDemandCard() {
+  const { t } = useLanguage();
   const monthlyConsumptionKWh = useSolarStore((s) => s.monthlyConsumptionKWh);
   const setMonthlyConsumption = useSolarStore((s) => s.setMonthlyConsumption);
 
@@ -20,9 +22,9 @@ export function EnergyDemandCard() {
         <div className="flex items-center justify-between text-xs font-semibold text-slate-300">
           <span className="flex items-center gap-1.5">
             <Zap className="w-3.5 h-3.5 text-amber-400" />
-            Monthly Electricity Demand
+            {t.energyDemand.monthlyConsumption}
           </span>
-          <span className="text-[10px] font-mono text-slate-400">Target Consumption</span>
+          <span className="text-[10px] font-mono text-slate-400">{t.energyDemand.annualConsumption}</span>
         </div>
 
         {/* Input & Unit */}
@@ -43,7 +45,7 @@ export function EnergyDemandCard() {
           </div>
 
           <div className="text-right">
-            <div className="text-[10px] text-slate-400">Annual Target</div>
+            <div className="text-[10px] text-slate-400">{t.energyDemand.annualConsumption}</div>
             <div className="text-xs font-bold font-mono text-amber-300">
               {annualConsumptionKWh.toLocaleString()} kWh/yr
             </div>
@@ -52,20 +54,20 @@ export function EnergyDemandCard() {
 
         {/* Quick Presets */}
         <div className="pt-2 border-t border-slate-800/80">
-          <div className="text-[11px] text-slate-400 mb-1.5">Quick Demand Presets</div>
+          <div className="text-[11px] text-slate-400 mb-1.5">{t.energyDemand.monthlyConsumption} Presets</div>
           <div className="grid grid-cols-4 gap-1.5">
             {presets.map((preset) => (
               <button
                 key={preset.label}
                 onClick={() => setMonthlyConsumption(preset.kwh)}
-                className={`px-2 py-1.5 rounded-lg text-center transition-all ${
+                className={`p-2 rounded-lg text-center transition-all border ${
                   monthlyConsumptionKWh === preset.kwh
-                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 font-semibold'
-                    : 'bg-slate-950/70 hover:bg-slate-800 text-slate-400 text-xs'
+                    ? 'border-amber-500 bg-amber-500/10 text-amber-300'
+                    : 'border-slate-800 bg-slate-950 hover:bg-slate-800/60 text-slate-400'
                 }`}
               >
-                <div className="text-[10px] truncate">{preset.label}</div>
-                <div className="text-[11px] font-mono font-bold">{preset.kwh}</div>
+                <div className="text-xs font-bold font-mono">{preset.kwh}</div>
+                <div className="text-[9px] text-slate-400 truncate">{preset.label}</div>
               </button>
             ))}
           </div>

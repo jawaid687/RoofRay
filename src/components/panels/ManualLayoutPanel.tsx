@@ -14,8 +14,10 @@ import {
   HelpCircle,
 } from 'lucide-react';
 import { useSolarStore } from '../../store/useSolarStore';
+import { useLanguage } from '../../i18n/useLanguage';
 
 export function ManualLayoutPanel() {
+  const { t } = useLanguage();
   const getSelectedBuilding = useSolarStore((s) => s.getSelectedBuilding);
   const getCurrentPanelType = useSolarStore((s) => s.getCurrentPanelType);
 
@@ -75,7 +77,7 @@ export function ManualLayoutPanel() {
       {/* Tool Selector Bar (FR-7.1) */}
       <div className="space-y-1.5">
         <label className="text-[11px] font-semibold text-slate-300 flex items-center justify-between">
-          <span>Active Placement Tool</span>
+          <span>{t.manualLayout.tools}</span>
           <span className="text-[10px] text-slate-500 font-mono">0.5m grid snap</span>
         </label>
         <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-900/80 rounded-xl border border-slate-800">
@@ -112,7 +114,7 @@ export function ManualLayoutPanel() {
             }`}
           >
             <Maximize2 className="w-4 h-4" />
-            <span className="text-[10px]">Fill Area</span>
+            <span className="text-[10px]">{t.manualLayout.fillZone}</span>
           </button>
         </div>
       </div>
@@ -120,7 +122,7 @@ export function ManualLayoutPanel() {
       {/* Orientation & Rotate Controls (FR-7.5) */}
       <div className="glass-panel p-3 rounded-xl border border-slate-800/80 space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-semibold text-slate-300">Orientation</span>
+          <span className="text-[11px] font-semibold text-slate-300">{t.panelConfig.orientation}</span>
           <span className="text-[10px] text-slate-400 font-mono">
             {panelOrientation === 'portrait'
               ? `${panelType.width}m × ${panelType.length}m`
@@ -137,7 +139,7 @@ export function ManualLayoutPanel() {
                 : 'bg-slate-900/60 text-slate-400 hover:text-slate-200 border border-slate-800'
             }`}
           >
-            Portrait (T)
+            {t.panelConfig.portrait} (T)
           </button>
           <button
             onClick={() => setPanelOrientation('landscape')}
@@ -147,7 +149,7 @@ export function ManualLayoutPanel() {
                 : 'bg-slate-900/60 text-slate-400 hover:text-slate-200 border border-slate-800'
             }`}
           >
-            Landscape (T)
+            {t.panelConfig.landscape} (T)
           </button>
         </div>
 
@@ -156,7 +158,7 @@ export function ManualLayoutPanel() {
           className="w-full py-1.5 px-2 rounded-lg text-[11px] font-medium bg-slate-900/60 hover:bg-slate-800/60 text-slate-300 hover:text-slate-100 border border-slate-800 flex items-center justify-center gap-1.5 transition-all"
         >
           <RotateCw className="w-3.5 h-3.5" />
-          <span>Rotate 90° (Q / E)</span>
+          <span>{t.manualLayout.rotate}</span>
         </button>
       </div>
 
@@ -169,7 +171,7 @@ export function ManualLayoutPanel() {
           className="flex-1 py-1.5 px-2 rounded-lg font-medium text-[11px] bg-slate-900/80 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 border border-slate-800 flex items-center justify-center gap-1 transition-all"
         >
           <Undo2 className="w-3.5 h-3.5" />
-          <span>Undo ({history.past.length})</span>
+          <span>{t.manualLayout.undo} ({history.past.length})</span>
         </button>
 
         <button
@@ -179,7 +181,7 @@ export function ManualLayoutPanel() {
           className="flex-1 py-1.5 px-2 rounded-lg font-medium text-[11px] bg-slate-900/80 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 border border-slate-800 flex items-center justify-center gap-1 transition-all"
         >
           <Redo2 className="w-3.5 h-3.5" />
-          <span>Redo ({history.future.length})</span>
+          <span>{t.manualLayout.redo} ({history.future.length})</span>
         </button>
 
         {selectedPanelIds.length > 0 && (

@@ -99,6 +99,32 @@ export async function runAiAdvisorTests() {
   assert(Array.isArray(unconfiguredResponse.assumptions), 'Assumptions is valid array');
   assert(Array.isArray(unconfiguredResponse.next_steps), 'Next steps is valid array');
 
+  // Test 4: Extended Input Range Validation (Priority 3.A)
+  const invalidLatPayload = { ...validPayload, location: { ...validPayload.location, latitude: 120 } };
+  assert(!validateAdvisorPayload(invalidLatPayload).valid, 'Out-of-range latitude (> 90°) rejected');
+
+  const invalidLonPayload = { ...validPayload, location: { ...validPayload.location, longitude: -210 } };
+  assert(!validateAdvisorPayload(invalidLonPayload).valid, 'Out-of-range longitude (< -180°) rejected');
+
+  const invalidBldgPayload = { ...validPayload, selectedBuilding: { ...validPayload.selectedBuilding, width: -10 } };
+  assert(!validateAdvisorPayload(invalidBldgPayload).valid, 'Negative building dimension rejected');
+
+  const oversizedBldgPayload = { ...validPayload, selectedBuilding: { ...validPayload.selectedBuilding, width: 9999 } };
+  assert(!validateAdvisorPayload(oversizedBldgPayload).valid, 'Excessive building dimension (> 500m) rejected');
+
+  const invalidWattagePayload = { ...validPayload, panelConfig: { ...validPayload.panelConfig, wattage: 20 } };
+  assert(!validateAdvisorPayload(invalidWattagePayload).valid, 'Unrealistic panel wattage (< 50W) rejected');
+
+  const longQuestion = 'A'.repeat(1200);
+  const oversizedQuestionPayload = { ...validPayload, userQuestion: longQuestion };
+  assert(!validateAdvisorPayload(oversizedQuestionPayload).valid, 'Oversized user prompt (> 1000 chars) rejected');
+
+  // Test 5: Fallback safety when key is missing or invalid
+  const fallbackSafe = await handleSolarAdvisorRequest(validPayload, 'invalid_key_for_testing');
+  assert(fallbackSafe.configured === true, 'Treated as configured attempt');
+  assert(Boolean(fallbackSafe.error), 'Safe error code returned without throwing unhandled exception');
+  assert(!JSON.stringify(fallbackSafe).includes('invalid_key_for_testing'), 'API secret is NEVER leaked in response text');
+
   console.log(`\n========================================`);
   console.log(`AI Advisor Schema Tests: ${passed} passed, ${failed} failed.`);
   console.log(`========================================\n`);

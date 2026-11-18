@@ -117,6 +117,25 @@ async function runValidation() {
     assert(Array.isArray(advisorJson.sources) && advisorJson.sources.length > 0, 'Sources attached to response');
     assert(advisorJson.sources[0].url.startsWith('http'), 'Source URL is authentic HTTP link');
     assert(Boolean(advisorJson.sources[0].relevance?.includes('Grounding')), 'Source relevance documents RAG Grounding');
+
+    // Test Security Controls (Priority 1)
+    const resTraversal = await fetch(`http://localhost:${testPort}/..%2f..%2fpackage.json`);
+    assert(resTraversal.status === 403 || resTraversal.status === 400 || resTraversal.status === 404, 'Path traversal attack rejected safely');
+
+    const resApi404 = await fetch(`http://localhost:${testPort}/api/nonexistent-route`);
+    assert(resApi404.status === 404, 'Unmatched /api route returns 404');
+    const api404Json = await resApi404.json().catch(() => ({}));
+    assert(api404Json.error === 'NOT_FOUND', 'Unmatched /api route never falls through to SPA index.html');
+
+    const resWrongMethod = await fetch(`http://localhost:${testPort}/api/ai/solar-advisor`, { method: 'GET' });
+    assert(resWrongMethod.status === 405, 'Non-POST method to advisor endpoint rejected with HTTP 405');
+
+    const resWrongType = await fetch(`http://localhost:${testPort}/api/ai/solar-advisor`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: 'plain text',
+    });
+    assert(resWrongType.status === 415, 'Non-JSON content type rejected with HTTP 415');
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

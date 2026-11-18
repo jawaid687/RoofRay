@@ -172,9 +172,11 @@ export interface FinancialResult {
   totalSystemCost: number;
   baseInstallationCost: number;
   equipmentCost: number;
-  annualSavingsUSD: number;
+  annualSavings: number;             // Currency-neutral savings in active currency
+  annualSavingsUSD: number;          // Legacy backwards compatibility alias
   paybackYears: number | null;
-  twentyYearNetSavingsUSD: number;
+  twentyYearNetSavings: number;      // Currency-neutral 20-year net benefit
+  twentyYearNetSavingsUSD: number;   // Legacy backwards compatibility alias
   roiPercent: number;
   currency?: CurrencyCode;
   annualSavingsFormatted?: string;

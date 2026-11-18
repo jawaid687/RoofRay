@@ -1,8 +1,10 @@
 import { useSolarStore } from '../../store/useSolarStore';
+import { useLanguage } from '../../i18n/useLanguage';
 import { SIMULATION_ASSUMPTIONS } from '../../config/assumptions';
 import { Building2, Box, ShieldCheck, CheckCircle2 } from 'lucide-react';
 
 export function BuildingInspector() {
+  const { t } = useLanguage();
   const selectedBuildingId = useSolarStore((s) => s.selectedBuildingId);
   const buildings = useSolarStore((s) => s.buildings);
   const selectBuilding = useSolarStore((s) => s.selectBuilding);
@@ -25,10 +27,10 @@ export function BuildingInspector() {
       {/* Building Selector Dropdown */}
       <div className="space-y-1.5">
         <label className="text-[11px] font-semibold text-slate-400 flex items-center justify-between">
-          <span>Target Building</span>
+          <span>{t.buildingInspector.targetBuilding}</span>
           <span className="flex items-center gap-1 text-[10px] text-emerald-400 font-mono">
             <ShieldCheck className="w-3 h-3" />
-            Fixed Geometry (v2)
+            {t.buildingInspector.fixedGeometry}
           </span>
         </label>
         <select
@@ -61,29 +63,29 @@ export function BuildingInspector() {
         <p className="text-xs text-slate-400 leading-relaxed">{building.description}</p>
       </div>
 
-      {/* Read-Only Geometry Constants (FR-1.1, FR-1.2) */}
+      {/* Read-Only Geometry Constants */}
       <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 space-y-3">
         <div className="flex items-center justify-between text-xs font-semibold text-slate-300">
           <span className="flex items-center gap-1.5">
             <Building2 className="w-3.5 h-3.5 text-sky-400" />
-            Structural Geometry
+            {t.buildingInspector.dimensions}
           </span>
           <span className="text-[10px] font-mono text-emerald-400/90 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-            Read-only Constant
+            {t.buildingInspector.fixedGeometry}
           </span>
         </div>
 
         <div className="grid grid-cols-3 gap-2 text-center">
           <div className="p-2 rounded-lg bg-slate-950 border border-slate-800/80">
-            <div className="text-[10px] text-slate-400 uppercase font-mono">Width (X)</div>
+            <div className="text-[10px] text-slate-400 uppercase font-mono">X (Width)</div>
             <div className="text-sm font-bold text-slate-100 font-mono mt-0.5">{building.width} m</div>
           </div>
           <div className="p-2 rounded-lg bg-slate-950 border border-slate-800/80">
-            <div className="text-[10px] text-slate-400 uppercase font-mono">Length (Z)</div>
+            <div className="text-[10px] text-slate-400 uppercase font-mono">Z (Length)</div>
             <div className="text-sm font-bold text-slate-100 font-mono mt-0.5">{building.length} m</div>
           </div>
           <div className="p-2 rounded-lg bg-slate-950 border border-slate-800/80">
-            <div className="text-[10px] text-slate-400 uppercase font-mono">Height (Y)</div>
+            <div className="text-[10px] text-slate-400 uppercase font-mono">Y (Height)</div>
             <div className="text-sm font-bold text-slate-100 font-mono mt-0.5">{building.height} m</div>
           </div>
         </div>
@@ -91,7 +93,7 @@ export function BuildingInspector() {
         {/* Total Roof Area Display */}
         <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between">
           <div>
-            <div className="text-[11px] text-slate-400">Total Roof Area</div>
+            <div className="text-[11px] text-slate-400">{t.buildingInspector.roofArea}</div>
             <div className="text-sm font-bold text-slate-100 font-mono">
               {roofAreaM2} m²
               <span className="text-xs text-slate-400 font-normal ml-1">
@@ -105,14 +107,14 @@ export function BuildingInspector() {
         </div>
       </div>
 
-      {/* Rooftop Obstacles (Read-only, FR-1.3) */}
+      {/* Rooftop Obstacles */}
       <div className="space-y-2 p-3.5 rounded-xl bg-slate-900/60 border border-slate-800">
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
             <Box className="w-3.5 h-3.5 text-amber-400" />
-            Fixed Roof Obstacles ({building.roofObstacles.length})
+            {t.buildingInspector.obstacles} ({building.roofObstacles.length})
           </span>
-          <span className="text-[10px] font-mono text-slate-400">0.5m buffer required</span>
+          <span className="text-[10px] font-mono text-slate-400">0.5m buffer</span>
         </div>
 
         {/* Obstacle List */}
@@ -133,7 +135,7 @@ export function BuildingInspector() {
                     <span>{obs.name}</span>
                   </div>
                   <div className="text-[10px] text-slate-400 font-mono mt-0.5 ml-4.5">
-                    {obs.width}m × {obs.length}m • h: {obs.height}m • pos: [{obs.relX > 0 ? `+${obs.relX}` : obs.relX}, {obs.relZ > 0 ? `+${obs.relZ}` : obs.relZ}]
+                    {obs.width}m × {obs.length}m • h: {obs.height}m
                   </div>
                 </div>
                 <span className="text-[9px] uppercase font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">

@@ -14,8 +14,8 @@
 
 ---
 
-[![Tests: 226 Passed](https://img.shields.io/badge/Unit_Tests-226%2F226_Passing-10b981.svg?style=for-the-badge&logo=jest)](npm-run-test:calc)
-[![Integration: 36 Passed](https://img.shields.io/badge/Integration_Tests-36%2F36_Passing-10b981.svg?style=for-the-badge)](npm-run-server)
+[![Tests: 235 Passed](https://img.shields.io/badge/Unit_Tests-235%2F235_Passing-10b981.svg?style=for-the-badge&logo=jest)](npm-run-test:calc)
+[![Integration: 41 Passed](https://img.shields.io/badge/Integration_Tests-41%2F41_Passing-10b981.svg?style=for-the-badge)](npm-run-server)
 [![React 19](https://img.shields.io/badge/React-19.0.0-61dafb.svg?style=for-the-badge&logo=react)](https://react.dev/)
 [![Three.js](https://img.shields.io/badge/Three.js-r174-000000.svg?style=for-the-badge&logo=three.js)](https://threejs.org/)
 [![TypeScript 5.7](https://img.shields.io/badge/TypeScript-5.7-3178c6.svg?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
@@ -44,12 +44,12 @@ Rather than using synthetic sun trajectories or treating generative AI as a calc
 
 ## 🌐 Route Structure & Architecture
 
-RoofRay operates with a clean single-page application (SPA) routing structure:
+RoofRay operates with a clean single-page application (SPA) routing structure with route-aware layout management:
 
-- **`/` (Public Marketing Landing Page):** Premium climate-tech SaaS presentation featuring hero interactive visuals, problem/solution comparisons, feature showcases, four-step workflow, AI technology explainers, national impact highlights, and full English / বাংলা localization.
-- **`/app` (Interactive Solar Studio):** The complete 3D digital twin planning workspace featuring Three.js orbit controls, live diurnal shadow raycasting, 12-month Web Worker analysis, manual layout studio, economics dashboard, AI Advisor panel, and exportable feasibility reports.
+- **`/` (Public Marketing Landing Page):** Premium climate-tech SaaS presentation featuring hero interactive visuals, problem/solution comparisons, feature showcases, four-step workflow, AI technology explainers, national impact highlights, and full English / বাংলা localization. Full native vertical scrolling (`min-height: 100vh; overflow-y: auto`) with zero viewport locking.
+- **`/app` (Interactive Solar Studio):** The complete 3D digital twin planning workspace featuring Three.js orbit controls, live diurnal shadow raycasting, 12-month Web Worker analysis, manual layout studio, economics dashboard, AI Advisor panel, and exportable feasibility reports. Uses isolated `fixed inset-0` layout and `app-mode` body locking so canvas mouse/wheel interaction remains completely jitter-free while sidebar controls scroll smoothly.
 
-Direct navigation, page refreshes, and deep query parameters (e.g. `/app?city=dhaka&tour=true`) function seamlessly across both routes.
+Direct navigation, page refreshes, and deep query parameters (e.g. `/app?city=dhaka&tour=true`) function seamlessly across both routes without 404 fallthrough.
 
 ---
 
@@ -81,17 +81,22 @@ Located in `src/server/advisorService.ts`, `src/rag/retrievalEngine.ts`, and `sr
             ↓
   Context Injection with Strict "Single Source of Truth" Rules
             ↓
-  Google Gemini API (JSON Output Mode)
+  Google Gemini API (JSON Output Mode via x-goog-api-key header)
             ↓
   Structured Response (Summary, Recommendations, Risks, Citations)
   ```
+- **Enterprise-Grade Security Hardening:**
+  - **Header-Based Authentication:** Secret `GEMINI_API_KEY` is transmitted strictly via `x-goog-api-key` HTTP header; never exposed in query parameters, terminal logs, or client-side bundles.
+  - **Separation of Instructions:** System role definition is passed via Gemini's native `system_instruction` configuration, keeping system constraints distinct from untrusted user queries.
+  - **Payload Validation & Bounds Checking:** Pre-validates latitude ($-90^\circ$ to $+90^\circ$), longitude ($-180^\circ$ to $+180^\circ$), building dimensions ($0.1\text{m}$ to $500\text{m}$), panel wattage ($50\text{W}$ to $2000\text{W}$), tilt ($0^\circ$ to $90^\circ$), and user query length ($\le 1000$ characters).
+  - **Directory Traversal & CORS Defense:** Server strictly validates canonical file paths against `dist/`, enforces whitelisted CORS origins, limits request body sizes ($\le 100\text{KB}$), and returns HTTP 404 JSON for unmatched `/api/*` routes.
 - **Verified Knowledge Corpus:**
   - *SREDA Net-Metering Guidelines (2018/2021):* 70% sanctioned load cap, 3-phase connection rule, bi-directional meter testing.
   - *BPDB Retail Tariff Schedule (2024):* LT-A progressive residential slabs and LT-E commercial rates.
   - *NREL PV Fundamentals:* Optimal fixed tilt (~latitude facing South), bypass diode behavior under partial shading, and thermal derating.
   - *NASA POWER Database:* South Asian horizontal irradiance benchmarks (4.5 to 5.2 kWh/m²/day) and monsoon cloud cover attenuation.
   - *DoE Grid Factor:* Bangladesh national grid baseline (0.637 kg CO₂/kWh).
-- **Honest Unconfigured State:** If `GEMINI_API_KEY` is not configured on the server, the UI displays clear setup instructions rather than a deceptive mock response.
+- **Honest Unconfigured State:** If `GEMINI_API_KEY` is not configured on the server, the UI displays clear setup instructions along with authentic Lexical RAG citations rather than a deceptive mock response.
 
 ---
 
@@ -114,12 +119,19 @@ Located in `src/components/ui/SolarReportModal.tsx`:
 
 ---
 
-## 🧪 Comprehensive Test Suite (226 Passing Assertions)
+## 🧪 Comprehensive Test Suite (276 Passing Assertions)
 
 RoofRay maintains an extensive automated test suite executed with TypeScript:
 
 ```bash
+# Run calculation and logic unit test suites (235 tests)
 npm run test:calc
+
+# Run production server, security, and localization integration tests (41 tests)
+npm run test:integration
+
+# Run all suites together (276 tests)
+npm run test:all
 ```
 
 ### Verified Test Suites:
@@ -131,11 +143,12 @@ npm run test:calc
 6. **Bangladesh Localization (50 tests):** Verified coordinates for all 8 divisions, Dhaka equinox/solstice ephemeris, BDT formatting.
 7. **Financial Configuration (21 tests):** BDT/USD capex, slab savings, missing-tariff guard (`paybackYears: null`), configurable export credit ratio, DoE grid emission factor.
 8. **Lexical RAG Retrieval (13 tests):** BM25 term weighting, SREDA/BPDB/NREL chunk retrieval, metadata attribution.
-9. **AI Advisor Schema & Safety (13 tests):** Payload validator, 30 req/min rate limiter, unconfigured key handling.
+9. **AI Advisor Schema & Safety (22 tests):** Coordinate bounds, dimension checks, wattage limits, prompt bounds, header auth, traversal defense, unconfigured key handling, secret leakage prevention.
 10. **Deterministic Calculations (28 tests):** Yield sum invariant, optimization modes, recommendation narrative.
 
-**Result: 226 Passed, 0 Failed, 0 Regressions.**
-Plus **36 End-to-End Production & Integration Assertions** in `scripts/validateAll.js`.
+**Result: 235 Calculation Suite Assertions Passed, 0 Failed, 0 Regressions.**  
+Plus **41 End-to-End Production & Integration Assertions** in `scripts/validateAll.js`.  
+**Grand Total: 276 Passing Automated Assertions.**
 
 ---
 

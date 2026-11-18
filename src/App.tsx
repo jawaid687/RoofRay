@@ -141,7 +141,7 @@ export function App() {
   ]);
 
   return (
-    <div className="w-screen h-screen flex flex-col bg-slate-950 text-slate-100 overflow-hidden font-sans">
+    <div className="fixed inset-0 w-screen h-screen flex flex-col bg-slate-950 text-slate-100 overflow-hidden font-sans">
       {/* Top Application Navigation Bar */}
       <Header />
 

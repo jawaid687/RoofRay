@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useSolarStore } from '../../store/useSolarStore';
+import { useLanguage } from '../../i18n/useLanguage';
 import { PANEL_TYPES } from '../../data/panelTypes';
 import {
   Sparkles,
@@ -22,6 +23,7 @@ interface AiAdvisorPanelProps {
 }
 
 export function AiAdvisorPanel({ onOpenReportModal }: AiAdvisorPanelProps) {
+  const { t } = useLanguage();
   const selectedBuildingId = useSolarStore((s) => s.selectedBuildingId);
   const buildings = useSolarStore((s) => s.buildings);
   const location = useSolarStore((s) => s.location);
@@ -91,8 +93,10 @@ export function AiAdvisorPanel({ onOpenReportModal }: AiAdvisorPanelProps) {
       },
       financialResult: {
         totalSystemCost: financial.totalSystemCost,
+        annualSavings: financial.annualSavings ?? financial.annualSavingsUSD,
         annualSavingsUSD: financial.annualSavingsUSD,
         paybackYears: financial.paybackYears,
+        twentyYearNetSavings: financial.twentyYearNetSavings ?? financial.twentyYearNetSavingsUSD,
         twentyYearNetSavingsUSD: financial.twentyYearNetSavingsUSD,
         roiPercent: financial.roiPercent,
         currency: currency,
@@ -155,13 +159,13 @@ export function AiAdvisorPanel({ onOpenReportModal }: AiAdvisorPanelProps) {
             </div>
             <div>
               <h3 className="text-xs font-bold text-white flex items-center gap-1.5">
-                <span>AI Solar Advisor</span>
+                <span>{t.aiAdvisor.title}</span>
                 <span className="text-[9px] px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 font-mono">
                   Gemini Grounded RAG
                 </span>
               </h3>
               <p className="text-[10px] text-slate-400">
-                Grounded in physical raycast data & official policy sources
+                {t.aiAdvisor.subtitle}
               </p>
             </div>
           </div>
@@ -185,7 +189,7 @@ export function AiAdvisorPanel({ onOpenReportModal }: AiAdvisorPanelProps) {
               rows={2}
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              placeholder="Ask the advisor about shading, SREDA policy, optimal orientation, or economic payback..."
+              placeholder={t.aiAdvisor.promptPlaceholder}
               className="w-full p-2.5 pr-10 bg-slate-950/90 border border-slate-800 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 resize-none font-sans"
             />
             <button

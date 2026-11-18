@@ -9,6 +9,7 @@ import {
   SolarRecommendation,
 } from '../types';
 import { SIMULATION_ASSUMPTIONS } from '../config/assumptions';
+import { formatCurrency } from '../utils/currency';
 
 export function generateSolarRecommendation(
   building: Building,
@@ -49,7 +50,7 @@ export function generateSolarRecommendation(
   const keyPoints: string[] = [
     `Solar Viability: ${suitabilityPercent}% of the ${analysis.totalRoofArea} m² roof area receives excellent or good unblocked sunlight (average ${(analysis.averageExposureScore * 100).toFixed(0)}% daylight factor).`,
     `Demand Alignment: The array produces ${energy.annualGenerationKWh.toLocaleString()} kWh/yr against ${energy.annualConsumptionKWh.toLocaleString()} kWh/yr total consumption, achieving ${energy.solarCoveragePercent}% energy independence.`,
-    `Economic Return: Estimated annual bill savings of $${financial.annualSavingsUSD.toLocaleString()} yield an estimated simple payback period of ${financial.paybackYears ? `${financial.paybackYears} years` : 'long-term'} with a 20-year net cash return of $${financial.twentyYearNetSavingsUSD.toLocaleString()}.`,
+    `Economic Return: Estimated annual bill savings of ${formatCurrency(financial.annualSavings ?? financial.annualSavingsUSD, financial.currency || 'USD')} yield an estimated simple payback period of ${financial.paybackYears ? `${financial.paybackYears} years` : 'long-term'} with a 20-year net cash return of ${formatCurrency(financial.twentyYearNetSavings ?? financial.twentyYearNetSavingsUSD, financial.currency || 'USD')}.`,
   ];
 
   // Specific spatial exclusions explaining why parts were left uninstalled

@@ -34,9 +34,11 @@ export interface SolarAdvisorRequest {
   };
   financialResult: {
     totalSystemCost: number;
-    annualSavingsUSD: number;
+    annualSavingsUSD?: number;
+    annualSavings?: number;
     paybackYears: number | null;
-    twentyYearNetSavingsUSD: number;
+    twentyYearNetSavingsUSD?: number;
+    twentyYearNetSavings?: number;
     roiPercent: number;
     currency?: 'USD' | 'BDT';
     tariffPerKWh?: number;
@@ -102,9 +104,80 @@ export function validateAdvisorPayload(body: any): { valid: boolean; error?: str
   if (!body.selectedBuilding || !body.energyProfile || !body.location) {
     return { valid: false, error: 'Missing required solar configuration fields (selectedBuilding, energyProfile, location)' };
   }
-  if (typeof body.energyProfile.installedCapacityKW !== 'number' || isNaN(body.energyProfile.installedCapacityKW)) {
-    return { valid: false, error: 'Invalid energy profile installed capacity' };
+
+  // 1. Location Validation
+  const loc = body.location;
+  if (typeof loc.city !== 'string' || loc.city.trim().length === 0 || loc.city.length > 100) {
+    return { valid: false, error: 'Invalid location city (must be 1-100 characters)' };
   }
+  if (typeof loc.country !== 'string' || loc.country.trim().length === 0 || loc.country.length > 100) {
+    return { valid: false, error: 'Invalid location country (must be 1-100 characters)' };
+  }
+  if (typeof loc.latitude !== 'number' || isNaN(loc.latitude) || loc.latitude < -90 || loc.latitude > 90) {
+    return { valid: false, error: 'Invalid latitude (must be between -90 and 90)' };
+  }
+  if (typeof loc.longitude !== 'number' || isNaN(loc.longitude) || loc.longitude < -180 || loc.longitude > 180) {
+    return { valid: false, error: 'Invalid longitude (must be between -180 and 180)' };
+  }
+
+  // 2. Building Validation (supports width/length/height or roofAreaM2/heightMeters)
+  const bldg = body.selectedBuilding;
+  if (typeof bldg.id !== 'string' || !bldg.id) {
+    return { valid: false, error: 'Missing building id' };
+  }
+  const bldgWidth = bldg.width ?? (bldg.roofAreaM2 ? Math.round(Math.sqrt(bldg.roofAreaM2) * 10) / 10 : undefined);
+  const bldgLength = bldg.length ?? (bldg.roofAreaM2 ? Math.round(Math.sqrt(bldg.roofAreaM2) * 10) / 10 : undefined);
+  const bldgHeight = bldg.height ?? bldg.heightMeters;
+
+  if (typeof bldgWidth !== 'number' || isNaN(bldgWidth) || bldgWidth <= 0 || bldgWidth > 500) {
+    return { valid: false, error: 'Invalid building width (must be between 0.1 and 500 meters)' };
+  }
+  if (typeof bldgLength !== 'number' || isNaN(bldgLength) || bldgLength <= 0 || bldgLength > 500) {
+    return { valid: false, error: 'Invalid building length (must be between 0.1 and 500 meters)' };
+  }
+  if (typeof bldgHeight !== 'number' || isNaN(bldgHeight) || bldgHeight <= 0 || bldgHeight > 1000) {
+    return { valid: false, error: 'Invalid building height (must be between 0.1 and 1000 meters)' };
+  }
+
+  // 3. Energy Profile Validation
+  const ep = body.energyProfile;
+  if (typeof ep.installedCapacityKW !== 'number' || isNaN(ep.installedCapacityKW) || ep.installedCapacityKW < 0 || ep.installedCapacityKW > 10000) {
+    return { valid: false, error: 'Invalid installed capacity (must be 0-10000 kW)' };
+  }
+  if (typeof ep.panelCount !== 'number' || isNaN(ep.panelCount) || ep.panelCount < 0 || ep.panelCount > 20000) {
+    return { valid: false, error: 'Invalid panel count (must be 0-20000 modules)' };
+  }
+  if (typeof ep.annualGenerationKWh !== 'number' || isNaN(ep.annualGenerationKWh) || ep.annualGenerationKWh < 0) {
+    return { valid: false, error: 'Invalid annual generation kWh (cannot be negative)' };
+  }
+  if (typeof ep.annualConsumptionKWh !== 'number' || isNaN(ep.annualConsumptionKWh) || ep.annualConsumptionKWh < 0) {
+    return { valid: false, error: 'Invalid annual consumption kWh (cannot be negative)' };
+  }
+
+  // 4. Panel Config Validation
+  if (body.panelConfig) {
+    const pc = body.panelConfig;
+    if (typeof pc.wattage === 'number' && (pc.wattage < 50 || pc.wattage > 2000)) {
+      return { valid: false, error: 'Invalid panel wattage (must be between 50W and 2000W)' };
+    }
+    if (typeof pc.tiltDegrees === 'number' && (pc.tiltDegrees < 0 || pc.tiltDegrees > 90)) {
+      return { valid: false, error: 'Invalid panel tilt degrees (must be between 0° and 90°)' };
+    }
+  }
+
+  // 5. Financial Result Validation
+  if (body.financialResult) {
+    const fin = body.financialResult;
+    if (typeof fin.totalSystemCost === 'number' && fin.totalSystemCost < 0) {
+      return { valid: false, error: 'Invalid total system cost (cannot be negative)' };
+    }
+  }
+
+  // 6. User Question Length Guard
+  if (body.userQuestion !== undefined && typeof body.userQuestion === 'string' && body.userQuestion.length > 1000) {
+    return { valid: false, error: 'User question exceeds maximum allowed length of 1000 characters' };
+  }
+
   return { valid: true };
 }
 
@@ -130,6 +203,13 @@ export async function handleSolarAdvisorRequest(
     3
   );
 
+  const formattedSources = retrievedSources.map((r) => ({
+    title: r.chunk.title,
+    authorOrg: r.chunk.authorOrg,
+    url: r.chunk.officialUrl,
+    relevance: `Lexical RAG Grounding: ${r.chunk.sourceTitle} (${r.chunk.publicationYear})${r.chunk.section ? ` [${r.chunk.section}]` : ''}`,
+  }));
+
   // 2. Check if API Key is configured
   if (!effectiveKey || effectiveKey.trim() === '' || effectiveKey === 'your_gemini_api_key_here') {
     return {
@@ -153,12 +233,7 @@ export async function handleSolarAdvisorRequest(
         'Create a .env file containing: GEMINI_API_KEY=your_key_here',
         'Optional: Set GEMINI_MODEL=gemini-2.5-flash',
       ],
-      sources: retrievedSources.map((r) => ({
-        title: r.chunk.title,
-        authorOrg: r.chunk.authorOrg,
-        url: r.chunk.officialUrl,
-        relevance: `Lexical RAG Grounding: ${r.chunk.sourceTitle} (${r.chunk.publicationYear})${r.chunk.section ? ` [${r.chunk.section}]` : ''}`,
-      })),
+      sources: formattedSources,
       timestamp: new Date().toISOString(),
       error: 'MISSING_API_KEY',
       setupGuide:
@@ -166,7 +241,7 @@ export async function handleSolarAdvisorRequest(
     };
   }
 
-  // 3. Build Prompt with Strict Grounding
+  // 3. Build Prompt with Strict Grounding & Separated Instructions
   const retrievedContextText = retrievedSources
     .map(
       (s, idx) =>
@@ -175,6 +250,8 @@ export async function handleSolarAdvisorRequest(
     .join('\n\n');
 
   const currencySymbol = payload.financialResult.currency === 'BDT' ? '৳' : '$';
+  const annualSavings = payload.financialResult.annualSavings ?? payload.financialResult.annualSavingsUSD ?? 0;
+  const twentyYearNet = payload.financialResult.twentyYearNetSavings ?? payload.financialResult.twentyYearNetSavingsUSD ?? 0;
 
   const systemPrompt = `You are the RoofRay AI Solar Advisor, a senior solar engineering and economic specialist at the International AI Builders Congress 2026.
 Your role is to interpret the user's solar configuration and provide explainable, rigorous recommendations.
@@ -197,9 +274,9 @@ STRUCTURED SOLAR CONTEXT:
 - Solar Demand Coverage: ${payload.energyProfile.solarCoveragePercent}%
 - Grid Export Surplus: ${payload.energyProfile.surplusKWh} kWh/yr
 - Financial Capital Cost: ${currencySymbol}${payload.financialResult.totalSystemCost.toLocaleString()}
-- Annual Bill Savings: ${currencySymbol}${payload.financialResult.annualSavingsUSD.toLocaleString()}/yr
+- Annual Bill Savings: ${currencySymbol}${annualSavings.toLocaleString()}/yr
 - Estimated Payback: ${payload.financialResult.paybackYears !== null ? `${payload.financialResult.paybackYears} years` : 'Unspecified tariff'}
-- 20-Year Net Benefit: ${currencySymbol}${payload.financialResult.twentyYearNetSavingsUSD.toLocaleString()} (ROI: ${payload.financialResult.roiPercent}%)
+- 20-Year Net Benefit: ${currencySymbol}${twentyYearNet.toLocaleString()} (ROI: ${payload.financialResult.roiPercent}%)
 - Environmental Offset: ${payload.environmentalResult.annualCO2ReductionTonnes} tonnes CO2/yr (~${payload.environmentalResult.equivalentTreesPlanted} trees)
 - Grid Emission Factor: ${payload.environmentalResult.gridEmissionFactorKgPerKWh || 0.42} kg CO2/kWh (${payload.environmentalResult.gridEmissionFactorSource || 'IEA Benchmark'})
 
@@ -220,8 +297,8 @@ Provide a comprehensive, professional assessment formatted as valid JSON adherin
   "sources": [{"title": "Source title", "authorOrg": "Publishing entity", "url": "URL if known", "relevance": "Why relevant"}]
 }`;
 
-  // 4. Dispatch to Gemini API
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${effectiveModel}:generateContent?key=${effectiveKey}`;
+  // 4. Dispatch to Gemini API via secured header (never pass credentials in URL parameter)
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${effectiveModel}:generateContent`;
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s timeout
@@ -229,12 +306,18 @@ Provide a comprehensive, professional assessment formatted as valid JSON adherin
   try {
     const res = await fetch(endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': effectiveKey,
+      },
       body: JSON.stringify({
+        system_instruction: {
+          parts: [{ text: systemPrompt }],
+        },
         contents: [
           {
             role: 'user',
-            parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }],
+            parts: [{ text: userPrompt }],
           },
         ],
         generationConfig: {
@@ -247,62 +330,89 @@ Provide a comprehensive, professional assessment formatted as valid JSON adherin
     clearTimeout(timeoutId);
 
     if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(`Gemini API HTTP ${res.status}: ${errorText.substring(0, 200)}`);
+      if (res.status === 401 || res.status === 403) {
+        throw new Error(`INVALID_API_KEY: Authentication failed (HTTP ${res.status}). Verify your Gemini API credential in Google AI Studio.`);
+      }
+      if (res.status === 429) {
+        throw new Error(`QUOTA_EXCEEDED: Gemini API rate limit or quota exceeded (HTTP 429).`);
+      }
+      throw new Error(`AI_PROVIDER_ERROR: Gemini API responded with HTTP ${res.status}`);
     }
 
     const resJson = await res.json();
     const candidateText = resJson?.candidates?.[0]?.content?.parts?.[0]?.text;
 
-    if (!candidateText) {
-      throw new Error('Gemini API returned empty text part');
+    if (!candidateText || typeof candidateText !== 'string') {
+      throw new Error('MALFORMED_AI_RESPONSE: Gemini returned empty or invalid response text');
     }
 
-    const parsed = JSON.parse(candidateText);
+    let parsed: any;
+    try {
+      parsed = JSON.parse(candidateText);
+    } catch {
+      throw new Error('MALFORMED_AI_RESPONSE: Failed to parse AI response as JSON');
+    }
 
-    // Priority 4.4: Exclusively use verified retrieved knowledge sources — never display unverified LLM-generated sources
-    const verifiedSources = retrievedSources.map((r) => ({
-      title: r.chunk.title,
-      authorOrg: r.chunk.authorOrg,
-      url: r.chunk.officialUrl,
-      relevance: `Lexical RAG Grounding: ${r.chunk.sourceTitle} (${r.chunk.publicationYear})${r.chunk.section ? ` [${r.chunk.section}]` : ''}`,
-    }));
+    // Strict schema validation for response structure
+    const summary = typeof parsed.summary === 'string' && parsed.summary.trim().length > 0
+      ? parsed.summary
+      : 'Solar configuration analysis generated successfully.';
+    const recommendations = Array.isArray(parsed.recommendations) && parsed.recommendations.length > 0
+      ? parsed.recommendations.map(String)
+      : ['Conduct an on-site structural and shading assessment prior to installation.'];
+    const advantages = Array.isArray(parsed.advantages) ? parsed.advantages.map(String) : [];
+    const risks = Array.isArray(parsed.risks) ? parsed.risks.map(String) : [];
+    const assumptions = Array.isArray(parsed.assumptions) ? parsed.assumptions.map(String) : [];
+    const next_steps = Array.isArray(parsed.next_steps) ? parsed.next_steps.map(String) : [];
 
     return {
       configured: true,
-      summary: parsed.summary || 'Solar configuration analysis generated successfully.',
-      recommendations: Array.isArray(parsed.recommendations) ? parsed.recommendations : [],
-      advantages: Array.isArray(parsed.advantages) ? parsed.advantages : [],
-      risks: Array.isArray(parsed.risks) ? parsed.risks : [],
-      assumptions: Array.isArray(parsed.assumptions) ? parsed.assumptions : [],
-      next_steps: Array.isArray(parsed.next_steps) ? parsed.next_steps : [],
-      sources: verifiedSources,
+      summary,
+      recommendations,
+      advantages,
+      risks,
+      assumptions,
+      next_steps,
+      sources: formattedSources,
       timestamp: new Date().toISOString(),
       modelUsed: effectiveModel,
     };
   } catch (err: unknown) {
     clearTimeout(timeoutId);
-    const message = err instanceof Error ? err.message : 'Unknown AI generation error';
+
+    let errorCode = 'AI_PROVIDER_ERROR';
+    let safeMessage = 'An unexpected error occurred while communicating with the AI advisor provider.';
+
+    if (err instanceof Error) {
+      if (err.name === 'AbortError') {
+        errorCode = 'TIMEOUT';
+        safeMessage = 'Gemini API request timed out after 25 seconds. Falling back to deterministic analysis.';
+      } else if (err.message.startsWith('INVALID_API_KEY')) {
+        errorCode = 'INVALID_API_KEY';
+        safeMessage = 'The configured Gemini API key is invalid or unauthorized. Please verify the key in Google AI Studio.';
+      } else if (err.message.startsWith('QUOTA_EXCEEDED')) {
+        errorCode = 'QUOTA_EXCEEDED';
+        safeMessage = 'Gemini API quota exceeded or rate limit reached. Please retry in a few moments.';
+      } else if (err.message.startsWith('MALFORMED_AI_RESPONSE')) {
+        errorCode = 'MALFORMED_AI_RESPONSE';
+        safeMessage = 'AI model generated non-standard JSON. Physical solar calculations remain fully valid.';
+      }
+    }
 
     return {
       configured: true,
-      summary: 'Failed to complete AI synthesis due to an external network or provider error.',
+      summary: safeMessage,
       recommendations: [
         'Review the deterministic 3D raycast metrics and financial tabs directly.',
         'Verify your server internet connectivity and Gemini API key quota.',
       ],
       advantages: [],
       risks: ['External LLM response unavailable; falling back to deterministic calculations.'],
-      assumptions: ['Physical solar calculations remain accurate and unaffected.'],
+      assumptions: ['Physical solar calculations remain accurate, deterministic, and unaffected.'],
       next_steps: ['Retry the inquiry in a few moments.'],
-      sources: retrievedSources.map((r) => ({
-        title: r.chunk.title,
-        authorOrg: r.chunk.authorOrg,
-        url: r.chunk.officialUrl,
-        relevance: `Grounding Citation: ${r.chunk.sourceTitle}`,
-      })),
+      sources: formattedSources,
       timestamp: new Date().toISOString(),
-      error: message,
+      error: errorCode,
     };
   }
 }

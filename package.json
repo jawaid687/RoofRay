@@ -10,9 +10,12 @@
     "server": "tsx server/server.ts",
     "preview": "vite preview",
     "test": "tsx src/tests/calculations.test.ts",
-    "test:calc": "tsx src/tests/calculations.test.ts"
+    "test:calc": "tsx src/tests/calculations.test.ts",
+    "test:integration": "tsx scripts/validateAll.js",
+    "test:all": "tsx src/tests/calculations.test.ts && tsx scripts/validateAll.js"
   },
   "dependencies": {
+    "@google/genai": "^3.6.0",
     "@react-three/drei": "^10.0.3",
     "@react-three/fiber": "^9.0.4",
     "clsx": "^2.1.1",

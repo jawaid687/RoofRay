@@ -1,4 +1,5 @@
 import { useSolarStore } from '../../store/useSolarStore';
+import { useLanguage } from '../../i18n/useLanguage';
 import { PANEL_TYPES } from '../../data/panelTypes';
 import { formatCurrency } from '../../utils/currency';
 import {
@@ -20,6 +21,7 @@ interface SolarReportModalProps {
 }
 
 export function SolarReportModal({ isOpen, onClose }: SolarReportModalProps) {
+  const { t } = useLanguage();
   const selectedBuildingId = useSolarStore((s) => s.selectedBuildingId);
   const buildings = useSolarStore((s) => s.buildings);
   const location = useSolarStore((s) => s.location);
@@ -70,9 +72,9 @@ export function SolarReportModal({ isOpen, onClose }: SolarReportModalProps) {
       economics: {
         currency: currency,
         totalCapex: financial.totalSystemCost,
-        annualSavings: financial.annualSavingsUSD,
+        annualSavings: financial.annualSavings ?? financial.annualSavingsUSD,
         paybackPeriodYears: financial.paybackYears,
-        twentyYearNetSavings: financial.twentyYearNetSavingsUSD,
+        twentyYearNetSavings: financial.twentyYearNetSavings ?? financial.twentyYearNetSavingsUSD,
         roiPercent: financial.roiPercent,
       },
       environmentalImpact: {
@@ -102,7 +104,7 @@ export function SolarReportModal({ isOpen, onClose }: SolarReportModalProps) {
             </div>
             <div>
               <h2 className="text-base font-bold text-white flex items-center gap-1.5">
-                <span>RoofRay Solar Feasibility Report</span>
+                <span>{t.solarReportModal.title}</span>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
                   SIMULATION ESTIMATE
                 </span>
@@ -118,7 +120,7 @@ export function SolarReportModal({ isOpen, onClose }: SolarReportModalProps) {
               title="Copy structured report JSON"
             >
               {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-              <span className="hidden sm:inline">{copied ? 'Copied' : 'JSON'}</span>
+              <span className="hidden sm:inline">{copied ? 'Copied' : t.solarReportModal.copyJson}</span>
             </button>
             <button
               onClick={handlePrint}
@@ -126,7 +128,7 @@ export function SolarReportModal({ isOpen, onClose }: SolarReportModalProps) {
               title="Print or export to PDF"
             >
               <Printer className="w-4 h-4" />
-              <span>Print / PDF</span>
+              <span>{t.solarReportModal.downloadPdf}</span>
             </button>
             <button
               onClick={onClose}

@@ -16,7 +16,7 @@ export interface MonthlyClimatology {
   allSkyIrradianceKWhM2Day: number;
   clearSkyIrradianceKWhM2Day: number;
   cloudinessClearnessIndex: number; // all-sky / clear-sky ratio
-  ambientTempC: number;
+  ambientTempC: number | null; // Real observed temperature or null if unrecorded (no invented fallbacks)
 }
 
 export interface SolarResourceData {
@@ -110,7 +110,7 @@ export async function fetchNasaSolarResource(
 
       const valAll = rawAll;
       const valClr = typeof rawClr === 'number' && !isNaN(rawClr) && rawClr >= valAll ? rawClr : valAll;
-      const temp = typeof rawTemp === 'number' && !isNaN(rawTemp) ? rawTemp : 25.0;
+      const temp = typeof rawTemp === 'number' && !isNaN(rawTemp) ? Math.round(rawTemp * 10) / 10 : null;
 
       sumAllSky += valAll;
       sumClrSky += valClr;
@@ -121,7 +121,7 @@ export async function fetchNasaSolarResource(
         allSkyIrradianceKWhM2Day: Math.round(valAll * 100) / 100,
         clearSkyIrradianceKWhM2Day: Math.round(valClr * 100) / 100,
         cloudinessClearnessIndex: valClr > 0 ? Math.round((valAll / valClr) * 100) / 100 : 1,
-        ambientTempC: Math.round(temp * 10) / 10,
+        ambientTempC: temp,
       });
     }
 

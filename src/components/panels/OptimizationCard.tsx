@@ -1,8 +1,10 @@
 import { useSolarStore } from '../../store/useSolarStore';
+import { useLanguage } from '../../i18n/useLanguage';
 import { OptimizationMode } from '../../types';
 import { Target, Zap, DollarSign, Scale, Sparkles, Loader2, CheckCircle2, AlertTriangle, Info } from 'lucide-react';
 
 export function OptimizationCard() {
+  const { t } = useLanguage();
   const optimizationMode = useSolarStore((s) => s.optimizationMode);
   const setOptimizationMode = useSolarStore((s) => s.setOptimizationMode);
   const generateSolarLayout = useSolarStore((s) => s.generateSolarLayout);
@@ -26,29 +28,29 @@ export function OptimizationCard() {
   }[] = [
     {
       id: 'need',
-      title: 'Meet My Electricity Need',
-      description: 'Sizes system to match ~100% of demand without oversizing excess export.',
+      title: t.optimization.meetDemand,
+      description: t.optimization.meetDemandDesc,
       icon: Target,
       badge: 'Demand Match',
     },
     {
       id: 'max_generation',
-      title: 'Maximum Solar Generation',
-      description: 'Maximizes panel density on all unshaded roof cells for peak power yield.',
+      title: t.optimization.maxGeneration,
+      description: t.optimization.maxGenerationDesc,
       icon: Zap,
       badge: 'Max Yield',
     },
     {
       id: 'lowest_cost',
-      title: 'Lowest Initial Cost',
-      description: 'Deploys a compact array covering baseline daytime load with low upfront cost.',
+      title: t.optimization.lowestCost,
+      description: t.optimization.lowestCostDesc,
       icon: DollarSign,
       badge: 'Budget Capex',
     },
     {
       id: 'balanced',
-      title: 'Best Value / Balanced',
-      description: 'Optimal 85–95% demand coverage balancing ROI, roof quality, and payback.',
+      title: t.optimization.balanced,
+      description: t.optimization.balancedDesc,
       icon: Scale,
       badge: 'Recommended',
     },
@@ -58,8 +60,8 @@ export function OptimizationCard() {
     <div className="space-y-3.5">
       <div className="space-y-2">
         <label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
-          <span>Optimization Objective</span>
-          <span className="text-[10px] text-amber-400 font-mono">Select Strategy</span>
+          <span>{t.optimization.mode}</span>
+          <span className="text-[10px] text-amber-400 font-mono">Strategy</span>
         </label>
 
         <div className="space-y-2">
@@ -123,71 +125,69 @@ export function OptimizationCard() {
         <div className="p-3 rounded-xl bg-amber-950/40 border border-amber-800/60 text-xs text-amber-200 flex items-start gap-2">
           <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
           <div className="space-y-0.5">
-            <span className="font-bold">Settings or geometry changed — layout outdated.</span>
+            <span className="font-bold">Layout Outdated</span>
             <p className="text-[11px] text-amber-300/80 leading-relaxed">
-              Click Regenerate Solar Layout to update 3D panel placement and recalculated economics.
+              Solar analysis or building settings have changed. Regenerate to update panel placement.
             </p>
           </div>
         </div>
       )}
 
-      {/* Success Result Banner */}
-      {isGenerated && layoutFeedback && !isOutdated && (
-        <div className="p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-800/50 text-xs text-emerald-300 flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-          <span className="font-medium text-[11px]">{layoutFeedback}</span>
-        </div>
-      )}
-
-      {/* Error Banner */}
+      {/* Error Message */}
       {layoutErrorMessage && (
-        <div className="p-3 rounded-xl bg-red-950/40 border border-red-800 text-xs text-red-200 flex items-start gap-2">
-          <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-          <div>
-            <div className="font-bold">Layout Placement Notice</div>
-            <p className="text-[11px] text-red-300 mt-0.5">{layoutErrorMessage}</p>
-          </div>
+        <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-800/60 text-xs text-rose-300 flex items-start gap-2">
+          <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+          <span>{layoutErrorMessage}</span>
         </div>
       )}
 
-      {/* CTA Button */}
+      {/* Primary Generation Action Button */}
       <button
         onClick={() => generateSolarLayout()}
-        disabled={isGenerating || !isAnalysisReady}
-        className={`w-full py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-lg transition-all ${
+        disabled={!isAnalysisReady || isGenerating}
+        className={`w-full py-3 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-lg transition-all ${
           !isAnalysisReady
-            ? 'bg-slate-800/60 text-slate-500 cursor-not-allowed border border-slate-700/50'
+            ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700/50'
             : isGenerating
-            ? 'bg-amber-600/50 text-amber-200 cursor-wait'
+            ? 'bg-sky-600/50 text-sky-200 cursor-wait'
             : isOutdated
             ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-amber-500/25 active:scale-[0.99]'
-            : isGenerated
-            ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-amber-500/20 active:scale-[0.99]'
-            : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-amber-500/20 active:scale-[0.99]'
+            : 'bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 shadow-amber-500/30 hover:shadow-amber-500/40 active:scale-[0.99]'
         }`}
       >
         {isGenerating ? (
           <>
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span>Generating Solar Layout...</span>
-          </>
-        ) : isOutdated ? (
-          <>
-            <Sparkles className="w-4 h-4 fill-current" />
-            <span>Regenerate Solar Layout</span>
-          </>
-        ) : isGenerated ? (
-          <>
-            <Sparkles className="w-4 h-4 fill-current" />
-            <span>Regenerate Solar Layout</span>
+            <Loader2 className="w-4 h-4 animate-spin text-sky-300" />
+            <span>{t.optimization.optimizing}</span>
           </>
         ) : (
           <>
-            <Sparkles className="w-4 h-4 fill-current" />
-            <span>Generate Solar Layout</span>
+            <Sparkles className="w-4 h-4 text-slate-950" />
+            <span>
+              {isGenerated
+                ? isOutdated
+                  ? 'Regenerate Solar Layout'
+                  : 'Re-optimize Layout'
+                : t.optimization.runOptimization}
+            </span>
           </>
         )}
       </button>
+
+      {/* Success Feedback Summary */}
+      {isGenerated && !isGenerating && (
+        <div className="p-3 rounded-xl bg-emerald-950/30 border border-emerald-800/50 text-xs text-emerald-300 space-y-1">
+          <div className="flex items-center gap-1.5 font-bold text-emerald-300">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>Layout Generated Successfully</span>
+          </div>
+          {layoutFeedback && (
+            <p className="text-[11px] text-emerald-300/80 leading-relaxed pl-5.5">
+              {layoutFeedback}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

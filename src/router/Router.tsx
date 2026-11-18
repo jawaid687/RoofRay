@@ -34,6 +34,17 @@ export function RouterProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
+  // Synchronize document.body class with route for proper scrolling behavior
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      if (currentPath.startsWith('/app')) {
+        document.body.classList.add('app-mode');
+      } else {
+        document.body.classList.remove('app-mode');
+      }
+    }
+  }, [currentPath]);
+
   const navigate = (to: string) => {
     const url = new URL(to, window.location.origin);
     const targetPath = url.pathname.startsWith('/app') ? '/app' : '/';

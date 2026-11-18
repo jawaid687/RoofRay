@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useSolarStore } from '../../store/useSolarStore';
+import { useLanguage } from '../../i18n/useLanguage';
 import { MetricCard } from '../ui/MetricCard';
 import { Zap, BarChart3, Building2, AlertTriangle, Settings2, RotateCcw, ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { formatCurrency, getDefaultFinancialParams, getCurrencySymbol } from '../../utils/currency';
@@ -10,6 +11,7 @@ interface FinancialSummaryProps {
 }
 
 export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps) {
+  const { t } = useLanguage();
   const energy = useSolarStore((s) => s.energyProfile);
   const financial = useSolarStore((s) => s.financialResult);
   const environmental = useSolarStore((s) => s.environmentalResult);
@@ -98,7 +100,7 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
       <div className="flex items-center justify-between">
         <h3 className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
           <Zap className="w-3.5 h-3.5 text-amber-400" />
-          Dashboard Performance & Economics
+          {t.financialSummary.title}
         </h3>
 
         <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800">
@@ -128,41 +130,41 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
       {/* Primary KPI Grid */}
       <div className="grid grid-cols-2 gap-2">
         <MetricCard
-          label="Installed Capacity"
+          label={t.energyDemand.installedCapacity}
           value={energy.installedCapacityKW}
           unit="kW"
           subtext={`${energy.panelCount} active modules`}
           variant="highlight"
         />
         <MetricCard
-          label="Annual Generation"
+          label={t.energyDemand.annualGeneration}
           value={energy.annualGenerationKWh.toLocaleString()}
           unit="kWh/yr"
           subtext={`Capacity factor: ${energy.averageCapacityFactorPercent}%`}
           variant="default"
         />
         <MetricCard
-          label="Estimated Capex"
+          label={t.financialSummary.capex}
           value={formatCurrency(financial.totalSystemCost, currency)}
           subtext={`Turnkey + install (${currency})`}
           variant="default"
         />
         <MetricCard
-          label="Annual Bill Savings"
-          value={formatCurrency(financial.annualSavingsUSD, currency)}
+          label={t.financialSummary.annualSavings}
+          value={formatCurrency(financial.annualSavings ?? financial.annualSavingsUSD, currency)}
           unit="/yr"
           subtext={`At ${currencySymbol}${activeTariff}/kWh`}
           variant="success"
         />
         <MetricCard
-          label="Payback Period"
+          label={t.financialSummary.payback}
           value={financial.paybackYears !== null ? `${financial.paybackYears}` : '—'}
           unit={financial.paybackYears !== null ? 'years' : ''}
-          subtext={`20-Yr Net: ${formatCurrency(financial.twentyYearNetSavingsUSD, currency)}`}
+          subtext={`20-Yr Net: ${formatCurrency(financial.twentyYearNetSavings ?? financial.twentyYearNetSavingsUSD, currency)}`}
           variant="warning"
         />
         <MetricCard
-          label="Carbon Abated"
+          label={t.financialSummary.carbonAbated}
           value={environmental.annualCO2ReductionTonnes}
           unit="t CO₂/yr"
           subtext={`~${environmental.equivalentTreesPlanted} trees planted`}
@@ -206,7 +208,7 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
         >
           <div className="flex items-center gap-1.5 text-sky-400">
             <Settings2 className="w-3.5 h-3.5" />
-            <span>Financial & Emission Assumptions</span>
+            <span>{t.financialSummary.assumptionsToggle}</span>
           </div>
           <div className="flex items-center gap-1 text-[10px] text-slate-500">
             <span>{showConfig ? 'Hide' : 'Configure'}</span>
@@ -229,7 +231,7 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
                   className="w-full px-2 py-1 bg-slate-900 border border-slate-700 rounded-lg text-slate-200 font-mono text-xs focus:outline-none focus:border-amber-400"
                 />
                 <span className="text-[9px] text-slate-500 block mt-0.5">
-                  {currency === 'BDT' ? 'BPDB 2024 Gazette Slab Ref' : 'US EIA Retail Average'}
+                  {currency === 'BDT' ? 'Flat Tariff Model (Configurable, e.g. ৳10.50/kWh)' : 'Flat Tariff Model (Configurable, e.g. $0.16/kWh)'}
                 </span>
               </div>
 
@@ -302,9 +304,11 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
 
             {/* Assumptions & Limitations Callout */}
             <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800 text-[10px] text-slate-400 space-y-1 leading-relaxed">
-              <span className="font-semibold text-slate-300 block">Financial Assumptions & Boundaries:</span>
-              <p>• Simple payback does not compound annual PV degradation (~0.5%/yr), inverter overhaul at Year 10–12, or local utility tariff inflation.</p>
-              <p>• Net metering capacity in Bangladesh is restricted to 70% of sanctioned load under Section 5.1 of SREDA guidelines.</p>
+              <span className="font-semibold text-slate-300 block">Financial Assumptions & Boundaries (Engineering Disclosure):</span>
+              <p>• <strong>Flat Tariff Model:</strong> Calculations utilize a flat single-rate utility tariff. Progressive multi-slab utility billing structures are not simulated.</p>
+              <p>• <strong>Simplified Payback:</strong> Metrics do not model financing interest, cost of capital discount rates, annual PV degradation (~0.5%/yr), or inverter replacement at Year 10–12.</p>
+              <p>• <strong>Net-Metering Policy:</strong> Grid export in Bangladesh is capped at 70% of sanctioned consumer load under SREDA Section 5.1 guidelines.</p>
+              <p className="text-amber-400/90 font-medium">• <strong>Simulation Estimate:</strong> Financial projections are indicative planning models and do not represent guaranteed cash flows or formal vendor quotations.</p>
             </div>
 
             <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between">
@@ -319,7 +323,7 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
                 title="Reset to default regional benchmarks"
               >
                 <RotateCcw className="w-3 h-3" />
-                <span>Reset Defaults</span>
+                <span>{t.financialSummary.resetDefaults}</span>
               </button>
             </div>
           </div>

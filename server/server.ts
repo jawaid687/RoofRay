@@ -17,7 +17,8 @@ import { handleSolarAdvisorRequest, validateAdvisorPayload, checkRateLimit } fro
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const PORT = parseInt(process.env.PORT || '3000', 10);
+// Port configuration: Defaults to 3001 in production (avoids collision with Vite 3000 in dev)
+const PORT = parseInt(process.env.PORT || '3001', 10);
 const DIST_DIR = path.resolve(__dirname, '../dist');
 
 // MIME types for static assets
@@ -38,14 +39,59 @@ const MIME_TYPES: Record<string, string> = {
   '.webmanifest': 'application/manifest+json',
 };
 
+// Configurable CORS origins
+const configuredAllowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean)
+  : [];
+
+const defaultAllowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:3001',
+  'https://roofray.onrender.com',
+];
+
+function isOriginAllowed(origin?: string): boolean {
+  if (!origin) return true; // Same-origin or non-browser client
+  return defaultAllowedOrigins.includes(origin) || configuredAllowedOrigins.includes(origin);
+}
+
+// In-memory single-instance daily AI request counter (limitation: resets on process restart)
+const MAX_DAILY_AI_REQUESTS = 500;
+let dailyAiRequestsCount = 0;
+let dailyAiResetTime = Date.now() + 24 * 60 * 60 * 1000;
+
+function checkDailyAiQuota(): boolean {
+  const now = Date.now();
+  if (now > dailyAiResetTime) {
+    dailyAiRequestsCount = 0;
+    dailyAiResetTime = now + 24 * 60 * 60 * 1000;
+  }
+  if (dailyAiRequestsCount >= MAX_DAILY_AI_REQUESTS) {
+    return false;
+  }
+  dailyAiRequestsCount++;
+  return true;
+}
+
 export const server = http.createServer(async (req, res) => {
   const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
-  const clientIp = req.socket.remoteAddress || '127.0.0.1';
+  
+  // Extract client IP safely behind Render reverse proxy
+  const forwarded = req.headers['x-forwarded-for'];
+  const clientIp = typeof forwarded === 'string'
+    ? forwarded.split(',')[0].trim()
+    : req.socket.remoteAddress || '127.0.0.1';
 
-  // Global CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  // Configured CORS headers (no wildcards)
+  const origin = req.headers.origin;
+  if (origin && isOriginAllowed(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  }
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
@@ -56,7 +102,13 @@ export const server = http.createServer(async (req, res) => {
   // ==========================================
   // 1. Health Endpoint (/api/ai/health)
   // ==========================================
-  if (req.method === 'GET' && (url.pathname === '/api/ai/health' || url.pathname === '/api/health')) {
+  if (url.pathname === '/api/ai/health' || url.pathname === '/api/health') {
+    if (req.method !== 'GET') {
+      res.writeHead(405, { 'Content-Type': 'application/json; charset=UTF-8', 'Allow': 'GET, OPTIONS' });
+      res.end(JSON.stringify({ error: 'METHOD_NOT_ALLOWED', message: 'Only GET is allowed on health endpoint' }));
+      return;
+    }
+
     const isConfigured = Boolean(
       process.env.GEMINI_API_KEY &&
       process.env.GEMINI_API_KEY !== 'your_gemini_api_key_here' &&
@@ -68,11 +120,17 @@ export const server = http.createServer(async (req, res) => {
       JSON.stringify({
         status: 'ok',
         service: 'RoofRay AI Solar Advisor Production Server',
-        version: '3.0.0',
+        version: '3.3.0',
         timestamp: new Date().toISOString(),
         aiProvider: 'Google Gemini',
         modelConfigured: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
         keyConfigured: isConfigured,
+        authMethod: 'x-goog-api-key header (secured)',
+        dailyQuota: {
+          limitPerInstance: MAX_DAILY_AI_REQUESTS,
+          consumed: dailyAiRequestsCount,
+          storage: 'in-memory (single process instance)',
+        },
       })
     );
     return;
@@ -81,7 +139,20 @@ export const server = http.createServer(async (req, res) => {
   // ==========================================
   // 2. Solar Advisor AI Endpoint (/api/ai/solar-advisor)
   // ==========================================
-  if (req.method === 'POST' && url.pathname === '/api/ai/solar-advisor') {
+  if (url.pathname === '/api/ai/solar-advisor') {
+    if (req.method !== 'POST') {
+      res.writeHead(405, { 'Content-Type': 'application/json; charset=UTF-8', 'Allow': 'POST, OPTIONS' });
+      res.end(JSON.stringify({ error: 'METHOD_NOT_ALLOWED', message: 'Only POST requests are supported on this endpoint' }));
+      return;
+    }
+
+    const contentType = req.headers['content-type'] || '';
+    if (!contentType.includes('application/json')) {
+      res.writeHead(415, { 'Content-Type': 'application/json; charset=UTF-8' });
+      res.end(JSON.stringify({ error: 'UNSUPPORTED_MEDIA_TYPE', message: 'Content-Type must be application/json' }));
+      return;
+    }
+
     if (!checkRateLimit(clientIp)) {
       res.writeHead(429, { 'Content-Type': 'application/json; charset=UTF-8' });
       res.end(
@@ -93,20 +164,43 @@ export const server = http.createServer(async (req, res) => {
       return;
     }
 
+    if (!checkDailyAiQuota()) {
+      res.writeHead(429, { 'Content-Type': 'application/json; charset=UTF-8' });
+      res.end(
+        JSON.stringify({
+          error: 'DAILY_QUOTA_EXCEEDED',
+          message: 'Instance daily AI advisory quota reached. Please retry tomorrow or review server limits.',
+        })
+      );
+      return;
+    }
+
     let bodyText = '';
+    let isOversized = false;
+
     req.on('data', (chunk) => {
       bodyText += chunk;
-      // Protect against large payloads (> 256KB)
-      if (bodyText.length > 256 * 1024) {
+      // Protect against large payloads (> 100KB)
+      if (bodyText.length > 100 * 1024 && !isOversized) {
+        isOversized = true;
         res.writeHead(413, { 'Content-Type': 'application/json; charset=UTF-8' });
-        res.end(JSON.stringify({ error: 'Payload too large' }));
+        res.end(JSON.stringify({ error: 'PAYLOAD_TOO_LARGE', message: 'Request payload exceeds 100KB limit' }));
         req.destroy();
       }
     });
 
     req.on('end', async () => {
+      if (isOversized) return;
       try {
-        const payload = JSON.parse(bodyText);
+        let payload: unknown;
+        try {
+          payload = JSON.parse(bodyText);
+        } catch {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=UTF-8' });
+          res.end(JSON.stringify({ error: 'INVALID_JSON', message: 'Request body is not valid JSON' }));
+          return;
+        }
+
         const validation = validateAdvisorPayload(payload);
         if (!validation.valid) {
           res.writeHead(400, { 'Content-Type': 'application/json; charset=UTF-8' });
@@ -114,33 +208,63 @@ export const server = http.createServer(async (req, res) => {
           return;
         }
 
-        const advisorResult = await handleSolarAdvisorRequest(payload);
+        const advisorResult = await handleSolarAdvisorRequest(payload as any);
         res.writeHead(200, { 'Content-Type': 'application/json; charset=UTF-8' });
         res.end(JSON.stringify(advisorResult));
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : 'Internal Server Error';
+      } catch {
         res.writeHead(500, { 'Content-Type': 'application/json; charset=UTF-8' });
-        res.end(JSON.stringify({ error: 'SERVER_ERROR', message: msg }));
+        res.end(JSON.stringify({ error: 'SERVER_ERROR', message: 'An internal error occurred while processing the AI advisory.' }));
       }
     });
     return;
   }
 
   // ==========================================
-  // 3. Static Asset & SPA Serving from dist/
+  // 3. Block unmatched /api/* routes from SPA fallback
+  // ==========================================
+  if (url.pathname.startsWith('/api/')) {
+    res.writeHead(404, { 'Content-Type': 'application/json; charset=UTF-8' });
+    res.end(JSON.stringify({ error: 'NOT_FOUND', message: `API endpoint not found: ${url.pathname}` }));
+    return;
+  }
+
+  // ==========================================
+  // 4. Static Asset & SPA Serving from dist/
   // ==========================================
   if (fs.existsSync(DIST_DIR)) {
-    const rawPath = decodeURIComponent(url.pathname);
+    let rawPath: string;
+    try {
+      rawPath = decodeURIComponent(url.pathname);
+    } catch {
+      res.writeHead(400, { 'Content-Type': 'application/json; charset=UTF-8' });
+      res.end(JSON.stringify({ error: 'BAD_REQUEST', message: 'Malformed URL encoding' }));
+      return;
+    }
+
+    // Path traversal & null byte sanitization
+    if (rawPath.includes('\0')) {
+      res.writeHead(400, { 'Content-Type': 'application/json; charset=UTF-8' });
+      res.end(JSON.stringify({ error: 'BAD_REQUEST', message: 'Null bytes are disallowed' }));
+      return;
+    }
+
     const hasExtension = path.extname(rawPath) !== '';
 
     if (hasExtension) {
-      // Direct static file request (e.g. /assets/index-xxx.js)
-      const filePath = path.join(DIST_DIR, rawPath);
+      // Normalize and safely resolve path inside DIST_DIR
+      const safeRelative = path.normalize(rawPath).replace(/^(\.\.[\/\\])+/, '');
+      const filePath = path.resolve(DIST_DIR, '.' + safeRelative);
+
+      // Verify the resolved file strictly resides inside DIST_DIR
+      if (!filePath.startsWith(DIST_DIR)) {
+        res.writeHead(403, { 'Content-Type': 'application/json; charset=UTF-8' });
+        res.end(JSON.stringify({ error: 'FORBIDDEN', message: 'Directory traversal is strictly forbidden' }));
+        return;
+      }
+
       if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
         const ext = path.extname(filePath).toLowerCase();
         const mime = MIME_TYPES[ext] || 'application/octet-stream';
-        
-        // Cache assets with hashed names for 1 year, others no-cache
         const isHashedAsset = rawPath.startsWith('/assets/');
         res.setHeader('Cache-Control', isHashedAsset ? 'public, max-age=31536000, immutable' : 'no-cache');
         res.writeHead(200, { 'Content-Type': mime });
@@ -154,8 +278,8 @@ export const server = http.createServer(async (req, res) => {
       return;
     }
 
-    // SPA Route Fallback (e.g. / or /app or /any-route)
-    const indexPath = path.join(DIST_DIR, 'index.html');
+    // SPA Route Fallback (e.g. / or /app or direct page refresh) -> serve index.html
+    const indexPath = path.resolve(DIST_DIR, 'index.html');
     if (fs.existsSync(indexPath)) {
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.writeHead(200, { 'Content-Type': 'text/html; charset=UTF-8' });

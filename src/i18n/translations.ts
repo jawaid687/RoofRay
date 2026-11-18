@@ -141,6 +141,161 @@ export interface TranslationSchema {
     co2OffsetLabel: string;
     exportReport: string;
   };
+  locationTime: {
+    title: string;
+    cityPreset: string;
+    dateTime: string;
+    sunPosition: string;
+    elevation: string;
+    azimuth: string;
+    solarNoon: string;
+    sunriseSunset: string;
+    summerSolstice: string;
+    winterSolstice: string;
+    equinox: string;
+    customCoordinates: string;
+    latitude: string;
+    longitude: string;
+    timezone: string;
+    apply: string;
+    diurnalPlayback: string;
+    speed: string;
+  };
+  buildingInspector: {
+    title: string;
+    targetBuilding: string;
+    dimensions: string;
+    roofArea: string;
+    usableArea: string;
+    obstacles: string;
+    setbackNotice: string;
+    fixedGeometry: string;
+  };
+  solarAnalysis: {
+    title: string;
+    runAnalysis: string;
+    analyzing: string;
+    recommendedArea: string;
+    annualInsolation: string;
+    exposureScore: string;
+    obstacleFootprint: string;
+    nasaClimatology: string;
+    clearSkyNotice: string;
+    offlineNotice: string;
+    viewHeatmap: string;
+  };
+  panelConfig: {
+    title: string;
+    moduleSpec: string;
+    wattage: string;
+    dimensions: string;
+    efficiency: string;
+    warranty: string;
+    tiltAngle: string;
+    orientation: string;
+    portrait: string;
+    landscape: string;
+  };
+  energyDemand: {
+    title: string;
+    monthlyConsumption: string;
+    annualConsumption: string;
+    installedCapacity: string;
+    annualGeneration: string;
+    gridCoverage: string;
+    surplusExport: string;
+  };
+  optimization: {
+    title: string;
+    mode: string;
+    balanced: string;
+    balancedDesc: string;
+    maxGeneration: string;
+    maxGenerationDesc: string;
+    lowestCost: string;
+    lowestCostDesc: string;
+    meetDemand: string;
+    meetDemandDesc: string;
+    runOptimization: string;
+    optimizing: string;
+    clearPanels: string;
+  };
+  manualLayout: {
+    title: string;
+    clickToPlace: string;
+    tools: string;
+    rotate: string;
+    undo: string;
+    redo: string;
+    delete: string;
+    fillZone: string;
+    collisionWarning: string;
+    setbackWarning: string;
+  };
+  financialSummary: {
+    title: string;
+    currency: string;
+    capex: string;
+    annualSavings: string;
+    payback: string;
+    twentyYearNet: string;
+    roi: string;
+    carbonAbated: string;
+    assumptionsToggle: string;
+    electricityTariff: string;
+    costPerKW: string;
+    baseCost: string;
+    exportCredit: string;
+    emissionFactor: string;
+    resetDefaults: string;
+    disclaimer: string;
+  };
+  aiAdvisor: {
+    title: string;
+    subtitle: string;
+    promptPlaceholder: string;
+    generateEvaluation: string;
+    generating: string;
+    keyNotConfigured: string;
+    setupGuide: string;
+    ragCitations: string;
+    summary: string;
+    recommendations: string;
+    advantages: string;
+    risks: string;
+    assumptions: string;
+    nextSteps: string;
+  };
+  solarReportModal: {
+    title: string;
+    downloadPdf: string;
+    copyJson: string;
+    close: string;
+    executiveSummary: string;
+    technicalHighlights: string;
+    financialProjection: string;
+    environmentalImpact: string;
+    disclaimer: string;
+  };
+  demoTour: {
+    title: string;
+    next: string;
+    previous: string;
+    finish: string;
+    exit: string;
+  };
+  common: {
+    loading: string;
+    error: string;
+    success: string;
+    meters: string;
+    sqMeters: string;
+    sqFeet: string;
+    years: string;
+    kwh: string;
+    kw: string;
+    tonnesCO2: string;
+  };
 }
 
 export const translations: Record<Language, TranslationSchema> = {
@@ -199,54 +354,54 @@ export const translations: Record<Language, TranslationSchema> = {
       title: 'Engineered for Precision & Explainability',
       subtitle: 'A unified suite of 3D spatial simulation, astronomical computation, and grounded AI advisory.',
       f1Title: 'Interactive 3D Solar Visualization',
-      f1Desc: 'Three.js & WebGL powered digital twin environment with realistic diurnal sun motion, smooth orbit controls, and customizable buildings.',
+      f1Desc: 'Web-based Three.js digital twin with dynamic diurnal sunlight and true astronomical ephemeris.',
       f2Title: 'Real-Time Shadow Simulation',
-      f2Desc: 'Hardware-accelerated raycasting projects dynamic shadows cast by neighboring high-rises and rooftop utility obstacles.',
+      f2Desc: 'Hardware-accelerated raycasting projects exact real-time shadows from towers, parapets, and rooftop utilities.',
       f3Title: 'Annual Solar Suitability Analysis',
-      f3Desc: 'Simulates hundreds of astronomical sun positions across all 12 months to classify roof surface into excellent, good, and poor exposure.',
+      f3Desc: 'Multi-month solar insolation analysis maps roof suitability into prime, moderate, and shaded zones.',
       f4Title: 'Intelligent Panel Placement',
-      f4Desc: 'Automated and manual placement with 0.8m firefighter perimeter setbacks, 0.5m obstacle clearance, and best-spot ranking.',
+      f4Desc: 'Automated packing and spatial validation enforcing fire safety setbacks (0.8m) and obstacle buffers.',
       f5Title: 'Solar Energy Estimation',
-      f5Desc: 'Deterministic energy modeling aggregating per-panel peak sun hours, tilt, orientation, and cell exposure scores.',
+      f5Desc: 'Deterministic energy calculation modeling panel tilt, azimuth, efficiency derating, and annual kWh yields.',
       f6Title: 'Financial and ROI Analysis',
       f6Desc: 'Configurable utility tariffs (BDT ৳ / USD $), turnkey installation costs, net-metering export credits, and 20-year net benefit projections.',
-      f7Title: 'AI Solar Advisor & RAG',
-      f7Desc: 'Server-side LLM advisor grounded in physical simulation data and verified policy knowledge from SREDA, BPDB, and NREL.',
+      f7Title: 'AI Solar Advisor with Grounded RAG',
+      f7Desc: 'Server-side LLM synthesis grounded in physical simulation data and authoritative SREDA/NREL technical corpus.',
     },
     workflow: {
-      badge: 'Four-Step Workflow',
-      title: 'How RoofRay Works',
-      subtitle: 'From astronomical ephemeris to an exportable investment report in minutes.',
-      step1Title: '1. Select Location & Rooftop',
-      step1Desc: 'Choose your city across Bangladesh divisional presets or global coordinates, and inspect roof dimensions and utility obstacles.',
-      step2Title: '2. Analyze Exposure & Shading',
-      step2Desc: 'Run real-time raycasting to visualize solar exposure heatmaps and inspect seasonal shadow dynamics from surrounding structures.',
-      step3Title: '3. Optimize Panel Placement',
-      step3Desc: 'Generate automated layout configurations targeting Maximum Generation, Lowest Cost, or Balanced Value, or design manually.',
-      step4Title: '4. Review Financials & AI Guidance',
-      step4Desc: 'Inspect energy yields, configurable payback timelines, carbon mitigation, and consult the AI Solar Advisor for strategic insights.',
+      badge: 'Step-by-Step Workflow',
+      title: 'How RoofRay Operates',
+      subtitle: 'A streamlined four-stage journey from astronomical sun vectoring to engineering reports.',
+      step1Title: '1. Select Location & Roof',
+      step1Desc: 'Choose from 8 Bangladesh divisional hubs or global locations, and inspect rooftop dimensions and utility obstacles.',
+      step2Title: '2. Simulate Shading & Insolation',
+      step2Desc: 'Run annual raycast analysis to identify peak solar zones and reveal shadow impacts across all seasons.',
+      step3Title: '3. Optimize PV Module Layout',
+      step3Desc: 'Auto-pack panels under Balanced, Maximum Generation, or Budget modes, or manually position individual modules.',
+      step4Title: '4. Analyze ROI & Consult AI',
+      step4Desc: 'Examine detailed cash-flow metrics, payback timelines, CO₂ reductions, and receive grounded recommendations from our AI Solar Advisor.',
     },
     aiTech: {
       badge: 'Responsible AI Architecture',
       title: 'Physics-Grounded Solar Intelligence',
-      subtitle: 'Our AI Solar Advisor never guesses physical calculations. It interprets verified simulation truth.',
-      groundingTitle: 'Deterministic Physics Engine',
-      groundingDesc: 'NOAA ephemeris and Three.js raycasting calculate sun elevation, azimuth, shadow projection, and per-panel kWh output.',
-      ragTitle: 'Knowledge Retrieval (RAG)',
-      ragDesc: 'Lexical retrieval indexes official documentation from SREDA, BPDB retail tariffs, and NREL PV fundamentals for contextual citations.',
-      deterministicTitle: 'Single Source of Truth',
-      deterministicDesc: 'The LLM receives verified structured numbers (capacity, annual kWh, costs, exposure). It does not hallucinate math.',
-      noHallucinationTitle: 'Explainable Advice & Citations',
-      noHallucinationDesc: 'Every recommendation is accompanied by transparent assumptions, risk notices, technical advantages, and cited sources.',
+      subtitle: 'Our AI Solar Advisor does not guess or hallucinate numbers — it explains verified engineering calculations.',
+      groundingTitle: 'Deterministic Single Source of Truth',
+      groundingDesc: 'NOAA solar equations and Three.js raycasting calculate physical production, kW capacity, and financial numbers.',
+      ragTitle: 'Lexical RAG Knowledge Retrieval',
+      ragDesc: 'Domain knowledge retrieved from official SREDA guidelines, BPDB tariff schedules, and NREL technical benchmarks.',
+      deterministicTitle: 'Strict Grounding Architecture',
+      deterministicDesc: 'LLM receives structured calculated context as ground truth and is prohibited from recalculating or inventing numbers.',
+      noHallucinationTitle: 'Explainable Advice with Attribution',
+      noHallucinationDesc: 'Every recommendation includes regulatory citations, physical risk disclosures, financial boundaries, and next steps.',
     },
     impact: {
-      badge: 'National & Global Impact',
-      title: 'Accelerating the Clean Energy Transition',
-      subtitle: 'Empowering urban planners, commercial enterprises, and homeowners with verifiable solar intelligence.',
-      bdTitle: 'Bangladesh Clean Energy Vision',
-      bdDesc: 'Supporting Bangladesh’s renewable energy targets by unlocking dense urban rooftop capacity in Dhaka, Chattogram, and regional industrial zones.',
-      globalTitle: 'Global Scalability',
-      globalDesc: 'NOAA ephemeris engine operates across any latitude or longitude worldwide, from equatorial Quito to high-latitude Oslo.',
+      badge: 'Sustainable Development',
+      title: 'Empowering the Clean Energy Transition',
+      subtitle: 'Accelerating rooftop solar adoption for homeowners, commercial facilities, and EPC engineers.',
+      bdTitle: 'Bangladesh National Solar Targets',
+      bdDesc: 'Supporting the 2,000 MW rooftop solar expansion across Dhaka, Chattogram, and key industrial export corridors.',
+      globalTitle: 'Universal Astronomical Engine',
+      globalDesc: 'Applicable worldwide from the Equator to the Arctic Circle using NOAA ephemeris and NASA POWER climatology.',
       netMeteringTitle: 'SREDA Net-Metering Readiness',
       netMeteringDesc: 'Pre-configured with SREDA net-metering guidelines (up to 70% sanctioned load) to streamline utility grid interconnection.',
       co2Title: 'Verifiable Carbon Offsets',
@@ -283,6 +438,161 @@ export const translations: Record<Language, TranslationSchema> = {
       annualSavingsLabel: 'Annual Bill Savings',
       co2OffsetLabel: 'Annual CO₂ Displaced',
       exportReport: 'Export Solar Report',
+    },
+    locationTime: {
+      title: 'Astronomical Location & Time',
+      cityPreset: 'City Preset',
+      dateTime: 'Date & Time',
+      sunPosition: 'Sun Position (NOAA)',
+      elevation: 'Elevation',
+      azimuth: 'Azimuth',
+      solarNoon: 'Solar Noon',
+      sunriseSunset: 'Sunrise / Sunset',
+      summerSolstice: 'Summer Solstice',
+      winterSolstice: 'Winter Solstice',
+      equinox: 'Equinox',
+      customCoordinates: 'Custom Coordinates',
+      latitude: 'Latitude (°N)',
+      longitude: 'Longitude (°E)',
+      timezone: 'Timezone',
+      apply: 'Apply Coordinates',
+      diurnalPlayback: 'Diurnal Sun Simulation',
+      speed: 'Playback Speed',
+    },
+    buildingInspector: {
+      title: 'Target Building Geometry',
+      targetBuilding: 'Active Building',
+      dimensions: 'Dimensions',
+      roofArea: 'Total Roof Area',
+      usableArea: 'Usable Area',
+      obstacles: 'Rooftop Obstacles',
+      setbackNotice: '0.8m perimeter setback & 0.5m obstacle clearances enforced.',
+      fixedGeometry: 'Preset Geometry',
+    },
+    solarAnalysis: {
+      title: '3D Solar & Shadow Analysis',
+      runAnalysis: 'Run Annual Solar Analysis',
+      analyzing: 'Simulating Solar Rays...',
+      recommendedArea: 'Recommended Zone',
+      annualInsolation: 'Annual Insolation',
+      exposureScore: 'Average Exposure',
+      obstacleFootprint: 'Obstacle Footprint',
+      nasaClimatology: 'NASA POWER Satellite Climatology',
+      clearSkyNotice: 'Pure astronomical clear-sky simulation via NOAA ephemeris.',
+      offlineNotice: 'NASA service offline. Running pure geometric raycasting.',
+      viewHeatmap: 'Toggle Solar Heatmap',
+    },
+    panelConfig: {
+      title: 'PV Module Specifications',
+      moduleSpec: 'Module Specification',
+      wattage: 'Rated Wattage',
+      dimensions: 'Dimensions',
+      efficiency: 'Module Efficiency',
+      warranty: 'Performance Warranty',
+      tiltAngle: 'Tilt Angle (°)',
+      orientation: 'Orientation',
+      portrait: 'Portrait',
+      landscape: 'Landscape',
+    },
+    energyDemand: {
+      title: 'Energy Demand & Consumption',
+      monthlyConsumption: 'Monthly Demand',
+      annualConsumption: 'Annual Demand',
+      installedCapacity: 'System Capacity',
+      annualGeneration: 'Annual Generation',
+      gridCoverage: 'Demand Offset Coverage',
+      surplusExport: 'Surplus Grid Export',
+    },
+    optimization: {
+      title: 'Layout Optimization',
+      mode: 'Optimization Objective',
+      balanced: 'Balanced / Best Value',
+      balancedDesc: 'Balances capital expenditure, energy production, and high solar yield zones.',
+      maxGeneration: 'Maximum Generation',
+      maxGenerationDesc: 'Packs maximum allowable modules into prime exposure areas.',
+      lowestCost: 'Lowest Initial Cost',
+      lowestCostDesc: 'Minimizes upfront capital cost while delivering high return on investment.',
+      meetDemand: 'Meet Consumption Need',
+      meetDemandDesc: 'Sizes array to offset approximately 100% of user consumption.',
+      runOptimization: 'Auto-Generate Layout',
+      optimizing: 'Optimizing Placements...',
+      clearPanels: 'Clear Array',
+    },
+    manualLayout: {
+      title: 'Manual Layout Studio',
+      clickToPlace: 'Click on unobstructed roof grid to place or remove solar panels.',
+      tools: 'Placement Controls',
+      rotate: 'Rotate Module (Q/E)',
+      undo: 'Undo (Ctrl+Z)',
+      redo: 'Redo (Ctrl+Y)',
+      delete: 'Delete Selected (Del)',
+      fillZone: 'Fill Selected Zone',
+      collisionWarning: 'Panel overlaps with existing module or rooftop obstacle.',
+      setbackWarning: 'Panel violates 0.8m fire safety setback boundary.',
+    },
+    financialSummary: {
+      title: 'Financial Performance & Economics',
+      currency: 'Currency',
+      capex: 'Estimated Capex',
+      annualSavings: 'Annual Savings',
+      payback: 'Payback Period',
+      twentyYearNet: '20-Year Net Benefit',
+      roi: 'Return on Investment',
+      carbonAbated: 'CO₂ Abatement',
+      assumptionsToggle: 'Financial & Emission Assumptions',
+      electricityTariff: 'Electricity Tariff',
+      costPerKW: 'Turnkey Cost / kW',
+      baseCost: 'Base Permitting & Meter Fee',
+      exportCredit: 'Export Credit Rate (% of tariff)',
+      emissionFactor: 'Grid Emission Factor',
+      resetDefaults: 'Reset Defaults',
+      disclaimer: 'Figures are simulation estimates for planning purposes and do not constitute binding contractor quotations.',
+    },
+    aiAdvisor: {
+      title: 'AI Solar Engineering Advisor',
+      subtitle: 'Grounded in real-time 3D raycasting and official SREDA / BPDB guidelines.',
+      promptPlaceholder: 'Ask a specific question (e.g. net-metering limits, shading mitigation, ROI payback in Dhaka)...',
+      generateEvaluation: 'Generate AI Solar Assessment',
+      generating: 'Synthesizing Engineering Recommendations...',
+      keyNotConfigured: 'Gemini API key is not configured on the server.',
+      setupGuide: 'Obtain a free API key at aistudio.google.com and configure GEMINI_API_KEY in .env.',
+      ragCitations: 'Verified Knowledge Base Grounding',
+      summary: 'Executive Summary',
+      recommendations: 'Engineering & Layout Recommendations',
+      advantages: 'Key System Advantages',
+      risks: 'Operational & Shading Risks',
+      assumptions: 'Engineering & Economic Assumptions',
+      nextSteps: 'Actionable Next Steps',
+    },
+    solarReportModal: {
+      title: 'RoofRay Feasibility & Engineering Report',
+      downloadPdf: 'Print / Save PDF',
+      copyJson: 'Copy Audit JSON',
+      close: 'Close',
+      executiveSummary: 'Executive Summary',
+      technicalHighlights: 'Technical Highlights',
+      financialProjection: 'Financial Projections',
+      environmentalImpact: 'Environmental Sustainability',
+      disclaimer: 'Notice: This report is generated by RoofRay simulation engine. An on-site engineering and structural survey is required before procurement.',
+    },
+    demoTour: {
+      title: 'RoofRay Guided Tour',
+      next: 'Next',
+      previous: 'Previous',
+      finish: 'Finish Tour',
+      exit: 'Exit Tour',
+    },
+    common: {
+      loading: 'Loading...',
+      error: 'Error',
+      success: 'Success',
+      meters: 'm',
+      sqMeters: 'm²',
+      sqFeet: 'sq ft',
+      years: 'years',
+      kwh: 'kWh',
+      kw: 'kW',
+      tonnesCO2: 't CO₂/yr',
     },
   },
   bn: {
@@ -424,6 +734,161 @@ export const translations: Record<Language, TranslationSchema> = {
       annualSavingsLabel: 'বার্ষিক বিল সাশ্রয়',
       co2OffsetLabel: 'বার্ষিক কার্বন হ্রাস',
       exportReport: 'সোলার রিপোর্ট ডাউনলোড',
+    },
+    locationTime: {
+      title: 'জ্যোতির্বিজ্ঞান অবস্থান ও সময়',
+      cityPreset: 'শহর নির্বাচন',
+      dateTime: 'তারিখ ও সময়',
+      sunPosition: 'সূর্যের অবস্থান (নোয়া)',
+      elevation: 'উন্নতি কোণ',
+      azimuth: 'দিক কোণ',
+      solarNoon: 'সৌর দুপুর',
+      sunriseSunset: 'সূর্যোদয় / সূর্যাস্ত',
+      summerSolstice: 'গ্রীষ্মের দীর্ঘতম দিন',
+      winterSolstice: 'শীতের ক্ষুদ্রতম দিন',
+      equinox: 'বিষুব (দিন-রাত সমান)',
+      customCoordinates: 'কাস্টম স্থানাঙ্ক',
+      latitude: 'অক্ষাংশ (°উ)',
+      longitude: 'দ্রাঘিমাংশ (°পূ)',
+      timezone: 'সময় অঞ্চল',
+      apply: 'স্থানাঙ্ক প্রয়োগ করুন',
+      diurnalPlayback: '২৪ ঘণ্টার সৌর সিমুলেশন',
+      speed: 'গতিবেগ',
+    },
+    buildingInspector: {
+      title: 'ভবন ও ছাদের জ্যামিতি',
+      targetBuilding: 'সক্রিয় ভবন',
+      dimensions: 'পরিমাপ',
+      roofArea: 'ছাদের মোট আয়তন',
+      usableArea: 'ব্যবহারযোগ্য আয়তন',
+      obstacles: 'ছাদের প্রতিবন্ধকতা',
+      setbackNotice: '০.৮ মিটার ফায়ার সেফটি ও ০.৫ মিটার বাধার নিরাপদ দূরত্ব নিশ্চিত।',
+      fixedGeometry: 'নির্দিষ্ট জ্যামিতি',
+    },
+    solarAnalysis: {
+      title: 'থ্রি-ডি সৌর ও ছায়া বিশ্লেষণ',
+      runAnalysis: 'বার্ষিক সৌর বিশ্লেষণ শুরু করুন',
+      analyzing: 'সৌর রশ্মি সিমুলেট হচ্ছে...',
+      recommendedArea: 'সুপারিশকৃত এলাকা',
+      annualInsolation: 'বার্ষিক সৌর ইনসোলেশন',
+      exposureScore: 'গড় সূর্যালোক স্কোর',
+      obstacleFootprint: 'বাধার আয়তন',
+      nasaClimatology: 'নাসা পাওয়ার স্যাটেলাইট ক্লাইমেটোলজি',
+      clearSkyNotice: 'নোয়া সূত্র অনুযায়ী ক্লিয়ার-স্কাই জ্যামিতিক সিমুলেশন।',
+      offlineNotice: 'নাসা সার্ভিস অফলাইন। পিউর রে-কাস্টিং চলছে।',
+      viewHeatmap: 'সৌর হিটম্যাপ পরিবর্তন',
+    },
+    panelConfig: {
+      title: 'পিভি মডিউল স্পেসিফিকেশন',
+      moduleSpec: 'মডিউল নির্বাচন',
+      wattage: 'উৎপাদন ক্ষমতা',
+      dimensions: 'পরিমাপ',
+      efficiency: 'কার্যক্ষমতা',
+      warranty: 'ওয়ারেন্টি',
+      tiltAngle: 'টিল্ট কোণ (°)',
+      orientation: 'দিক বিন্যাস',
+      portrait: 'লম্বালম্বি (Portrait)',
+      landscape: 'আড়াআড়ি (Landscape)',
+    },
+    energyDemand: {
+      title: 'বিদ্যুতের চাহিদা ও ব্যবহার',
+      monthlyConsumption: 'মাসিক চাহিদা',
+      annualConsumption: 'বার্ষিক চাহিদা',
+      installedCapacity: 'সিস্টেম ক্যাপাসিটি',
+      annualGeneration: 'বার্ষিক উৎপাদন',
+      gridCoverage: 'গ্রিড বিদ্যুৎ সাশ্রয়',
+      surplusExport: 'গ্রিডে উদ্বৃত্ত বিদ্যুৎ',
+    },
+    optimization: {
+      title: 'প্যানেল বিন্যাস অপ্টিমাইজেশন',
+      mode: 'অপ্টিমাইজেশনের লক্ষ্য',
+      balanced: 'ভারসাম্যপূর্ণ / সেরা মান',
+      balancedDesc: 'খরচ ও সর্বোচ্চ উৎপাদনের মধ্যে সমন্বয় রেখে সেরা স্থানে প্যানেল বসায়।',
+      maxGeneration: 'সর্বোচ্চ উৎপাদন',
+      maxGenerationDesc: 'ছাদের সর্বোচ্চ রোদযুক্ত অংশে সর্বাধিক সংখ্যক প্যানেল স্থাপন করে।',
+      lowestCost: 'সর্বনিম্ন প্রাথমিক খরচ',
+      lowestCostDesc: 'কম খরচে বেশি রিটার্ন নিশ্চিত করে প্রয়োজনীয় সংখ্যক প্যানেল বসায়।',
+      meetDemand: 'চাহিদা অনুযায়ী সাজান',
+      meetDemandDesc: 'ব্যবহারকারীর মাসিক চাহিদার প্রায় ১০০% পূরণ উপযোগী সিস্টেম সাজায়।',
+      runOptimization: 'স্বয়ংক্রিয় বিন্যাস তৈরি',
+      optimizing: 'বিন্যাস অপ্টিমাইজ হচ্ছে...',
+      clearPanels: 'প্যানেল মুছুন',
+    },
+    manualLayout: {
+      title: 'ম্যানুয়াল স্টুডিও',
+      clickToPlace: 'প্যানেল বসাতে বা সরাতে ছাদের ফাঁকা গ্রিডে ক্লিক করুন।',
+      tools: 'নিয়ন্ত্রণ টুলসমূহ',
+      rotate: 'ঘোরান (Q/E)',
+      undo: 'পূর্বাবস্থায় (Ctrl+Z)',
+      redo: 'পুনরায় (Ctrl+Y)',
+      delete: 'মুছুন (Del)',
+      fillZone: 'অঞ্চল পূর্ণ করুন',
+      collisionWarning: 'প্যানেল অন্য প্যানেল বা ছাদের বাধার উপর পড়েছে।',
+      setbackWarning: 'প্যানেল ০.৮ মিটার ফায়ার সেফটি সীমানা অতিক্রম করেছে।',
+    },
+    financialSummary: {
+      title: 'আর্থিক ফলাফল ও অর্থনীতি',
+      currency: 'মুদ্রা',
+      capex: 'আনুমানিক টার্নকি খরচ',
+      annualSavings: 'বার্ষিক বিল সাশ্রয়',
+      payback: 'বিনিয়োগ ওঠার সময়কাল',
+      twentyYearNet: '২০ বছরের নিট লাভ',
+      roi: 'রিটার্ন অন ইনভেস্টমেন্ট',
+      carbonAbated: 'কার্বন নিঃসরণ হ্রাস',
+      assumptionsToggle: 'আর্থিক ও নির্গমন অনুমানসমূহ',
+      electricityTariff: 'বিদ্যুৎ ট্যারিফ',
+      costPerKW: 'টার্নকি খরচ / কিলোওয়াট',
+      baseCost: 'বেস ইন্টারকানেকশন ফি',
+      exportCredit: 'রপ্তানি ক্রেডিট হার (% অফ ট্যারিফ)',
+      emissionFactor: 'গ্রিড কার্বন নির্গমন গুণক',
+      resetDefaults: 'ডিফল্ট রিসেট',
+      disclaimer: 'হিসাবসমূহ সিমুলেশন মডেলের উপর ভিত্তি করে তৈরি এবং বাস্তব কাজের চুক্তিনামা নয়।',
+    },
+    aiAdvisor: {
+      title: 'এআই সোলার ইঞ্জিনিয়ারিং উপদেষ্টা',
+      subtitle: 'পদার্থবিজ্ঞান-ভিত্তিক থ্রি-ডি রে-কাস্টিং এবং শ্রেডা/বিপিডিবি নির্দেশিকা আশ্রিত।',
+      promptPlaceholder: 'নির্দিষ্ট প্রশ্ন করুন (যেমন: নেট-মিটারিং সীমা, ঢাকার পেব্যাক সময়কাল, ছায়া হ্রাস)...',
+      generateEvaluation: 'এআই মূল্যায়ন রিপোর্ট তৈরি করুন',
+      generating: 'পেশাদার পরামর্শ তৈরি হচ্ছে...',
+      keyNotConfigured: 'সার্ভারে জেমিনাই (Gemini) এআই কী কনফিগার করা নেই।',
+      setupGuide: 'aistudio.google.com থেকে বিনামূল্যে এআই কী নিয়ে .env ফাইলে GEMINI_API_KEY যুক্ত করুন।',
+      ragCitations: 'যাচাইকৃত রেফারেন্স ও নির্দেশিকা',
+      summary: 'নির্বাহী সারাংশ',
+      recommendations: 'প্রকৌশল ও লেআউট সুপারিশ',
+      advantages: 'সিস্টেমের মূল সুবিধাসমূহ',
+      risks: 'ছায়াজনিত ও প্রযুক্তিগত ঝুঁকি',
+      assumptions: 'প্রকৌশল ও আর্থিক অনুমানসমূহ',
+      nextSteps: 'পরবর্তী কার্যকর পদক্ষেপ',
+    },
+    solarReportModal: {
+      title: 'রূফরে সৌর সম্ভাব্যতা ও প্রকৌশল রিপোর্ট',
+      downloadPdf: 'প্রিন্ট / পিডিএফ সংরক্ষণ',
+      copyJson: 'অডিট JSON কপি',
+      close: 'বন্ধ করুন',
+      executiveSummary: 'নির্বাহী সারাংশ',
+      technicalHighlights: 'প্রযুক্তিগত বৈশিষ্ট্যসমূহ',
+      financialProjection: 'আর্থিক প্রাক্কলন',
+      environmentalImpact: 'পরিবেশগত স্থায়িত্ব',
+      disclaimer: 'বিজ্ঞপ্তি: এই প্রতিবেদনটি রূফরে সিমুলেশন ইঞ্জিন দ্বারা তৈরিকৃত। ক্রয়ের পূর্বে অন-সাইট কাঠামোগত জরিপ প্রয়োজন।',
+    },
+    demoTour: {
+      title: 'রূফরে গাইডেড ট্যুর',
+      next: 'পরবর্তী',
+      previous: 'পূর্ববর্তী',
+      finish: 'ট্যুর সম্পন্ন',
+      exit: 'ট্যুর বন্ধ করুন',
+    },
+    common: {
+      loading: 'লোড হচ্ছে...',
+      error: 'ত্রুটি',
+      success: 'সফল',
+      meters: 'মিটার',
+      sqMeters: 'বর্গমিটার',
+      sqFeet: 'বর্গফুট',
+      years: 'বছর',
+      kwh: 'কিলোওয়াট-ঘণ্টা',
+      kw: 'কিলোওয়াট',
+      tonnesCO2: 'টন CO₂/বছর',
     },
   },
 };

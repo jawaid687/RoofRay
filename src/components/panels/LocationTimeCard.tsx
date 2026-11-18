@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useSolarStore } from '../../store/useSolarStore';
+import { useLanguage } from '../../i18n/useLanguage';
 import { CITY_PRESETS } from '../../config/assumptions';
 import { isValidTimezone } from '../../simulation/timezone';
 import {
@@ -19,6 +20,7 @@ import {
 } from 'lucide-react';
 
 export function LocationTimeCard() {
+  const { t } = useLanguage();
   const location = useSolarStore((s) => s.location);
   const setLocation = useSolarStore((s) => s.setLocation);
   const setCityPreset = useSolarStore((s) => s.setCityPreset);
@@ -119,13 +121,13 @@ export function LocationTimeCard() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-300">
             <Globe className="w-4 h-4 text-sky-400" />
-            <span>Geographic Location</span>
+            <span>{t.locationTime.title}</span>
           </div>
           <button
             onClick={() => setShowAdvancedCoords(!showAdvancedCoords)}
             className="text-[11px] font-mono text-sky-400 hover:text-sky-300 flex items-center gap-1"
           >
-            <span>{showAdvancedCoords ? 'Simple' : 'Coordinates'}</span>
+            <span>{showAdvancedCoords ? 'Simple' : t.locationTime.customCoordinates}</span>
             {showAdvancedCoords ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </button>
         </div>
@@ -239,7 +241,7 @@ export function LocationTimeCard() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-300">
             <Calendar className="w-4 h-4 text-amber-400" />
-            <span>Simulation Date & Seasons</span>
+            <span>{t.locationTime.dateTime}</span>
           </div>
           <span className="text-[10px] font-mono text-slate-400">NOAA Ephemeris</span>
         </div>
