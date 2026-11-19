@@ -333,7 +333,7 @@ async function runBrowserTests() {
     })()`);
     assert(welcomeTitleFound, 'AI Advisor mounts Welcome Screen with "Your AI Solar Engineering Assistant"');
 
-    // Verify Suggested Prompts
+    // Verify Context-Aware Suggested Prompts for San Francisco (USA)
     const suggestedCount = await evaluate(`(() => {
       const text = document.body.innerText;
       let count = 0;
@@ -341,11 +341,63 @@ async function runBrowserTests() {
       if (text.includes('Optimize solar panel placement')) count++;
       if (text.includes('Explain current shading conditions')) count++;
       if (text.includes('Calculate solar investment payback')) count++;
-      if (text.includes('Check Bangladesh net-metering regulations')) count++;
-      if (text.includes('Recommend optimal panel orientation')) count++;
+      if (text.includes('California solar regulations')) count++;
+      if (text.includes('US utility interconnection')) count++;
       return count;
     })()`);
-    assert(suggestedCount === 6, 'All 6 suggested question prompts are rendered on welcome screen');
+    assert(suggestedCount === 6, 'Context-aware suggestions properly generated for active SF location (6/6)');
+
+    // Verify irrelevant jurisdiction questions (e.g. Bangladesh SREDA in San Francisco) are strictly omitted
+    const irrelevantJurisdictionOmitted = await evaluate(`(() => {
+      const text = document.body.innerText;
+      return !text.includes('Check Bangladesh SREDA');
+    })()`);
+    assert(irrelevantJurisdictionOmitted, 'Irrelevant jurisdiction suggestions (Bangladesh SREDA) strictly omitted for San Francisco');
+
+    // Verify Expand / Collapse Chat Controls
+    const initialAsideWidth = await evaluate(`(() => {
+      const aside = document.querySelector('aside');
+      return aside ? aside.getBoundingClientRect().width : 0;
+    })()`);
+    assert(initialAsideWidth > 350 && initialAsideWidth < 550, 'Chat panel starts in standard layout width (~440-480px)');
+
+    // Click Expand button
+    const expandClicked = await evaluate(`(() => {
+      const buttons = Array.from(document.querySelectorAll('button'));
+      const btn = buttons.find(b => b.innerText.includes('Expand') || b.getAttribute('aria-label') === 'Expand chat view');
+      if (btn) {
+        btn.click();
+        return true;
+      }
+      return false;
+    })()`);
+    assert(expandClicked, 'Expand Chat control located and clicked');
+    await new Promise((r) => setTimeout(r, 400));
+
+    const expandedAsideWidth = await evaluate(`(() => {
+      const aside = document.querySelector('aside');
+      return aside ? aside.getBoundingClientRect().width : 0;
+    })()`);
+    assert(expandedAsideWidth >= 600, `Chat successfully expanded horizontally to wider workspace (${Math.round(expandedAsideWidth)}px)`);
+
+    // Click Collapse button to restore
+    const collapseClicked = await evaluate(`(() => {
+      const buttons = Array.from(document.querySelectorAll('button'));
+      const btn = buttons.find(b => b.innerText.includes('Collapse') || b.getAttribute('aria-label') === 'Collapse chat view');
+      if (btn) {
+        btn.click();
+        return true;
+      }
+      return false;
+    })()`);
+    assert(collapseClicked, 'Collapse Chat control located and clicked');
+    await new Promise((r) => setTimeout(r, 400));
+
+    const collapsedAsideWidth = await evaluate(`(() => {
+      const aside = document.querySelector('aside');
+      return aside ? aside.getBoundingClientRect().width : 0;
+    })()`);
+    assert(collapsedAsideWidth < 550, `Chat cleanly restored to standard width (${Math.round(collapsedAsideWidth)}px)`);
 
     // Verify Fixed Message Composer
     const composerExists = await evaluate(`(() => {

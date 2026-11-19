@@ -84,54 +84,244 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Suggested Prompts for Welcome Screen
-  const suggestedPrompts = [
-    {
-      id: 'viability',
-      text: t.aiAdvisor.suggestedViability || 'Analyze my rooftop solar viability.',
-      icon: Zap,
-      color: 'text-amber-400',
-    },
-    {
-      id: 'placement',
-      text: t.aiAdvisor.suggestedPlacement || 'Optimize solar panel placement.',
-      icon: Layers,
-      color: 'text-sky-400',
-    },
-    {
-      id: 'shading',
-      text: t.aiAdvisor.suggestedShading || 'Explain current shading conditions.',
-      icon: Sun,
-      color: 'text-amber-300',
-    },
-    {
-      id: 'payback',
-      text: t.aiAdvisor.suggestedPayback || 'Calculate solar investment payback.',
-      icon: TrendingUp,
-      color: 'text-emerald-400',
-    },
-    {
-      id: 'netmetering',
-      text: t.aiAdvisor.suggestedNetMetering || 'Check Bangladesh net-metering regulations.',
-      icon: ShieldCheck,
-      color: 'text-purple-400',
-    },
-    {
-      id: 'orientation',
-      text: t.aiAdvisor.suggestedOrientation || 'Recommend optimal panel orientation.',
-      icon: MapPin,
-      color: 'text-cyan-400',
-    },
-  ];
+  // Dynamic Context-Aware Suggested Prompts based on Building Location
+  const suggestedPrompts = useMemo(() => {
+    const country = (location.country || '').toLowerCase();
+    const city = (location.city || '').toLowerCase();
 
-  // Follow-up suggestion chips when chat has history
+    const isBangladesh = country.includes('bangladesh') || /dhaka|chattogram|sylhet|rajshahi|khulna|barishal|rangpur|mymensingh/.test(city);
+    const isUSA = country.includes('usa') || country.includes('united states') || /san francisco|phoenix|new york|california/.test(city);
+    const isAustralia = country.includes('australia') || /sydney|melbourne|brisbane/.test(city);
+    const isUK = country.includes('uk') || country.includes('united kingdom') || /london|manchester/.test(city);
+
+    if (isBangladesh) {
+      return [
+        {
+          id: 'viability',
+          text: t.aiAdvisor.suggestedViability || 'Analyze my rooftop solar viability & payback.',
+          icon: Zap,
+          color: 'text-amber-400',
+        },
+        {
+          id: 'placement',
+          text: t.aiAdvisor.suggestedPlacement || 'Optimize solar panel placement on this roof.',
+          icon: Layers,
+          color: 'text-sky-400',
+        },
+        {
+          id: 'shading',
+          text: t.aiAdvisor.suggestedShading || 'Explain current shading conditions & obstacle impact.',
+          icon: Sun,
+          color: 'text-amber-300',
+        },
+        {
+          id: 'payback',
+          text: t.aiAdvisor.suggestedPayback || 'Calculate solar investment payback in BDT.',
+          icon: TrendingUp,
+          color: 'text-emerald-400',
+        },
+        {
+          id: 'bd-netmetering',
+          text: t.aiAdvisor.suggestedBdNetMetering || 'Check Bangladesh SREDA 70% net-metering limit.',
+          icon: ShieldCheck,
+          color: 'text-purple-400',
+        },
+        {
+          id: 'bd-bpdb',
+          text: t.aiAdvisor.suggestedBdBPDB || 'What are BPDB grid interconnection & tariff rules?',
+          icon: MapPin,
+          color: 'text-cyan-400',
+        },
+      ];
+    }
+
+    if (isUSA) {
+      return [
+        {
+          id: 'viability',
+          text: t.aiAdvisor.suggestedViability || 'Analyze my rooftop solar viability & payback.',
+          icon: Zap,
+          color: 'text-amber-400',
+        },
+        {
+          id: 'placement',
+          text: t.aiAdvisor.suggestedPlacement || 'Optimize solar panel placement on this roof.',
+          icon: Layers,
+          color: 'text-sky-400',
+        },
+        {
+          id: 'shading',
+          text: t.aiAdvisor.suggestedShading || 'Explain current shading conditions & obstacle impact.',
+          icon: Sun,
+          color: 'text-amber-300',
+        },
+        {
+          id: 'payback',
+          text: t.aiAdvisor.suggestedPayback || 'Calculate solar investment payback & energy coverage.',
+          icon: TrendingUp,
+          color: 'text-emerald-400',
+        },
+        {
+          id: 'us-regs',
+          text: t.aiAdvisor.suggestedUsRegs || 'Check California solar regulations & NEM 3.0 rules.',
+          icon: ShieldCheck,
+          color: 'text-purple-400',
+        },
+        {
+          id: 'us-interconnect',
+          text: t.aiAdvisor.suggestedUsInterconnect || 'What are US utility interconnection requirements?',
+          icon: MapPin,
+          color: 'text-cyan-400',
+        },
+      ];
+    }
+
+    if (isAustralia) {
+      return [
+        {
+          id: 'viability',
+          text: t.aiAdvisor.suggestedViability || 'Analyze my rooftop solar viability & payback.',
+          icon: Zap,
+          color: 'text-amber-400',
+        },
+        {
+          id: 'placement',
+          text: t.aiAdvisor.suggestedPlacement || 'Optimize solar panel placement on this roof.',
+          icon: Layers,
+          color: 'text-sky-400',
+        },
+        {
+          id: 'shading',
+          text: t.aiAdvisor.suggestedShading || 'Explain current shading conditions & obstacle impact.',
+          icon: Sun,
+          color: 'text-amber-300',
+        },
+        {
+          id: 'payback',
+          text: t.aiAdvisor.suggestedPayback || 'Calculate solar investment payback & feed-in tariffs.',
+          icon: TrendingUp,
+          color: 'text-emerald-400',
+        },
+        {
+          id: 'au-regs',
+          text: t.aiAdvisor.suggestedAuRegs || 'Check Clean Energy Council guidelines & STC incentives.',
+          icon: ShieldCheck,
+          color: 'text-purple-400',
+        },
+        {
+          id: 'orientation',
+          text: 'Recommend equator-facing North orientation for Australia.',
+          icon: MapPin,
+          color: 'text-cyan-400',
+        },
+      ];
+    }
+
+    if (isUK) {
+      return [
+        {
+          id: 'viability',
+          text: t.aiAdvisor.suggestedViability || 'Analyze my rooftop solar viability & payback.',
+          icon: Zap,
+          color: 'text-amber-400',
+        },
+        {
+          id: 'placement',
+          text: t.aiAdvisor.suggestedPlacement || 'Optimize solar panel placement on this roof.',
+          icon: Layers,
+          color: 'text-sky-400',
+        },
+        {
+          id: 'shading',
+          text: t.aiAdvisor.suggestedShading || 'Explain current shading conditions & seasonal variation.',
+          icon: Sun,
+          color: 'text-amber-300',
+        },
+        {
+          id: 'payback',
+          text: t.aiAdvisor.suggestedPayback || 'Calculate solar investment payback & energy coverage.',
+          icon: TrendingUp,
+          color: 'text-emerald-400',
+        },
+        {
+          id: 'uk-regs',
+          text: t.aiAdvisor.suggestedUkRegs || 'Check UK Smart Export Guarantee (SEG) & G98/G99 rules.',
+          icon: ShieldCheck,
+          color: 'text-purple-400',
+        },
+        {
+          id: 'orientation',
+          text: t.aiAdvisor.suggestedOrientation || 'Recommend optimal south-facing tilt for UK latitude.',
+          icon: MapPin,
+          color: 'text-cyan-400',
+        },
+      ];
+    }
+
+    // Default global fallback
+    return [
+      {
+        id: 'viability',
+        text: t.aiAdvisor.suggestedViability || 'Analyze my rooftop solar viability & payback.',
+        icon: Zap,
+        color: 'text-amber-400',
+      },
+      {
+        id: 'placement',
+        text: t.aiAdvisor.suggestedPlacement || 'Optimize solar panel placement on this roof.',
+        icon: Layers,
+        color: 'text-sky-400',
+      },
+      {
+        id: 'shading',
+        text: t.aiAdvisor.suggestedShading || 'Explain current shading conditions & obstacle impact.',
+        icon: Sun,
+        color: 'text-amber-300',
+      },
+      {
+        id: 'payback',
+        text: t.aiAdvisor.suggestedPayback || 'Calculate solar investment payback & energy coverage.',
+        icon: TrendingUp,
+        color: 'text-emerald-400',
+      },
+      {
+        id: 'netmetering',
+        text: t.aiAdvisor.suggestedNetMetering || 'Check local net-metering regulations & utility caps.',
+        icon: ShieldCheck,
+        color: 'text-purple-400',
+      },
+      {
+        id: 'orientation',
+        text: t.aiAdvisor.suggestedOrientation || 'Recommend optimal panel orientation & tilt angle.',
+        icon: MapPin,
+        color: 'text-cyan-400',
+      },
+    ];
+  }, [location.country, location.city, t]);
+
+  // Context-aware follow-up suggestion chips when chat has history
   const followUpChips = useMemo(() => {
+    const country = (location.country || '').toLowerCase();
+    if (country.includes('bangladesh')) {
+      return [
+        'Explain Bangladesh SREDA 70% sanctioned load cap',
+        'Show 20-year net savings breakdown in BDT',
+        'What are BPDB bi-directional meter requirements?',
+      ];
+    }
+    if (country.includes('usa') || country.includes('united states')) {
+      return [
+        'Explain California NEM 3.0 export credits',
+        'Show 20-year net savings breakdown in USD',
+        'What are Title 24 solar mandate requirements?',
+      ];
+    }
     return [
       'Explain shading impact on yield',
       'Show 20-year net savings breakdown',
-      'What are the SREDA setback rules?',
+      'What are the setback & clearance requirements?',
     ];
-  }, []);
+  }, [location.country]);
 
   // Format currency
   const currencySymbol = currency === 'BDT' ? '৳' : '$';
@@ -419,11 +609,13 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
               <span className="text-amber-300">{exposureScore}% sun</span>
               <span>•</span>
               <span className="text-sky-300 font-mono">{formattedCapex}</span>
+              <span>•</span>
+              <span className="text-slate-300">{energy.solarCoveragePercent}% annual coverage</span>
             </div>
           </div>
         </div>
 
-        {/* Top Controls: Report, New Chat, Clear, Wide Mode */}
+        {/* Top Controls: Report, New Chat, Clear, Expand/Collapse Toggle */}
         <div className="flex items-center gap-1 shrink-0">
           {onOpenReportModal && (
             <button
@@ -457,10 +649,12 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
           {onToggleWide && (
             <button
               onClick={onToggleWide}
-              className="hidden lg:flex p-1.5 rounded-lg bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 text-slate-400 hover:text-white transition-all"
-              title={isWide ? 'Collapse chat view' : 'Expand chat view'}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-white text-[11px] font-semibold transition-all shadow-sm"
+              title={isWide ? (t.aiAdvisor.collapseChat || 'Collapse Chat') : (t.aiAdvisor.expandChat || 'Expand Chat')}
+              aria-label={isWide ? 'Collapse chat view' : 'Expand chat view'}
             >
-              {isWide ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+              {isWide ? <Minimize2 className="w-3.5 h-3.5 text-purple-400" /> : <Maximize2 className="w-3.5 h-3.5 text-purple-400" />}
+              <span className="hidden sm:inline">{isWide ? (t.aiAdvisor.collapseChat || 'Collapse') : (t.aiAdvisor.expandChat || 'Expand')}</span>
             </button>
           )}
         </div>
@@ -509,7 +703,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 space-y-4"
+        className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-5 space-y-4"
       >
         {/* WELCOME SCREEN (When no messages exist) */}
         {messages.length === 0 && (
@@ -538,7 +732,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-emerald-400" />
                   <span className="text-slate-300">
-                    Grounded in RoofRay 3D Raycasting & SREDA / BPDB Knowledge Base
+                    Grounded in RoofRay 3D Raycasting & verified engineering knowledge
                   </span>
                 </div>
                 <span className="text-[10px] font-mono text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded">
@@ -547,24 +741,29 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
               </div>
             </div>
 
-            {/* Suggested Prompts Header & Grid */}
+            {/* Context-Aware Suggested Prompts Grid */}
             <div className="space-y-2.5">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-1">
-                Suggested Questions
-              </span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  Location-Specific Questions ({location.city})
+                </span>
+                <span className="text-[10px] text-purple-300 font-mono">
+                  {location.country}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {suggestedPrompts.map((sp) => {
                   const Icon = sp.icon;
                   return (
                     <button
                       key={sp.id}
                       onClick={() => handleSendMessage(sp.text)}
-                      className="p-3 rounded-xl bg-slate-900/70 hover:bg-slate-800/90 border border-slate-800/80 hover:border-purple-500/40 text-left transition-all group flex items-start gap-2.5"
+                      className="p-3.5 rounded-xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-purple-500/40 text-left transition-all group flex items-start gap-3 shadow-sm hover:shadow-md"
                     >
-                      <div className={`p-1.5 rounded-lg bg-slate-950 border border-slate-800 ${sp.color} shrink-0 group-hover:scale-105 transition-transform`}>
-                        <Icon className="w-3.5 h-3.5" />
+                      <div className={`p-2 rounded-lg bg-slate-950 border border-slate-800 ${sp.color} shrink-0 group-hover:scale-105 transition-transform`}>
+                        <Icon className="w-4 h-4" />
                       </div>
-                      <span className="text-xs text-slate-300 group-hover:text-white leading-snug">
+                      <span className="text-[12px] sm:text-[13px] text-slate-200 group-hover:text-white leading-snug font-medium">
                         {sp.text}
                       </span>
                     </button>
@@ -582,15 +781,15 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
           if (isUser) {
             return (
               <div key={msg.id} className="flex justify-end items-end gap-2 group">
-                <div className="max-w-[85%] sm:max-w-[78%] p-3 sm:p-3.5 rounded-2xl rounded-tr-sm bg-gradient-to-br from-indigo-600/30 to-purple-600/20 border border-indigo-500/40 text-slate-100 shadow-md space-y-1">
-                  <p className="text-xs sm:text-[13px] leading-relaxed whitespace-pre-wrap font-sans">
+                <div className="max-w-[85%] sm:max-w-[78%] p-3.5 sm:p-4 rounded-2xl rounded-tr-sm bg-gradient-to-br from-indigo-700/60 via-indigo-600/50 to-purple-800/40 border border-indigo-400/50 text-white shadow-md space-y-1.5">
+                  <p className="text-[13px] sm:text-[14px] leading-relaxed whitespace-pre-wrap font-sans text-slate-50">
                     {msg.text}
                   </p>
-                  <div className="text-[9px] text-indigo-300/70 text-right font-mono">
+                  <div className="text-[10px] text-indigo-200/80 text-right font-mono">
                     {msg.timestamp}
                   </div>
                 </div>
-                <div className="w-7 h-7 rounded-lg bg-indigo-600/40 border border-indigo-400/40 flex items-center justify-center text-indigo-200 shrink-0">
+                <div className="w-8 h-8 rounded-xl bg-indigo-600/50 border border-indigo-400/50 flex items-center justify-center text-indigo-100 shrink-0 shadow-sm">
                   <User className="w-4 h-4" />
                 </div>
               </div>
@@ -606,66 +805,66 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
           const sourcesOpen = expandedSections[`${msg.id}-sources`] ?? false;
 
           return (
-            <div key={msg.id} className="flex justify-start items-start gap-2 sm:gap-2.5 group">
+            <div key={msg.id} className="flex justify-start items-start gap-2.5 sm:gap-3 group">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-white shrink-0 shadow-md shadow-purple-600/20 mt-0.5">
                 <Bot className="w-4 h-4" />
               </div>
 
-              <div className="max-w-[92%] sm:max-w-[88%] space-y-2.5">
+              <div className="max-w-[92%] sm:max-w-[88%] space-y-3">
                 {/* Assistant Message Container */}
-                <div className="p-3.5 sm:p-4 rounded-2xl rounded-tl-sm bg-slate-900/90 border border-purple-500/30 text-slate-200 shadow-lg shadow-purple-950/20 space-y-3">
+                <div className="p-4 sm:p-5 rounded-2xl rounded-tl-sm bg-slate-900/95 border border-purple-500/40 text-slate-100 shadow-xl shadow-purple-950/25 space-y-3.5">
                   {/* Assistant Header Row */}
-                  <div className="flex items-center justify-between text-[11px] pb-1 border-b border-slate-800/60">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-bold text-white flex items-center gap-1">
+                  <div className="flex items-center justify-between text-xs pb-1.5 border-b border-slate-800/80">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-white flex items-center gap-1.5 text-xs">
                         <span>RoofRay Advisor</span>
                       </span>
-                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 font-mono">
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 font-mono font-medium">
                         {data?.modelUsed || 'gemini-3.5-flash-lite'}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-1 text-slate-400">
-                      <span className="text-[9px] font-mono mr-1">{msg.timestamp}</span>
+                    <div className="flex items-center gap-1.5 text-slate-400">
+                      <span className="text-[10px] font-mono mr-1">{msg.timestamp}</span>
                       <button
                         onClick={() => handleCopyMessage(msg.id, msg.text)}
-                        className="p-1 rounded hover:bg-slate-800 hover:text-white transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-slate-800 hover:text-white transition-colors"
                         title="Copy Response"
                       >
                         {copiedId === msg.id ? (
-                          <Check className="w-3 h-3 text-emerald-400" />
+                          <Check className="w-3.5 h-3.5 text-emerald-400" />
                         ) : (
-                          <Copy className="w-3 h-3" />
+                          <Copy className="w-3.5 h-3.5" />
                         )}
                       </button>
                       {msg.userPromptOriginal && (
                         <button
                           onClick={() => handleRetryLast(msg.userPromptOriginal)}
-                          className="p-1 rounded hover:bg-slate-800 hover:text-purple-300 transition-colors"
+                          className="p-1.5 rounded-lg hover:bg-slate-800 hover:text-purple-300 transition-colors"
                           title="Retry Inquiry"
                         >
-                          <RotateCcw className="w-3 h-3" />
+                          <RotateCcw className="w-3.5 h-3.5" />
                         </button>
                       )}
                     </div>
                   </div>
 
                   {/* Primary Narrative Summary */}
-                  <div className="text-xs sm:text-[13px] text-slate-200 leading-relaxed font-sans space-y-2">
+                  <div className="text-[13px] sm:text-[14px] text-slate-100 leading-relaxed font-sans space-y-2.5">
                     <p className="whitespace-pre-wrap">{msg.text}</p>
                   </div>
 
                   {/* Unconfigured Gemini Notice */}
                   {data && !data.configured && (
-                    <div className="p-3 rounded-xl bg-amber-950/30 border border-amber-800/50 space-y-2 text-xs">
+                    <div className="p-3.5 rounded-xl bg-amber-950/30 border border-amber-800/50 space-y-2 text-xs">
                       <div className="flex items-center gap-1.5 text-amber-300 font-bold">
                         <Key className="w-4 h-4 text-amber-400" />
                         <span>{t.aiAdvisor.keySetupRequired}</span>
                       </div>
-                      <p className="text-[11px] text-amber-200/90 leading-relaxed">
+                      <p className="text-[12px] text-amber-200/90 leading-relaxed">
                         {t.aiAdvisor.keySetupDesc}
                       </p>
-                      <div className="p-2 rounded-lg bg-slate-950/80 font-mono text-[10px] text-slate-300 space-y-1">
+                      <div className="p-2.5 rounded-lg bg-slate-950/80 font-mono text-[11px] text-slate-300 space-y-1">
                         <div>1. Get free key: <a href="https://aistudio.google.com" target="_blank" rel="noopener noreferrer" className="text-sky-400 underline">aistudio.google.com</a></div>
                         <div>2. In .env: <code className="text-amber-300">GEMINI_API_KEY=your_key</code></div>
                         <div>3. Restart RoofRay</div>
@@ -675,27 +874,27 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
 
                   {/* Collapsible Deep-Dive Sections */}
                   {data && data.configured && (
-                    <div className="space-y-2 pt-1 border-t border-slate-800/60">
+                    <div className="space-y-2.5 pt-1.5 border-t border-slate-800/80">
                       {/* 1. Engineering Recommendations */}
                       {data.recommendations && data.recommendations.length > 0 && (
-                        <div className="rounded-xl border border-slate-800 bg-slate-950/50 overflow-hidden">
+                        <div className="rounded-xl border border-slate-800 bg-slate-950/60 overflow-hidden">
                           <button
                             onClick={() => toggleSection(`${msg.id}-recs`)}
-                            className="w-full p-2.5 flex items-center justify-between text-xs font-bold text-amber-300 hover:bg-slate-900/60 transition-colors"
+                            className="w-full p-3 flex items-center justify-between text-xs font-bold text-amber-300 hover:bg-slate-900/60 transition-colors"
                           >
-                            <div className="flex items-center gap-1.5">
-                              <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" />
+                            <div className="flex items-center gap-2">
+                              <CheckCircle2 className="w-4 h-4 text-amber-400" />
                               <span>{t.aiAdvisor.engineeringRecommendations || 'Engineering Recommendations'}</span>
-                              <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 font-mono">
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono">
                                 {data.recommendations.length}
                               </span>
                             </div>
-                            {recsOpen ? <ChevronUp className="w-3.5 h-3.5 text-slate-400" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-400" />}
+                            {recsOpen ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
                           </button>
                           {recsOpen && (
-                            <div className="p-3 pt-0 border-t border-slate-800/40 space-y-1.5">
+                            <div className="p-3.5 pt-0 border-t border-slate-800/50 space-y-2">
                               {data.recommendations.map((rec, i) => (
-                                <div key={i} className="flex items-start gap-2 text-[11px] text-slate-300">
+                                <div key={i} className="flex items-start gap-2 text-[12px] sm:text-[13px] text-slate-200">
                                   <span className="text-amber-400 mt-0.5 font-bold shrink-0">▸</span>
                                   <span className="leading-relaxed">{rec}</span>
                                 </div>
@@ -707,45 +906,45 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
 
                       {/* 2. Key Advantages & Operational Risks */}
                       {((data.advantages && data.advantages.length > 0) || (data.risks && data.risks.length > 0)) && (
-                        <div className="rounded-xl border border-slate-800 bg-slate-950/50 overflow-hidden">
+                        <div className="rounded-xl border border-slate-800 bg-slate-950/60 overflow-hidden">
                           <button
                             onClick={() => toggleSection(`${msg.id}-adv`)}
-                            className="w-full p-2.5 flex items-center justify-between text-xs font-bold text-emerald-300 hover:bg-slate-900/60 transition-colors"
+                            className="w-full p-3 flex items-center justify-between text-xs font-bold text-emerald-300 hover:bg-slate-900/60 transition-colors"
                           >
-                            <div className="flex items-center gap-1.5">
-                              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                            <div className="flex items-center gap-2">
+                              <ShieldCheck className="w-4 h-4 text-emerald-400" />
                               <span>Key Advantages & Risk Analysis</span>
                             </div>
-                            {advOpen ? <ChevronUp className="w-3.5 h-3.5 text-slate-400" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-400" />}
+                            {advOpen ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
                           </button>
                           {advOpen && (
-                            <div className="p-3 pt-0 border-t border-slate-800/40 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div className="p-3.5 pt-0 border-t border-slate-800/50 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                               {/* Advantages */}
-                              <div className="p-2.5 rounded-lg bg-emerald-950/20 border border-emerald-800/30 space-y-1">
+                              <div className="p-3 rounded-lg bg-emerald-950/20 border border-emerald-800/30 space-y-1.5">
                                 <span className="text-[10px] font-bold text-emerald-400 flex items-center gap-1 uppercase tracking-wider">
                                   <span>Advantages</span>
                                 </span>
-                                <div className="space-y-1">
+                                <div className="space-y-1.5">
                                   {data.advantages?.map((adv, i) => (
-                                    <div key={i} className="flex items-start gap-1.5 text-[11px] text-slate-300">
+                                    <div key={i} className="flex items-start gap-2 text-[12px] text-slate-200">
                                       <span className="text-emerald-400 shrink-0 font-bold">✓</span>
-                                      <span>{adv}</span>
+                                      <span className="leading-relaxed">{adv}</span>
                                     </div>
                                   ))}
                                 </div>
                               </div>
 
                               {/* Risks */}
-                              <div className="p-2.5 rounded-lg bg-amber-950/20 border border-amber-800/30 space-y-1">
+                              <div className="p-3 rounded-lg bg-amber-950/20 border border-amber-800/30 space-y-1.5">
                                 <span className="text-[10px] font-bold text-amber-400 flex items-center gap-1 uppercase tracking-wider">
-                                  <AlertTriangle className="w-3 h-3 text-amber-400" />
+                                  <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
                                   <span>Risks & Limitations</span>
                                 </span>
-                                <div className="space-y-1">
+                                <div className="space-y-1.5">
                                   {data.risks?.map((risk, i) => (
-                                    <div key={i} className="flex items-start gap-1.5 text-[11px] text-slate-300">
+                                    <div key={i} className="flex items-start gap-2 text-[12px] text-slate-200">
                                       <span className="text-amber-400 shrink-0 font-bold">!</span>
-                                      <span>{risk}</span>
+                                      <span className="leading-relaxed">{risk}</span>
                                     </div>
                                   ))}
                                 </div>
@@ -755,43 +954,58 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
                         </div>
                       )}
 
-                      {/* 3. Financial Metrics Summary */}
-                      <div className="rounded-xl border border-slate-800 bg-slate-950/50 overflow-hidden">
+                      {/* 3. Financial Performance & Payback Metrics */}
+                      <div className="rounded-xl border border-slate-800 bg-slate-950/60 overflow-hidden">
                         <button
                           onClick={() => toggleSection(`${msg.id}-fin`)}
-                          className="w-full p-2.5 flex items-center justify-between text-xs font-bold text-sky-300 hover:bg-slate-900/60 transition-colors"
+                          className="w-full p-3 flex items-center justify-between text-xs font-bold text-sky-300 hover:bg-slate-900/60 transition-colors"
                         >
-                          <div className="flex items-center gap-1.5">
-                            <TrendingUp className="w-3.5 h-3.5 text-sky-400" />
-                            <span>Financial Performance & Payback Metrics</span>
+                          <div className="flex items-center gap-2">
+                            <TrendingUp className="w-4 h-4 text-sky-400" />
+                            <span>Financial Performance & Economic Transparency</span>
                           </div>
-                          {finOpen ? <ChevronUp className="w-3.5 h-3.5 text-slate-400" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-400" />}
+                          {finOpen ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
                         </button>
                         {finOpen && (
-                          <div className="p-3 pt-0 border-t border-slate-800/40 grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
-                            <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
-                              <span className="text-[10px] text-slate-400 block">Total System Cost</span>
-                              <span className="text-xs font-mono font-bold text-white">{currencySymbol}{financial.totalSystemCost.toLocaleString()}</span>
+                          <div className="p-3.5 pt-0 border-t border-slate-800/50 space-y-3">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
+                              <div className="p-2.5 rounded-lg bg-slate-900/70 border border-slate-800">
+                                <span className="text-[10px] text-slate-400 block font-medium">Total Capital Cost</span>
+                                <span className="text-[13px] font-mono font-bold text-white mt-0.5 block">{currencySymbol}{financial.totalSystemCost.toLocaleString()}</span>
+                              </div>
+                              <div className="p-2.5 rounded-lg bg-slate-900/70 border border-slate-800">
+                                <span className="text-[10px] text-slate-400 block font-medium">Annual Bill Savings</span>
+                                <span className="text-[13px] font-mono font-bold text-emerald-400 mt-0.5 block">{currencySymbol}{(financial.annualSavings ?? financial.annualSavingsUSD ?? 0).toLocaleString()}/yr</span>
+                              </div>
+                              <div className="p-2.5 rounded-lg bg-slate-900/70 border border-slate-800">
+                                <span className="text-[10px] text-slate-400 block font-medium">Estimated Payback</span>
+                                <span className="text-[13px] font-mono font-bold text-amber-300 mt-0.5 block">{financial.paybackYears !== null ? `${financial.paybackYears} years` : 'N/A'}</span>
+                              </div>
+                              <div className="p-2.5 rounded-lg bg-slate-900/70 border border-slate-800">
+                                <span className="text-[10px] text-slate-400 block font-medium">20-Year Net Benefit</span>
+                                <span className="text-[13px] font-mono font-bold text-sky-300 mt-0.5 block">{currencySymbol}{(financial.twentyYearNetSavings ?? financial.twentyYearNetSavingsUSD ?? 0).toLocaleString()}</span>
+                              </div>
+                              <div className="p-2.5 rounded-lg bg-slate-900/70 border border-slate-800">
+                                <span className="text-[10px] text-slate-400 block font-medium">Project ROI</span>
+                                <span className="text-[13px] font-mono font-bold text-purple-300 mt-0.5 block">{financial.roiPercent}%</span>
+                              </div>
+                              <div className="p-2.5 rounded-lg bg-slate-900/70 border border-slate-800">
+                                <span className="text-[10px] text-slate-400 block font-medium">Annual Energy Coverage</span>
+                                <span className="text-[13px] font-mono font-bold text-slate-200 mt-0.5 block">{energy.solarCoveragePercent}%</span>
+                              </div>
                             </div>
-                            <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
-                              <span className="text-[10px] text-slate-400 block">Annual Bill Savings</span>
-                              <span className="text-xs font-mono font-bold text-emerald-400">{currencySymbol}{(financial.annualSavings ?? financial.annualSavingsUSD ?? 0).toLocaleString()}/yr</span>
-                            </div>
-                            <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
-                              <span className="text-[10px] text-slate-400 block">Payback Period</span>
-                              <span className="text-xs font-mono font-bold text-amber-300">{financial.paybackYears !== null ? `${financial.paybackYears} years` : 'N/A'}</span>
-                            </div>
-                            <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
-                              <span className="text-[10px] text-slate-400 block">20-Year Net Benefit</span>
-                              <span className="text-xs font-mono font-bold text-sky-300">{currencySymbol}{(financial.twentyYearNetSavings ?? financial.twentyYearNetSavingsUSD ?? 0).toLocaleString()}</span>
-                            </div>
-                            <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
-                              <span className="text-[10px] text-slate-400 block">Estimated ROI</span>
-                              <span className="text-xs font-mono font-bold text-purple-300">{financial.roiPercent}%</span>
-                            </div>
-                            <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
-                              <span className="text-[10px] text-slate-400 block">Electricity Tariff</span>
-                              <span className="text-xs font-mono font-bold text-slate-200">{currencySymbol}{financial.tariffPerKWh ?? 'N/A'}/kWh</span>
+
+                            {/* Financial Disclosure & Transparency Note */}
+                            <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800/80 text-[11px] text-slate-400 leading-relaxed space-y-1">
+                              <span className="font-bold text-slate-300 block text-[10px] uppercase tracking-wider">
+                                {t.aiAdvisor.financialDisclosure || 'Financial Transparency & Simulation Disclosure'}:
+                              </span>
+                              <p>
+                                {t.aiAdvisor.financialDisclosureText || 'Annual bill savings and payback reflect annualized net-metering offset under the applied flat tariff. Actual bill savings depend on utility rate structures, time-of-use tariffs, and interval load profiles.'} Applied Tariff: <strong className="text-slate-200 font-mono">{currencySymbol}{financial.tariffPerKWh ?? 'N/A'}/kWh</strong>.
+                              </p>
+                              <p className="text-[10px] text-slate-500">
+                                Note: This simulation models annualized geometric energy offset (annual generation / consumption). Real-world sub-hourly self-consumption requires interval smart-meter load monitoring.
+                              </p>
                             </div>
                           </div>
                         )}
@@ -799,37 +1013,37 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
 
                       {/* 4. Actionable Next Steps & Engineering Assumptions */}
                       {((data.next_steps && data.next_steps.length > 0) || (data.assumptions && data.assumptions.length > 0)) && (
-                        <div className="rounded-xl border border-slate-800 bg-slate-950/50 overflow-hidden">
+                        <div className="rounded-xl border border-slate-800 bg-slate-950/60 overflow-hidden">
                           <button
                             onClick={() => toggleSection(`${msg.id}-next`)}
-                            className="w-full p-2.5 flex items-center justify-between text-xs font-bold text-sky-300 hover:bg-slate-900/60 transition-colors"
+                            className="w-full p-3 flex items-center justify-between text-xs font-bold text-sky-300 hover:bg-slate-900/60 transition-colors"
                           >
-                            <div className="flex items-center gap-1.5">
-                              <ArrowRightCircle className="w-3.5 h-3.5 text-sky-400" />
+                            <div className="flex items-center gap-2">
+                              <ArrowRightCircle className="w-4 h-4 text-sky-400" />
                               <span>Project Next Steps & Engineering Assumptions</span>
                             </div>
-                            {nextOpen ? <ChevronUp className="w-3.5 h-3.5 text-slate-400" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-400" />}
+                            {nextOpen ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
                           </button>
                           {nextOpen && (
-                            <div className="p-3 pt-0 border-t border-slate-800/40 space-y-2">
+                            <div className="p-3.5 pt-0 border-t border-slate-800/50 space-y-2.5">
                               {data.next_steps && data.next_steps.length > 0 && (
-                                <div className="space-y-1">
+                                <div className="space-y-1.5">
                                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Recommended Next Steps:</span>
                                   {data.next_steps.map((ns, i) => (
-                                    <div key={i} className="flex items-start gap-1.5 text-[11px] text-slate-300">
+                                    <div key={i} className="flex items-start gap-2 text-[12px] text-slate-200">
                                       <span className="text-sky-400 font-bold">{i + 1}.</span>
-                                      <span>{ns}</span>
+                                      <span className="leading-relaxed">{ns}</span>
                                     </div>
                                   ))}
                                 </div>
                               )}
                               {data.assumptions && data.assumptions.length > 0 && (
-                                <div className="space-y-1 pt-1.5 border-t border-slate-800/40">
+                                <div className="space-y-1.5 pt-2 border-t border-slate-800/50">
                                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Physical Assumptions:</span>
                                   {data.assumptions.map((as, i) => (
-                                    <div key={i} className="flex items-start gap-1.5 text-[11px] text-slate-400">
+                                    <div key={i} className="flex items-start gap-2 text-[11px] text-slate-400">
                                       <span className="text-slate-500">•</span>
-                                      <span>{as}</span>
+                                      <span className="leading-relaxed">{as}</span>
                                     </div>
                                   ))}
                                 </div>
@@ -839,31 +1053,31 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
                         </div>
                       )}
 
-                      {/* 4. Verified Citations & Regulatory Grounding */}
+                      {/* 5. Verified Citations & Regulatory Grounding */}
                       {data.sources && data.sources.length > 0 && (
-                        <div className="rounded-xl border border-slate-800 bg-slate-950/50 overflow-hidden">
+                        <div className="rounded-xl border border-slate-800 bg-slate-950/60 overflow-hidden">
                           <button
                             onClick={() => toggleSection(`${msg.id}-sources`)}
-                            className="w-full p-2.5 flex items-center justify-between text-xs font-bold text-purple-300 hover:bg-slate-900/60 transition-colors"
+                            className="w-full p-3 flex items-center justify-between text-xs font-bold text-purple-300 hover:bg-slate-900/60 transition-colors"
                           >
-                            <div className="flex items-center gap-1.5">
-                              <Info className="w-3.5 h-3.5 text-purple-400" />
+                            <div className="flex items-center gap-2">
+                              <Info className="w-4 h-4 text-purple-400" />
                               <span>{t.aiAdvisor.citationsGrounding || 'Technical Citations Grounding'}</span>
-                              <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-purple-500/20 text-purple-300 font-mono">
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-mono">
                                 {data.sources.length} sources
                               </span>
                             </div>
-                            {sourcesOpen ? <ChevronUp className="w-3.5 h-3.5 text-slate-400" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-400" />}
+                            {sourcesOpen ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
                           </button>
                           {sourcesOpen && (
-                            <div className="p-3 pt-0 border-t border-slate-800/40 space-y-2">
+                            <div className="p-3.5 pt-0 border-t border-slate-800/50 space-y-2.5">
                               {data.sources.map((src, i) => (
                                 <div
                                   key={i}
-                                  className="p-2 rounded-lg bg-slate-900/70 border border-slate-800/60 space-y-1"
+                                  className="p-2.5 rounded-lg bg-slate-900/70 border border-slate-800/60 space-y-1.5"
                                 >
                                   <div className="flex items-start justify-between gap-2">
-                                    <div className="text-[11px] font-semibold text-slate-200">
+                                    <div className="text-[12px] font-semibold text-slate-200">
                                       {src.title}
                                       {src.authorOrg && (
                                         <span className="text-slate-400 font-normal ml-1">
@@ -872,31 +1086,31 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
                                       )}
                                     </div>
                                     {src.url && (
-                                      <div className="flex items-center gap-1 shrink-0">
+                                      <div className="flex items-center gap-1.5 shrink-0">
                                         <button
                                           onClick={() => handleCopyCitation(src.url!)}
                                           className="p-1 rounded text-slate-400 hover:text-white"
                                           title="Copy source link"
                                         >
                                           {copiedUrl === src.url ? (
-                                            <Check className="w-2.5 h-2.5 text-emerald-400" />
+                                            <Check className="w-3 h-3 text-emerald-400" />
                                           ) : (
-                                            <Copy className="w-2.5 h-2.5" />
+                                            <Copy className="w-3 h-3" />
                                           )}
                                         </button>
                                         <a
                                           href={src.url}
                                           target="_blank"
                                           rel="noopener noreferrer"
-                                          className="text-sky-400 hover:text-sky-300 flex items-center gap-0.5 text-[10px]"
+                                          className="text-sky-400 hover:text-sky-300 flex items-center gap-1 text-[11px] font-medium"
                                         >
                                           <span>Doc</span>
-                                          <ExternalLink className="w-2.5 h-2.5" />
+                                          <ExternalLink className="w-3 h-3" />
                                         </a>
                                       </div>
                                     )}
                                   </div>
-                                  <div className="text-[10px] text-slate-400 font-sans">
+                                  <div className="text-[11px] text-slate-400 font-sans leading-relaxed">
                                     {src.relevance}
                                   </div>
                                 </div>
@@ -910,7 +1124,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
 
                   {/* Error Retry Message */}
                   {msg.isError && (
-                    <div className="p-2.5 rounded-xl bg-red-950/40 border border-red-800/60 text-xs text-red-200 flex items-center justify-between gap-2">
+                    <div className="p-3 rounded-xl bg-red-950/40 border border-red-800/60 text-xs text-red-200 flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
                         <span>{msg.text}</span>
@@ -918,7 +1132,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
                       {msg.userPromptOriginal && (
                         <button
                           onClick={() => handleRetryLast(msg.userPromptOriginal)}
-                          className="px-2 py-1 rounded bg-red-800/50 hover:bg-red-700/60 text-[10px] font-bold text-white shrink-0"
+                          className="px-2.5 py-1 rounded bg-red-800/50 hover:bg-red-700/60 text-[11px] font-bold text-white shrink-0"
                         >
                           Retry
                         </button>
@@ -937,7 +1151,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
             <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-white shrink-0 shadow-md shadow-purple-600/30">
               <Bot className="w-4 h-4 animate-spin" />
             </div>
-            <div className="p-3.5 rounded-2xl rounded-tl-sm bg-slate-900/90 border border-purple-500/30 text-slate-200 shadow-md space-y-1.5 max-w-sm">
+            <div className="p-4 rounded-2xl rounded-tl-sm bg-slate-900/95 border border-purple-500/40 text-slate-200 shadow-md space-y-1.5 max-w-sm">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-semibold text-purple-300">
                   {t.aiAdvisor.analyzing || 'Analyzing your solar data...'}
@@ -948,8 +1162,8 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
                   <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '300ms' }}></span>
                 </div>
               </div>
-              <p className="text-[11px] text-slate-400">
-                Evaluating 3D raycasting, shading exposure & verified SREDA / BPDB regulatory guidelines.
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Evaluating 3D raycasting, shading exposure & verified regulatory guidelines.
               </p>
             </div>
           </div>
@@ -995,7 +1209,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
               <button
                 key={idx}
                 onClick={() => handleSendMessage(chip)}
-                className="px-2 py-1 rounded-full bg-slate-900/90 hover:bg-purple-950/60 border border-slate-800 hover:border-purple-500/40 text-slate-300 hover:text-purple-200 whitespace-nowrap transition-all shrink-0"
+                className="px-2.5 py-1 rounded-full bg-slate-900/90 hover:bg-purple-950/60 border border-slate-800 hover:border-purple-500/40 text-slate-300 hover:text-purple-200 whitespace-nowrap transition-all shrink-0 font-medium"
               >
                 {chip}
               </button>
@@ -1012,7 +1226,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={t.aiAdvisor.chatInputPlaceholder || 'Ask anything about your solar project (Enter to send, Shift+Enter for newline)...'}
-            className="flex-1 bg-transparent p-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none resize-none font-sans max-h-24"
+            className="flex-1 bg-transparent p-1.5 text-xs sm:text-[13px] text-slate-100 placeholder-slate-500 focus:outline-none resize-none font-sans max-h-24 leading-relaxed"
             disabled={loading}
           />
           <button

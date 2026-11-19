@@ -64,7 +64,7 @@ export function ControlPanel() {
   };
 
   return (
-    <aside className={`w-full ${isWide && activeTab === 'advisor' ? 'lg:w-[680px] xl:w-[760px]' : 'lg:w-[440px] xl:w-[480px]'} h-[calc(100vh-4rem)] glass-panel border-l border-slate-800/80 flex flex-col shrink-0 z-10 overflow-hidden transition-all duration-300`}>
+    <aside className={`w-full ${isWide && activeTab === 'advisor' ? 'lg:w-[680px] xl:w-[780px] 2xl:w-[860px]' : 'lg:w-[440px] xl:w-[480px]'} h-[calc(100vh-4rem)] glass-panel border-l border-slate-800/80 flex flex-col shrink-0 z-10 overflow-hidden transition-all duration-300 ease-in-out`}>
       {/* Top Tab Switcher */}
       <div className="flex border-b border-slate-800/80 bg-slate-950/60 p-2 gap-1.5 shrink-0 overflow-x-auto">
         <button

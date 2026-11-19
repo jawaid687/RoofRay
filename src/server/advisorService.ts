@@ -827,8 +827,11 @@ STRICT GROUNDING & RESPONSIBLE AI RULES:
      * General Engineering Recommendations: 0.8m to 1.5m perimeter setbacks and 0.5m to 1.0m obstacle clearances are engineering design best practices for wind mitigation, maintenance access, and firefighter pathway egress. DO NOT claim 0.5m or 0.8m is an official statutory SREDA code without verified citation.
      * Never present an international NREL publication as a Bangladesh government regulation.
 
-3. CLEAR-SKY VS ACTUAL:
+3. CLEAR-SKY VS ACTUAL & FINANCIAL TRANSPARENCY:
    - Explicitly note that the raycasted annual generation is a clear-sky geometric simulation and recommend on-site shading or structural audits.
+   - Refer to the ${payload.energyProfile.solarCoveragePercent}% metric specifically as "annual energy coverage" (ratio of annual solar generation to annual electricity consumption demand).
+   - Do NOT claim actual real-time self-consumption without interval load profiles; clarify that bill savings represent annualized net-metering / retail energy offset under the applied flat tariff (${currencySymbol}${payload.financialResult.tariffPerKWh !== undefined ? payload.financialResult.tariffPerKWh : 'N/A'}/kWh).
+   - Clearly distinguish theoretical clear-sky raycast savings (${currencySymbol}${annualSavings.toLocaleString()}/yr) from verified utility-billed financial outcomes.
 
 4. STRUCTURED OUTPUT:
    - Return your response strictly as valid JSON adhering to the specified schema.

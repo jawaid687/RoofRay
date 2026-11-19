@@ -326,6 +326,17 @@ export interface TranslationSchema {
     suggestedPayback: string;
     suggestedNetMetering: string;
     suggestedOrientation: string;
+    suggestedUsRegs: string;
+    suggestedUsInterconnect: string;
+    suggestedBdNetMetering: string;
+    suggestedBdBPDB: string;
+    suggestedAuRegs: string;
+    suggestedUkRegs: string;
+    financialDisclosure: string;
+    financialDisclosureText: string;
+    annualEnergyCoverage: string;
+    expandChat: string;
+    collapseChat: string;
     chatInputPlaceholder: string;
     analyzing: string;
     newChat: string;
@@ -696,8 +707,19 @@ export const translations: Record<Language, TranslationSchema> = {
       suggestedPlacement: 'Optimize solar panel placement.',
       suggestedShading: 'Explain current shading conditions.',
       suggestedPayback: 'Calculate solar investment payback.',
-      suggestedNetMetering: 'Check Bangladesh net-metering regulations.',
-      suggestedOrientation: 'Recommend optimal panel orientation.',
+      suggestedNetMetering: 'Check local net-metering regulations & utility caps.',
+      suggestedOrientation: 'Recommend optimal panel orientation & tilt angle.',
+      suggestedUsRegs: 'Check California solar regulations & NEM 3.0 rules.',
+      suggestedUsInterconnect: 'What are US utility interconnection requirements?',
+      suggestedBdNetMetering: 'Check Bangladesh SREDA 70% net-metering limit.',
+      suggestedBdBPDB: 'What are BPDB grid interconnection & tariff rules?',
+      suggestedAuRegs: 'Check Clean Energy Council guidelines & STC incentives.',
+      suggestedUkRegs: 'Check UK Smart Export Guarantee (SEG) & G98/G99 rules.',
+      financialDisclosure: 'Financial Transparency & Simulation Disclosure',
+      financialDisclosureText: 'Annual savings and payback reflect annualized net-metering offset under the applied flat tariff. Actual bill savings depend on utility rate structures, time-of-use tariffs, and interval load profiles.',
+      annualEnergyCoverage: 'Annual Energy Coverage',
+      expandChat: 'Expand Chat',
+      collapseChat: 'Collapse Chat',
       chatInputPlaceholder: 'Ask anything about your solar project (Enter to send, Shift+Enter for newline)...',
       analyzing: 'Analyzing your solar data...',
       newChat: 'New Chat',
@@ -1066,8 +1088,19 @@ export const translations: Record<Language, TranslationSchema> = {
       suggestedPlacement: 'সোলার প্যানেলের বিন্যাস অপ্টিমাইজ করুন।',
       suggestedShading: 'বর্তমান ছায়া পরিস্থিতি ব্যাখ্যা করুন।',
       suggestedPayback: 'সৌর বিনিয়োগের পে-ব্যাক হিসাব করুন।',
-      suggestedNetMetering: 'বাংলাদেশের নেট-মিটারিং নীতিমালা যাচাই করুন।',
-      suggestedOrientation: 'অনুকূল প্যানেল ওরিয়েন্টেশন প্রস্তাব করুন।',
+      suggestedNetMetering: 'স্থানীয় নেট-মিটারিং নীতিমালা ও ইউটিলিটি নিয়ম যাচাই করুন।',
+      suggestedOrientation: 'অনুকূল প্যানেল ওরিয়েন্টেশন ও টিল্ট কোণ প্রস্তাব করুন।',
+      suggestedUsRegs: 'ক্যালিফোর্নিয়া সৌর নীতিমালা ও NEM 3.0 যাচাই করুন।',
+      suggestedUsInterconnect: 'যুক্তরাষ্ট্রের ইউটিলিটি ইন্টারকানেকশন নিয়মাবলী কি?',
+      suggestedBdNetMetering: 'বাংলাদেশের স্রেডা ৭০% নেট-মিটারিং সীমা যাচাই করুন।',
+      suggestedBdBPDB: 'বিপিডিবি গ্রিড সংযোগ ও ট্যারিফ নিয়মাবলী কি?',
+      suggestedAuRegs: 'অস্ট্রেলিয়ার ক্লিন এনার্জি কাউন্সিল নির্দেশিকা ও এসটিসি প্রণোদনা যাচাই করুন।',
+      suggestedUkRegs: 'যুক্তরাজ্যের স্মার্ট এক্সপোর্ট গ্যারান্টি (SEG) ও G98/G99 নীতিমালা যাচাই করুন।',
+      financialDisclosure: 'আর্থিক স্বচ্ছতা ও সিমুলেশন প্রকাশনা',
+      financialDisclosureText: 'বার্ষিক সাশ্রয় ও পে-ব্যাক হিসাব প্রযোজ্য ফ্ল্যাট ট্যারিফে বার্ষিক অফসেটের ভিত্তিতে তৈরি। প্রকৃত বিল সাশ্রয় ইউটিলিটি রেট কাঠামো, ব্যবহারের সময় এবং লোড প্রোফাইলের উপর নির্ভরশীল।',
+      annualEnergyCoverage: 'বার্ষিক বিদ্যুৎ কভারেজ',
+      expandChat: 'চ্যাট বড় করুন',
+      collapseChat: 'চ্যাট ছোট করুন',
       chatInputPlaceholder: 'আপনার সোলার প্রকল্প সম্পর্কে যা কিছু জিজ্ঞাসা করুন (Enter পাঠান, Shift+Enter নতুন লাইন)...',
       analyzing: 'আপনার সৌর তথ্য বিশ্লেষণ করা হচ্ছে...',
       newChat: 'নতুন চ্যাট',
