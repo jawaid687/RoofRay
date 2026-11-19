@@ -31,6 +31,7 @@ export function AiAdvisorPanel({ onOpenReportModal }: AiAdvisorPanelProps) {
   const financial = useSolarStore((s) => s.financialResult);
   const environmental = useSolarStore((s) => s.environmentalResult);
   const analysisResults = useSolarStore((s) => s.analysisResults);
+  const liveShading = useSolarStore((s) => s.liveShading);
   const placedPanels = useSolarStore((s) => s.placedPanels);
   const selectedPanelTypeId = useSolarStore((s) => s.selectedPanelTypeId);
   const currency = useSolarStore((s) => s.currency);
@@ -68,6 +69,8 @@ export function AiAdvisorPanel({ onOpenReportModal }: AiAdvisorPanelProps) {
         height: building.height,
         roofType: building.roofType,
         obstaclesCount: building.roofObstacles.length,
+        roofOrientation: building.roofType === 'flat' ? 'horizontal flat (0° tilt)' : building.roofType,
+        roofAzimuthDeg: location.northOffsetDeg || 0,
       },
       location: {
         city: location.city,
@@ -75,12 +78,20 @@ export function AiAdvisorPanel({ onOpenReportModal }: AiAdvisorPanelProps) {
         latitude: location.latitude,
         longitude: location.longitude,
         timezone: location.timezone,
+        northOffsetDeg: location.northOffsetDeg,
       },
       solarAnalysis: analysis
         ? {
             annualExposurePercent: Math.round(analysis.averageExposureScore * 100),
             unshadedAreaM2: analysis.recommendedInstallationArea,
             recommendedZoneAreaM2: analysis.recommendedZone?.area,
+            liveExposurePercent: liveShading ? Math.round(liveShading.litRatio * 100) : undefined,
+          }
+        : liveShading
+        ? {
+            annualExposurePercent: Math.round(liveShading.litRatio * 100),
+            unshadedAreaM2: Math.round(building.width * building.length * liveShading.litRatio * 10) / 10,
+            liveExposurePercent: Math.round(liveShading.litRatio * 100),
           }
         : undefined,
       energyProfile: {
@@ -111,7 +122,7 @@ export function AiAdvisorPanel({ onOpenReportModal }: AiAdvisorPanelProps) {
       panelConfig: {
         panelName: panelType.name,
         wattage: panelType.wattage,
-        tiltDegrees: 15,
+        tiltDegrees: placedPanels[0]?.tiltDegrees ?? 15,
         orientation: placedPanels[0]?.orientation || 'portrait',
       },
     };

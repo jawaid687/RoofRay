@@ -10,6 +10,8 @@ export interface SolarAdvisorRequest {
     height: number;
     roofType: string;
     obstaclesCount: number;
+    roofOrientation?: string;
+    roofAzimuthDeg?: number;
   };
   location: {
     city: string;
@@ -17,12 +19,14 @@ export interface SolarAdvisorRequest {
     latitude: number;
     longitude: number;
     timezone: string;
+    northOffsetDeg?: number;
   };
   solarAnalysis?: {
     annualExposurePercent: number;
     unshadedAreaM2: number;
     recommendedZoneAreaM2?: number;
     averageAnnualKWhPerM2?: number;
+    liveExposurePercent?: number;
   };
   energyProfile: {
     installedCapacityKW: number;
@@ -298,6 +302,170 @@ export function validateAdvisorResponseSchema(parsed: unknown): AdvisorResponseS
   };
 }
 
+export interface DetectedLocation {
+  city?: string;
+  country: string;
+  latitude: number;
+  longitude: number;
+  hemisphere: 'Northern' | 'Southern';
+}
+
+export interface LocationReconciliation {
+  explicitQuestionLocation?: DetectedLocation;
+  hasLocationConflict: boolean;
+  effectiveTargetLocation: DetectedLocation;
+  explanationNote?: string;
+}
+
+export function detectExplicitLocationInQuery(query?: string): DetectedLocation | null {
+  if (!query || typeof query !== 'string') return null;
+  const lower = query.toLowerCase();
+
+  const bangladeshCities: Record<string, { city: string; lat: number; lon: number }> = {
+    dhaka: { city: 'Dhaka', lat: 23.8103, lon: 90.4125 },
+    chattogram: { city: 'Chattogram', lat: 22.3569, lon: 91.7832 },
+    chittagong: { city: 'Chattogram', lat: 22.3569, lon: 91.7832 },
+    sylhet: { city: 'Sylhet', lat: 24.8949, lon: 91.8687 },
+    rajshahi: { city: 'Rajshahi', lat: 24.3636, lon: 88.6241 },
+    khulna: { city: 'Khulna', lat: 22.8456, lon: 89.5403 },
+    barishal: { city: 'Barishal', lat: 22.7010, lon: 90.3535 },
+    barisal: { city: 'Barishal', lat: 22.7010, lon: 90.3535 },
+    rangpur: { city: 'Rangpur', lat: 25.7439, lon: 89.2752 },
+    mymensingh: { city: 'Mymensingh', lat: 24.7471, lon: 90.4203 },
+    comilla: { city: 'Cumilla', lat: 23.4607, lon: 91.1809 },
+    gazipur: { city: 'Gazipur', lat: 23.9999, lon: 90.4203 },
+    narayanganj: { city: 'Narayanganj', lat: 23.6238, lon: 90.5000 },
+  };
+
+  for (const [key, data] of Object.entries(bangladeshCities)) {
+    if (new RegExp(`\\b${key}\\b`, 'i').test(lower)) {
+      return {
+        city: data.city,
+        country: 'Bangladesh',
+        latitude: data.lat,
+        longitude: data.lon,
+        hemisphere: 'Northern',
+      };
+    }
+  }
+
+  if (/\b(bangladesh|bd)\b/i.test(lower)) {
+    return {
+      city: 'Dhaka',
+      country: 'Bangladesh',
+      latitude: 23.8103,
+      longitude: 90.4125,
+      hemisphere: 'Northern',
+    };
+  }
+
+  if (/\bsan francisco\b/i.test(lower)) {
+    return {
+      city: 'San Francisco, CA',
+      country: 'United States',
+      latitude: 37.7749,
+      longitude: -122.4194,
+      hemisphere: 'Northern',
+    };
+  }
+  if (/\b(california|ca)\b/i.test(lower)) {
+    return {
+      city: 'California',
+      country: 'United States',
+      latitude: 36.7783,
+      longitude: -119.4179,
+      hemisphere: 'Northern',
+    };
+  }
+  if (/\b(usa|united states|u\.s\.)\b/i.test(lower)) {
+    return {
+      country: 'United States',
+      latitude: 37.0902,
+      longitude: -95.7129,
+      hemisphere: 'Northern',
+    };
+  }
+
+  if (/\b(sydney|australia|melbourne|brisbane)\b/i.test(lower)) {
+    return {
+      city: 'Sydney',
+      country: 'Australia',
+      latitude: -33.8688,
+      longitude: 151.2093,
+      hemisphere: 'Southern',
+    };
+  }
+
+  if (/\b(london|uk|united kingdom|great britain)\b/i.test(lower)) {
+    return {
+      city: 'London',
+      country: 'United Kingdom',
+      latitude: 51.5074,
+      longitude: -0.1278,
+      hemisphere: 'Northern',
+    };
+  }
+
+  return null;
+}
+
+export function resolveLocationReconciliation(payload: SolarAdvisorRequest): LocationReconciliation {
+  const queryLoc = detectExplicitLocationInQuery(payload.userQuestion);
+  const buildingCity = payload.location?.city || '';
+  const buildingCountry = payload.location?.country || '';
+  const buildingLat = typeof payload.location?.latitude === 'number' ? payload.location.latitude : 0;
+  const buildingLon = typeof payload.location?.longitude === 'number' ? payload.location.longitude : 0;
+  const buildingHemisphere = buildingLat >= 0 ? 'Northern' : 'Southern';
+
+  if (!queryLoc) {
+    return {
+      hasLocationConflict: false,
+      effectiveTargetLocation: {
+        city: buildingCity,
+        country: buildingCountry,
+        latitude: buildingLat,
+        longitude: buildingLon,
+        hemisphere: buildingHemisphere,
+      },
+    };
+  }
+
+  const isSameCountry =
+    queryLoc.country.toLowerCase() === buildingCountry.toLowerCase() ||
+    (queryLoc.country === 'United States' && (buildingCountry === 'USA' || buildingCountry === 'United States')) ||
+    (queryLoc.country === 'Bangladesh' && buildingCountry === 'Bangladesh');
+
+  const isSameCity =
+    !queryLoc.city ||
+    buildingCity.toLowerCase().includes(queryLoc.city.toLowerCase()) ||
+    queryLoc.city.toLowerCase().includes(buildingCity.toLowerCase());
+
+  if (isSameCountry && isSameCity) {
+    return {
+      explicitQuestionLocation: queryLoc,
+      hasLocationConflict: false,
+      effectiveTargetLocation: {
+        city: queryLoc.city || buildingCity,
+        country: queryLoc.country,
+        latitude: queryLoc.latitude,
+        longitude: queryLoc.longitude,
+        hemisphere: queryLoc.hemisphere,
+      },
+    };
+  }
+
+  const targetCity = queryLoc.city ? `${queryLoc.city}, ${queryLoc.country}` : queryLoc.country;
+  const buildingLocStr = buildingCity ? `${buildingCity}, ${buildingCountry}` : buildingCountry;
+  const explanation = `User inquiry explicitly specifies ${targetCity}, whereas the currently active 3D model building ("${payload.selectedBuilding?.name || 'Selected Building'}") is situated in ${buildingLocStr}.`;
+
+  return {
+    explicitQuestionLocation: queryLoc,
+    hasLocationConflict: true,
+    effectiveTargetLocation: queryLoc,
+    explanationNote: explanation,
+  };
+}
+
 export const DEFAULT_GEMINI_MODEL = 'gemini-3.5-flash-lite';
 
 export function resolveGeminiModel(customModel?: string): string {
@@ -487,15 +655,22 @@ export async function handleSolarAdvisorRequest(
   const effectiveKey = rawKey.trim().replace(/^["']|["']$/g, '').trim();
   const effectiveModel = resolveGeminiModel(modelName);
 
-  // 1. Perform Lexical RAG Retrieval
+  // 1. Resolve Location & Reconcile Explicit Query Location with Active 3D Model
+  const locationReconciliation = resolveLocationReconciliation(payload);
+  const targetLoc = locationReconciliation.effectiveTargetLocation;
+  const effectiveCountry = targetLoc.country;
+  const effectiveCity = targetLoc.city;
+  const effectiveCurrency = effectiveCountry === 'Bangladesh' ? 'BDT' : (payload.financialResult.currency || 'USD');
+
+  // 2. Perform Lexical RAG Retrieval grounded in Target Location
   const userQuery = payload.userQuestion || 'Provide an engineering and financial solar recommendation for this rooftop layout';
   const retrievedSources = retrieveGroundedContext(
     userQuery,
     {
-      country: payload.location.country,
-      city: payload.location.city,
+      country: effectiveCountry,
+      city: effectiveCity,
       hasShading: (payload.solarAnalysis?.annualExposurePercent ?? 100) < 85,
-      currency: payload.financialResult.currency || 'USD',
+      currency: effectiveCurrency,
       panelCount: payload.energyProfile.panelCount,
     },
     3
@@ -505,10 +680,10 @@ export async function handleSolarAdvisorRequest(
     title: r.chunk.title,
     authorOrg: r.chunk.authorOrg,
     url: r.chunk.officialUrl,
-    relevance: `Lexical RAG Grounding: ${r.chunk.sourceTitle} (${r.chunk.publicationYear})${r.chunk.section ? ` [${r.chunk.section}]` : ''}`,
+    relevance: `RAG Grounding (${r.chunk.category.includes('bangladesh') ? 'Official Bangladesh Policy/Tariff' : 'International Technical Reference'}): ${r.chunk.sourceTitle} (${r.chunk.publicationYear})${r.chunk.section ? ` [${r.chunk.section}]` : ''}`,
   }));
 
-  // 2. Check if API Key is configured
+  // 3. Check if API Key is configured
   if (!effectiveKey || effectiveKey === 'your_gemini_api_key_here' || effectiveKey.length < 10) {
     return {
       configured: false,
@@ -539,11 +714,15 @@ export async function handleSolarAdvisorRequest(
     };
   }
 
-  // 3. Build Prompt with Strict Grounding & Separated Instructions
+  // 4. Build Prompt with Strict Grounding & Separated Instructions
   const retrievedContextText = retrievedSources
     .map(
       (s, idx) =>
-        `[Citation ${idx + 1}] "${s.chunk.title}" by ${s.chunk.authorOrg} (${s.chunk.publicationYear}): ${s.chunk.content}`
+        `[Citation ${idx + 1}] "${s.chunk.title}" by ${s.chunk.authorOrg} (${s.chunk.publicationYear}):
+Document Source: ${s.chunk.sourceTitle} [${s.chunk.section || 'General'}]
+Document Classification: ${s.chunk.category.includes('bangladesh') ? 'BANGLADESH STATUTORY / REGULATORY FRAMEWORK' : 'INTERNATIONAL TECHNICAL & PHYSICAL PV GUIDANCE'}
+Official Link: ${s.chunk.officialUrl}
+Verified Excerpt: ${s.chunk.content}`
     )
     .join('\n\n');
 
@@ -551,32 +730,79 @@ export async function handleSolarAdvisorRequest(
   const annualSavings = payload.financialResult.annualSavings ?? payload.financialResult.annualSavingsUSD ?? 0;
   const twentyYearNet = payload.financialResult.twentyYearNetSavings ?? payload.financialResult.twentyYearNetSavingsUSD ?? 0;
 
+  let locationDirective = '';
+  if (locationReconciliation.hasLocationConflict) {
+    locationDirective = `
+================================================================================
+CRITICAL LOCATION DISCREPANCY & GEOGRAPHIC RECONCILIATION DIRECTIVE:
+- TARGET LOCATION IN USER INQUIRY: ${targetLoc.city ? targetLoc.city + ', ' : ''}${targetLoc.country} (Latitude: ~${targetLoc.latitude}°, ${targetLoc.hemisphere} Hemisphere)
+- ACTIVE 3D WORKSPACE SCENE: Building "${payload.selectedBuilding.name}" currently positioned at ${payload.location.city}, ${payload.location.country}
+- ${locationReconciliation.explanationNote}
+
+MANDATORY LOCATION RULES:
+1. ACKNOWLEDGE THE INQUIRY LOCATION: You MUST acknowledge that the user specifically requested analysis for ${targetLoc.city ? targetLoc.city + ', ' : ''}${targetLoc.country}.
+2. DO NOT DESCRIBE THE BUILDING AS BEING IN ${payload.location.city.toUpperCase()}: Under NO circumstances describe the installation as being in ${payload.location.city} or state "The ${payload.energyProfile.installedCapacityKW} kW solar rooftop installation at ${payload.selectedBuilding.name} in ${payload.location.city}...".
+3. EXPLAIN THE DISTINCTION IN YOUR SUMMARY: Clearly explain in your summary that you are applying the physical rooftop dimensions (${payload.selectedBuilding.width}m x ${payload.selectedBuilding.length}m, ${payload.selectedBuilding.obstaclesCount} obstacles) and system layout (${payload.energyProfile.installedCapacityKW} kW) of the active 3D model to the requested location of ${targetLoc.city ? targetLoc.city + ', ' : ''}${targetLoc.country}.
+4. SOLAR ORIENTATION & EPHEMERIS: Use ${targetLoc.country}'s geographic reality (${targetLoc.hemisphere} Hemisphere, latitude ~${targetLoc.latitude}°). Panels must face the equator (${targetLoc.hemisphere === 'Northern' ? 'due True South / Azimuth 180°' : 'due True North / Azimuth 0°'}). In ${targetLoc.city || targetLoc.country}, an optimal fixed tilt of ~15° balances year-round insolation with monsoon rain self-cleaning and reduced wind uplift.
+5. REGULATORY & ECONOMIC FRAMEWORK: Apply ${targetLoc.country}'s regulatory guidelines (e.g. SREDA Net Metering Guidelines 2018 in Bangladesh: 70% sanctioned load cap, 3-phase grid connection). DO NOT apply US tariffs, California NEM 3.0, or US tax incentives when answering for ${targetLoc.country}.
+================================================================================
+`;
+  } else {
+    locationDirective = `
+GEOGRAPHICAL & BUILDING CONTEXT:
+- Location: ${payload.location.city}, ${payload.location.country} (Lat: ${payload.location.latitude}°, Lon: ${payload.location.longitude}°, Timezone: ${payload.location.timezone}, ${targetLoc.hemisphere} Hemisphere)
+- Building: "${payload.selectedBuilding.name}" in its active location of ${payload.location.city}, ${payload.location.country}.
+`;
+  }
+
   const systemPrompt = `You are the RoofRay AI Solar Advisor, a senior solar engineering and economic specialist at the International AI Builders Congress 2026.
 Your role is to interpret the user's solar configuration and provide explainable, rigorous recommendations.
 
+${locationDirective}
+
 STRICT GROUNDING & RESPONSIBLE AI RULES:
-1. SINGLE SOURCE OF TRUTH: You must NOT recalculate, guess, or invent physical solar production, capacity, or financial figures. Use ONLY the exact numbers provided in the structured context below.
-2. CITATION GROUNDING: You must ground regulatory, net-metering, and design recommendations in the verified technical citations provided.
-3. CLEAR-SKY VS ACTUAL: Explicitly note that the raycasted annual generation is a clear-sky geometric simulation and recommend on-site shading or structural audits.
-4. TARIFFS & CURRENCY: Use the provided currency (${payload.financialResult.currency || 'USD'}) and tariff (${currencySymbol}${payload.financialResult.tariffPerKWh || 'N/A'}/kWh).
-5. STRUCTURED OUTPUT: Return your response strictly as valid JSON adhering to the specified schema.
+1. SINGLE SOURCE OF TRUTH (STRICT NUMERICAL ACCURACY):
+   - You must NOT recalculate, guess, or invent physical solar production, capacity, or financial figures. Use ONLY the exact numbers provided in the structured context below.
+   - Installed capacity is EXACTLY ${payload.energyProfile.installedCapacityKW} kW (${payload.energyProfile.panelCount} panels).
+   - Annual generation is EXACTLY ${payload.energyProfile.annualGenerationKWh} kWh/yr.
+   - Annual consumption is EXACTLY ${payload.energyProfile.annualConsumptionKWh} kWh/yr (${payload.energyProfile.solarCoveragePercent}% coverage).
+   - Capital cost is ${currencySymbol}${payload.financialResult.totalSystemCost.toLocaleString()}.
+   - Electricity tariff is ${currencySymbol}${payload.financialResult.tariffPerKWh !== undefined ? payload.financialResult.tariffPerKWh : 'N/A'}/kWh.
+   - Annual bill savings is ${currencySymbol}${annualSavings.toLocaleString()}/yr.
+   - Payback period is ${payload.financialResult.paybackYears !== null ? `${payload.financialResult.paybackYears} years` : 'Unspecified tariff'}.
+   - 20-Year net savings is ${currencySymbol}${twentyYearNet.toLocaleString()} (ROI: ${payload.financialResult.roiPercent}%).
+   - Never mix or convert currencies: use ${payload.financialResult.currency || 'USD'} (${currencySymbol}) consistently as calculated by RoofRay.
+
+2. CITATION GROUNDING & REGULATORY DISTINCTION:
+   - Ground regulatory, net-metering, and design recommendations in the verified technical citations provided.
+   - Distinguish strictly between legally mandated requirements and general engineering recommendations:
+     * Mandated Bangladesh Regulations (SREDA / BPDB): 70% sanctioned load cap, mandatory three-phase utility connection, bi-directional net meters, and IEEE 1547 / IEC 62116 anti-islanding within 2 seconds.
+     * General Engineering Recommendations: 0.8m to 1.5m perimeter setbacks and 0.5m to 1.0m obstacle clearances are engineering design best practices for wind mitigation, maintenance access, and firefighter pathway egress. DO NOT claim 0.5m or 0.8m is an official statutory SREDA code without verified citation.
+     * Never present an international NREL publication as a Bangladesh government regulation.
+
+3. CLEAR-SKY VS ACTUAL:
+   - Explicitly note that the raycasted annual generation is a clear-sky geometric simulation and recommend on-site shading or structural audits.
+
+4. STRUCTURED OUTPUT:
+   - Return your response strictly as valid JSON adhering to the specified schema.
 
 STRUCTURED SOLAR CONTEXT:
-- Location: ${payload.location.city}, ${payload.location.country} (Lat: ${payload.location.latitude}°, Lon: ${payload.location.longitude}°, Timezone: ${payload.location.timezone})
-- Building Geometry: ${payload.selectedBuilding.name} (${payload.selectedBuilding.width}m x ${payload.selectedBuilding.length}m, Height: ${payload.selectedBuilding.height}m, Type: ${payload.selectedBuilding.roofType})
-- Rooftop Obstacles: ${payload.selectedBuilding.obstaclesCount} utility obstacles (HVAC / water tanks)
+- Active 3D Building Geometry: ${payload.selectedBuilding.name} (${payload.selectedBuilding.width}m width x ${payload.selectedBuilding.length}m length, Height: ${payload.selectedBuilding.height}m, Type: ${payload.selectedBuilding.roofType}, Roof Orientation: ${payload.selectedBuilding.roofOrientation || 'horizontal flat (0° tilt)'}, Azimuth: ${payload.selectedBuilding.roofAzimuthDeg ?? 0}°)
+- Rooftop Obstacles: ${payload.selectedBuilding.obstaclesCount} utility obstacles (HVAC / water tanks / stairwells)
 - Array Configuration: ${payload.energyProfile.panelCount} panels (${payload.panelConfig.panelName}, ${payload.panelConfig.wattage}W each, Tilt: ${payload.panelConfig.tiltDegrees}°, Orientation: ${payload.panelConfig.orientation})
 - System Capacity: ${payload.energyProfile.installedCapacityKW} kW
 - Annual Generation: ${payload.energyProfile.annualGenerationKWh} kWh/yr
 - Annual Consumption Demand: ${payload.energyProfile.annualConsumptionKWh} kWh/yr
 - Solar Demand Coverage: ${payload.energyProfile.solarCoveragePercent}%
 - Grid Export Surplus: ${payload.energyProfile.surplusKWh} kWh/yr
+- Shading Exposure: ${payload.solarAnalysis?.annualExposurePercent !== undefined ? `${payload.solarAnalysis.annualExposurePercent}% annual exposure` : `${payload.solarAnalysis?.liveExposurePercent ?? 100}% live unshaded`} (${payload.solarAnalysis?.unshadedAreaM2 ?? payload.selectedBuilding.width * payload.selectedBuilding.length} m² usable area)
 - Financial Capital Cost: ${currencySymbol}${payload.financialResult.totalSystemCost.toLocaleString()}
+- Applied Electricity Tariff: ${currencySymbol}${payload.financialResult.tariffPerKWh !== undefined ? payload.financialResult.tariffPerKWh : 'N/A'}/kWh
 - Annual Bill Savings: ${currencySymbol}${annualSavings.toLocaleString()}/yr
 - Estimated Payback: ${payload.financialResult.paybackYears !== null ? `${payload.financialResult.paybackYears} years` : 'Unspecified tariff'}
 - 20-Year Net Benefit: ${currencySymbol}${twentyYearNet.toLocaleString()} (ROI: ${payload.financialResult.roiPercent}%)
 - Environmental Offset: ${payload.environmentalResult.annualCO2ReductionTonnes} tonnes CO2/yr (~${payload.environmentalResult.equivalentTreesPlanted} trees)
-- Grid Emission Factor: ${payload.environmentalResult.gridEmissionFactorKgPerKWh || 0.42} kg CO2/kWh (${payload.environmentalResult.gridEmissionFactorSource || 'IEA Benchmark'})
+- Grid Emission Factor: ${payload.environmentalResult.gridEmissionFactorKgPerKWh || 0.42} kg CO2/kWh (${payload.environmentalResult.gridEmissionFactorSource || 'Benchmark'})
 
 VERIFIED KNOWLEDGE CITATIONS:
 ${retrievedContextText}
@@ -586,7 +812,7 @@ ${retrievedContextText}
 
 Provide a comprehensive, professional assessment formatted as valid JSON adhering to this schema:
 {
-  "summary": "Concise executive overview of the solar system viability and primary takeaway",
+  "summary": "Concise executive overview of the solar system viability and primary takeaway${locationReconciliation.hasLocationConflict ? ` (must acknowledge ${targetLoc.city ? targetLoc.city + ', ' : ''}${targetLoc.country} without describing building as in ${payload.location.city})` : ''}",
   "recommendations": ["Actionable engineering and economic recommendations"],
   "advantages": ["Key physical and financial advantages of this specific layout"],
   "risks": ["Potential risks (shading penalties, thermal derating, grid limits, structural constraints)"],

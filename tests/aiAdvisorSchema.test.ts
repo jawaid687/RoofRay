@@ -6,7 +6,10 @@ import {
   SolarAdvisorRequest,
   resolveGeminiModel,
   executeGeminiRequest,
+  detectExplicitLocationInQuery,
+  resolveLocationReconciliation,
 } from '../src/server/advisorService';
+import { KNOWLEDGE_CORPUS } from '../src/rag/knowledge/corpus';
 
 export async function runAiAdvisorTests() {
   console.log('🤖 Starting AI Solar Advisor Schema & Safety Test Suite...\n');
@@ -273,6 +276,186 @@ export async function runAiAdvisorTests() {
     assert(resRedact.safeMessage.includes('[REDACTED_API_KEY]'), 'Key replaced with [REDACTED_API_KEY] marker');
   } finally {
     globalThis.fetch = originalFetch;
+  }
+
+  // -----------------------------------------------------------------
+  // Test 9: Priority 6 Deterministic Context Accuracy & Location Suite
+  // -----------------------------------------------------------------
+  console.log('\n--- Test 9: Context Accuracy & Location Resolution (Priority 6) ---');
+  const savedFetch = globalThis.fetch;
+  const mockAiOutput = {
+    summary: 'Executive assessment for rooftop solar viability.',
+    recommendations: ['Install panels due True South (Azimuth 180°).', 'Maintain 0.8m perimeter safety buffer for access.'],
+    advantages: ['High solar yield coverage.'],
+    risks: ['Monsoon cloud attenuation requires annual auditing.'],
+    assumptions: ['Clear-sky geometric calculation.'],
+    next_steps: ['Obtain utility net metering approval under SREDA guidelines.'],
+  };
+
+  try {
+    let capturedBody: any = null;
+    function mockGeminiSuccess(customResponse = mockAiOutput) {
+      globalThis.fetch = (async (_url: any, opts: any) => {
+        if (opts?.body) {
+          try {
+            capturedBody = JSON.parse(opts.body);
+          } catch {
+            // ignore
+          }
+        }
+        return {
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          json: async () => ({
+            candidates: [{ content: { parts: [{ text: JSON.stringify(customResponse) }] } }],
+            modelVersion: 'gemini-3.5-flash-lite',
+          }),
+        } as unknown as Response;
+      }) as unknown as typeof fetch;
+    }
+
+    // 9.1: Dhaka Location Question
+    const dhakaPayload: SolarAdvisorRequest = {
+      ...validPayload,
+      userQuestion: 'Suggest optimal panel orientation and safety setbacks for a rooftop solar installation in Dhaka, Bangladesh.',
+      location: { city: 'Dhaka', country: 'Bangladesh', latitude: 23.8103, longitude: 90.4125, timezone: 'Asia/Dhaka' },
+      financialResult: { ...validPayload.financialResult, currency: 'BDT', tariffPerKWh: 10.5 },
+    };
+    const dhakaLoc = detectExplicitLocationInQuery(dhakaPayload.userQuestion);
+    assert(dhakaLoc?.city === 'Dhaka' && dhakaLoc?.country === 'Bangladesh', '9.1: Dhaka query explicitly detected with 23.81°N latitude');
+    const dhakaRecon = resolveLocationReconciliation(dhakaPayload);
+    assert(!dhakaRecon.hasLocationConflict, '9.1: No conflict when building is in Dhaka');
+    mockGeminiSuccess();
+    const resDhaka = await handleSolarAdvisorRequest(dhakaPayload, dummyKey);
+    assert(resDhaka.configured === true && resDhaka.sources.some((s) => s.title.includes('SREDA')), '9.1: Dhaka inquiry attaches official SREDA citations');
+
+    // 9.2: San Francisco Building Question
+    const sfPayload: SolarAdvisorRequest = {
+      ...validPayload,
+      userQuestion: 'Evaluate solar array placement for Apex Lofts in San Francisco, California.',
+      location: { city: 'San Francisco, CA', country: 'United States', latitude: 37.7749, longitude: -122.4194, timezone: 'America/Los_Angeles' },
+    };
+    const sfLoc = detectExplicitLocationInQuery(sfPayload.userQuestion);
+    assert(sfLoc?.country === 'United States', '9.2: San Francisco query explicitly detected');
+    const sfRecon = resolveLocationReconciliation(sfPayload);
+    assert(!sfRecon.hasLocationConflict, '9.2: No conflict when building is in SF');
+
+    // 9.3: Explicit Location Differing from Selected Building (The Critical User Bug)
+    const conflictPayload: SolarAdvisorRequest = {
+      ...validPayload,
+      selectedBuilding: { ...validPayload.selectedBuilding, name: 'Apex Lofts & Residences' },
+      location: { city: 'San Francisco', country: 'United States', latitude: 37.7749, longitude: -122.4194, timezone: 'America/Los_Angeles' },
+      userQuestion: 'Suggest optimal panel orientation and safety setbacks for a rooftop solar installation in Dhaka, Bangladesh.',
+    };
+    const conflictRecon = resolveLocationReconciliation(conflictPayload);
+    assert(conflictRecon.hasLocationConflict === true, '9.3: Location conflict detected between Dhaka query and SF building');
+    assert(conflictRecon.effectiveTargetLocation.city === 'Dhaka', '9.3: Target location correctly routed to Dhaka');
+    mockGeminiSuccess();
+    await handleSolarAdvisorRequest(conflictPayload, dummyKey);
+    const systemInstructionText = capturedBody?.system_instruction?.parts?.[0]?.text || '';
+    assert(systemInstructionText.includes('CRITICAL LOCATION DISCREPANCY'), '9.3: Prompt contains location discrepancy reconciliation directive');
+    assert(systemInstructionText.includes('DO NOT DESCRIBE THE BUILDING AS BEING IN SAN FRANCISCO'), '9.3: Prompt strictly forbids describing building as in San Francisco');
+
+    // 9.4: Missing Location in User Query
+    const missingLocPayload: SolarAdvisorRequest = {
+      ...validPayload,
+      userQuestion: 'What is the recommended panel tilt angle and maintenance buffer?',
+      location: { city: 'Sylhet', country: 'Bangladesh', latitude: 24.8949, longitude: 91.8687, timezone: 'Asia/Dhaka' },
+    };
+    assert(detectExplicitLocationInQuery(missingLocPayload.userQuestion) === null, '9.4: Generic query detected with no explicit location override');
+    const missingLocRecon = resolveLocationReconciliation(missingLocPayload);
+    assert(!missingLocRecon.hasLocationConflict && missingLocRecon.effectiveTargetLocation.city === 'Sylhet', '9.4: Preserves active building location (Sylhet) without conflict');
+
+    // 9.5: Changed Building Selection
+    const commercialBldgPayload: SolarAdvisorRequest = {
+      ...validPayload,
+      selectedBuilding: {
+        id: 'bldg-comm-02',
+        name: 'Dhaka Export Processing Center',
+        width: 35,
+        length: 50,
+        height: 22,
+        roofType: 'flat',
+        obstaclesCount: 6,
+        roofOrientation: 'horizontal flat (0° tilt)',
+        roofAzimuthDeg: 0,
+      },
+    };
+    assert(validateAdvisorPayload(commercialBldgPayload).valid, '9.5: Commercial building payload validates cleanly');
+    mockGeminiSuccess();
+    await handleSolarAdvisorRequest(commercialBldgPayload, dummyKey);
+    const bldgText = capturedBody?.system_instruction?.parts?.[0]?.text || '';
+    assert(bldgText.includes('Dhaka Export Processing Center') && bldgText.includes('35m width x 50m length') && bldgText.includes('6 utility obstacles'), '9.5: System prompt synchronizes updated building geometry');
+
+    // 9.6: Changed Panel Configuration
+    const newPanelPayload: SolarAdvisorRequest = {
+      ...validPayload,
+      panelConfig: {
+        panelName: 'TopCon Bi-Facial 550W',
+        wattage: 550,
+        tiltDegrees: 20,
+        orientation: 'landscape',
+      },
+      energyProfile: {
+        ...validPayload.energyProfile,
+        installedCapacityKW: 19.8,
+        panelCount: 36,
+      },
+    };
+    mockGeminiSuccess();
+    await handleSolarAdvisorRequest(newPanelPayload, dummyKey);
+    const panelText = capturedBody?.system_instruction?.parts?.[0]?.text || '';
+    assert(panelText.includes('TopCon Bi-Facial 550W') && panelText.includes('19.8 kW') && panelText.includes('Tilt: 20°') && panelText.includes('landscape'), '9.6: System prompt reflects changed panel wattage, tilt, orientation and capacity');
+
+    // 9.7: Changed Financial Assumptions
+    const newFinPayload: SolarAdvisorRequest = {
+      ...validPayload,
+      financialResult: {
+        totalSystemCost: 1850000,
+        annualSavings: 285000,
+        paybackYears: 6.5,
+        twentyYearNetSavings: 3850000,
+        roiPercent: 208.1,
+        currency: 'BDT',
+        tariffPerKWh: 14.5,
+      },
+    };
+    mockGeminiSuccess();
+    await handleSolarAdvisorRequest(newFinPayload, dummyKey);
+    const finText = capturedBody?.system_instruction?.parts?.[0]?.text || '';
+    assert(finText.includes('৳1,850,000') && finText.includes('৳285,000/yr') && finText.includes('6.5 years') && finText.includes('৳14.5/kWh'), '9.7: System prompt preserves exact financial figures and currency (BDT)');
+
+    // 9.8: Missing Simulation Results (Before running annual analysis)
+    const missingSimPayload: SolarAdvisorRequest = {
+      ...validPayload,
+      solarAnalysis: undefined,
+    };
+    assert(validateAdvisorPayload(missingSimPayload).valid, '9.8: Missing simulation results payload validates without throwing');
+    mockGeminiSuccess();
+    const missingSimRes = await handleSolarAdvisorRequest(missingSimPayload, dummyKey);
+    assert(missingSimRes.configured === true, '9.8: Advisor generates response gracefully even without completed simulation');
+
+    // 9.9: Invalid Numerical Context
+    const invalidFin = { ...validPayload, financialResult: { ...validPayload.financialResult, totalSystemCost: -5000 } };
+    assert(!validateAdvisorPayload(invalidFin).valid, '9.9: Negative system cost rejected');
+    const invalidEnergy = { ...validPayload, energyProfile: { ...validPayload.energyProfile, annualGenerationKWh: -100 } };
+    assert(!validateAdvisorPayload(invalidEnergy).valid, '9.9: Negative annual generation rejected');
+    const invalidDim = { ...validPayload, selectedBuilding: { ...validPayload.selectedBuilding, length: 0 } };
+    assert(!validateAdvisorPayload(invalidDim).valid, '9.9: Zero building dimension rejected');
+
+    // 9.10: Citation Validation (Integrity & Origin)
+    mockGeminiSuccess();
+    const citationRes = await handleSolarAdvisorRequest(dhakaPayload, dummyKey);
+    assert(Array.isArray(citationRes.sources) && citationRes.sources.length === 3, '9.10: Exactly 3 grounded citations attached');
+    for (const src of citationRes.sources) {
+      assert(src.url !== undefined && src.url.startsWith('http'), '9.10: Citation contains authentic HTTP link');
+      const inCorpus = KNOWLEDGE_CORPUS.some((c) => c.title === src.title);
+      assert(inCorpus, `9.10: Source title "${src.title}" verified against knowledge corpus`);
+      assert(!src.relevance.includes('undefined'), '9.10: Relevance string is properly formatted');
+    }
+  } finally {
+    globalThis.fetch = savedFetch;
   }
 
   console.log(`\n========================================`);
