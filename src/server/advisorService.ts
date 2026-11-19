@@ -298,13 +298,171 @@ export function validateAdvisorResponseSchema(parsed: unknown): AdvisorResponseS
   };
 }
 
+export const DEFAULT_GEMINI_MODEL = 'gemini-3.8-flash';
+export const STABLE_FALLBACK_MODEL = 'gemini-2.5-flash';
+
+interface GeminiApiResponse {
+  candidates?: Array<{
+    content?: {
+      parts?: Array<{
+        text?: string;
+      }>;
+      role?: string;
+    };
+    finishReason?: string;
+  }>;
+  error?: {
+    code?: number;
+    message?: string;
+    status?: string;
+    details?: unknown[];
+  };
+}
+
+async function executeGeminiRequest(
+  targetModel: string,
+  key: string,
+  systemPrompt: string,
+  userPrompt: string,
+  timeoutMs: number = 18000
+): Promise<{
+  ok: boolean;
+  httpStatus: number;
+  statusText: string;
+  candidateText?: string;
+  errorCode: string;
+  safeMessage: string;
+  providerStatus?: string;
+}> {
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent`;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': key,
+      },
+      body: JSON.stringify({
+        system_instruction: {
+          parts: [{ text: systemPrompt }],
+        },
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: userPrompt }],
+          },
+        ],
+        generationConfig: {
+          responseMimeType: 'application/json',
+          temperature: 0.2, // Low temperature for factual precision
+        },
+      }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    const resJson = (await res.json().catch(() => null)) as GeminiApiResponse | null;
+
+    if (!res.ok) {
+      const providerStatus = resJson?.error?.status || '';
+      let rawMsg = resJson?.error?.message || res.statusText || 'Unknown provider error';
+      if (key) {
+        rawMsg = rawMsg.split(key).join('[REDACTED_API_KEY]');
+      }
+
+      let errorCode = 'AI_PROVIDER_ERROR';
+      let safeMessage = `Gemini API error (HTTP ${res.status}): ${rawMsg}`;
+
+      if (res.status === 400) {
+        errorCode = 'INVALID_REQUEST';
+        safeMessage = `Invalid request or configuration (HTTP 400). Provider detail: ${rawMsg}${providerStatus ? ` [${providerStatus}]` : ''}`;
+      } else if (res.status === 401) {
+        errorCode = 'AUTHENTICATION_FAILED';
+        safeMessage = `Authentication failed (HTTP 401). Verify that your Gemini API key is valid. Provider detail: ${rawMsg}`;
+      } else if (res.status === 403) {
+        errorCode = 'PERMISSION_DENIED';
+        safeMessage = `Permission or API restriction failure (HTTP 403). Ensure Generative Language API is enabled and project permissions are active. Provider detail: ${rawMsg}${providerStatus ? ` [${providerStatus}]` : ''}`;
+      } else if (res.status === 404) {
+        errorCode = 'MODEL_UNAVAILABLE';
+        safeMessage = `Model "${targetModel}" is not available or unsupported for this API endpoint (HTTP 404). Provider detail: ${rawMsg}`;
+      } else if (res.status === 429) {
+        errorCode = 'RATE_LIMIT_EXCEEDED';
+        safeMessage = `Gemini rate limit or quota exceeded (HTTP 429). Provider detail: ${rawMsg}`;
+      } else if (res.status === 503) {
+        errorCode = 'SERVICE_UNAVAILABLE';
+        safeMessage = `Model "${targetModel}" is currently experiencing temporary high demand or outage (HTTP 503). Provider detail: ${rawMsg}`;
+      } else if (res.status >= 500) {
+        errorCode = 'PROVIDER_ERROR';
+        safeMessage = `Google Gemini service error (HTTP ${res.status}). Provider detail: ${rawMsg}`;
+      }
+
+      return {
+        ok: false,
+        httpStatus: res.status,
+        statusText: res.statusText,
+        errorCode,
+        safeMessage,
+        providerStatus,
+      };
+    }
+
+    const candidateText = resJson?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!candidateText || typeof candidateText !== 'string') {
+      return {
+        ok: false,
+        httpStatus: 200,
+        statusText: 'OK',
+        errorCode: 'MALFORMED_AI_RESPONSE',
+        safeMessage: 'Gemini returned an empty or invalid candidate content block.',
+      };
+    }
+
+    return {
+      ok: true,
+      httpStatus: 200,
+      statusText: 'OK',
+      candidateText,
+      errorCode: '',
+      safeMessage: '',
+    };
+  } catch (err: unknown) {
+    clearTimeout(timeoutId);
+    let errorCode = 'AI_PROVIDER_ERROR';
+    let safeMessage = 'An unexpected error occurred while communicating with the AI advisor provider.';
+
+    if (err instanceof Error) {
+      if (err.name === 'AbortError') {
+        errorCode = 'TIMEOUT';
+        safeMessage = 'Gemini API request timed out after 25 seconds.';
+      } else {
+        safeMessage = err.message;
+        if (key) {
+          safeMessage = safeMessage.split(key).join('[REDACTED_API_KEY]');
+        }
+      }
+    }
+
+    return {
+      ok: false,
+      httpStatus: 0,
+      statusText: 'FETCH_ERROR',
+      errorCode,
+      safeMessage,
+    };
+  }
+}
+
 export async function handleSolarAdvisorRequest(
   payload: SolarAdvisorRequest,
   apiKey?: string,
-  modelName: string = 'gemini-2.5-flash'
+  modelName: string = DEFAULT_GEMINI_MODEL
 ): Promise<SolarAdvisorResponse> {
-  const effectiveKey = apiKey || process.env.GEMINI_API_KEY;
-  const effectiveModel = process.env.GEMINI_MODEL || modelName;
+  const rawKey = apiKey !== undefined ? apiKey : (process.env.GEMINI_API_KEY || '');
+  const effectiveKey = rawKey.trim().replace(/^["']|["']$/g, '').trim();
+  const effectiveModel = process.env.GEMINI_MODEL || modelName || DEFAULT_GEMINI_MODEL;
 
   // 1. Perform Lexical RAG Retrieval
   const userQuery = payload.userQuestion || 'Provide an engineering and financial solar recommendation for this rooftop layout';
@@ -328,7 +486,7 @@ export async function handleSolarAdvisorRequest(
   }));
 
   // 2. Check if API Key is configured
-  if (!effectiveKey || effectiveKey.trim() === '' || effectiveKey === 'your_gemini_api_key_here') {
+  if (!effectiveKey || effectiveKey === 'your_gemini_api_key_here' || effectiveKey.length < 10) {
     return {
       configured: false,
       summary: 'AI Solar Advisor requires a server-side Gemini API key configuration to generate live natural-language evaluations.',
@@ -348,7 +506,7 @@ export async function handleSolarAdvisorRequest(
       ],
       next_steps: [
         'Create a .env file containing: GEMINI_API_KEY=your_key_here',
-        'Optional: Set GEMINI_MODEL=gemini-2.5-flash',
+        `Optional: Set GEMINI_MODEL=${DEFAULT_GEMINI_MODEL}`,
       ],
       sources: formattedSources,
       timestamp: new Date().toISOString(),
@@ -414,118 +572,97 @@ Provide a comprehensive, professional assessment formatted as valid JSON adherin
   "sources": [{"title": "Source title", "authorOrg": "Publishing entity", "url": "URL if known", "relevance": "Why relevant"}]
 }`;
 
-  // 4. Dispatch to Gemini API via secured header (never pass credentials in URL parameter)
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${effectiveModel}:generateContent`;
+  // 4. Dispatch to Gemini API via secured header
+  let activeModelUsed = effectiveModel;
+  let execResult = await executeGeminiRequest(effectiveModel, effectiveKey, systemPrompt, userPrompt);
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s timeout
-
-  try {
-    const res = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-goog-api-key': effectiveKey,
-      },
-      body: JSON.stringify({
-        system_instruction: {
-          parts: [{ text: systemPrompt }],
-        },
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: userPrompt }],
-          },
-        ],
-        generationConfig: {
-          responseMimeType: 'application/json',
-          temperature: 0.2, // Low temperature for factual precision
-        },
-      }),
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-
-    if (!res.ok) {
-      if (res.status === 401 || res.status === 403) {
-        throw new Error(`INVALID_API_KEY: Authentication failed (HTTP ${res.status}). Verify your Gemini API credential in Google AI Studio.`);
-      }
-      if (res.status === 429) {
-        throw new Error(`QUOTA_EXCEEDED: Gemini API rate limit or quota exceeded (HTTP 429).`);
-      }
-      throw new Error(`AI_PROVIDER_ERROR: Gemini API responded with HTTP ${res.status}`);
+  // Resilient Fallback: If primary model encounters timeout, 5xx (e.g. 503 high demand), or 404, fallback to stable production model
+  if (
+    !execResult.ok &&
+    (execResult.httpStatus >= 500 || execResult.httpStatus === 404 || execResult.errorCode === 'TIMEOUT') &&
+    effectiveModel !== STABLE_FALLBACK_MODEL
+  ) {
+    console.warn(`[RoofRay Advisor] Model "${effectiveModel}" failed (${execResult.errorCode || 'HTTP ' + execResult.httpStatus}). Attempting fallback to "${STABLE_FALLBACK_MODEL}"...`);
+    const fallbackResult = await executeGeminiRequest(STABLE_FALLBACK_MODEL, effectiveKey, systemPrompt, userPrompt, 25000);
+    if (fallbackResult.ok) {
+      const reason = execResult.errorCode === 'TIMEOUT' ? 'TIMEOUT_HIGH_LATENCY' : (execResult.errorCode || 'HTTP ' + execResult.httpStatus);
+      execResult = fallbackResult;
+      activeModelUsed = `${STABLE_FALLBACK_MODEL} (fallback from ${effectiveModel}: ${reason})`;
     }
+  }
 
-    const resJson = await res.json();
-    const candidateText = resJson?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!candidateText || typeof candidateText !== 'string') {
-      throw new Error('MALFORMED_AI_RESPONSE: Gemini returned empty or invalid response text');
-    }
-
-    let parsed: any;
-    try {
-      parsed = JSON.parse(candidateText);
-    } catch {
-      throw new Error('MALFORMED_AI_RESPONSE: Failed to parse AI response as JSON');
-    }
-
-    // Strict schema validation for response structure (rejects malformed types, rejects [object Object])
-    const schemaValidation = validateAdvisorResponseSchema(parsed);
-    if (!schemaValidation.valid || !schemaValidation.data) {
-      throw new Error(`MALFORMED_AI_RESPONSE: ${schemaValidation.error || 'Failed schema validation'}`);
-    }
-
-    const { summary, recommendations, advantages, risks, assumptions, next_steps } = schemaValidation.data;
-
+  if (!execResult.ok || !execResult.candidateText) {
     return {
       configured: true,
-      summary,
-      recommendations,
-      advantages,
-      risks,
-      assumptions,
-      next_steps,
-      sources: formattedSources,
-      timestamp: new Date().toISOString(),
-      modelUsed: effectiveModel,
-    };
-  } catch (err: unknown) {
-    clearTimeout(timeoutId);
-
-    let errorCode = 'AI_PROVIDER_ERROR';
-    let safeMessage = 'An unexpected error occurred while communicating with the AI advisor provider.';
-
-    if (err instanceof Error) {
-      if (err.name === 'AbortError') {
-        errorCode = 'TIMEOUT';
-        safeMessage = 'Gemini API request timed out after 25 seconds. Falling back to deterministic analysis.';
-      } else if (err.message.startsWith('INVALID_API_KEY')) {
-        errorCode = 'INVALID_API_KEY';
-        safeMessage = 'The configured Gemini API key is invalid or unauthorized. Please verify the key in Google AI Studio.';
-      } else if (err.message.startsWith('QUOTA_EXCEEDED')) {
-        errorCode = 'QUOTA_EXCEEDED';
-        safeMessage = 'Gemini API quota exceeded or rate limit reached. Please retry in a few moments.';
-      } else if (err.message.startsWith('MALFORMED_AI_RESPONSE')) {
-        errorCode = 'MALFORMED_AI_RESPONSE';
-        safeMessage = 'AI model generated non-standard JSON. Physical solar calculations remain fully valid.';
-      }
-    }
-
-    return {
-      configured: true,
-      summary: safeMessage,
+      summary: execResult.safeMessage,
       recommendations: [
         'Review the deterministic 3D raycast metrics and financial tabs directly.',
-        'Verify your server internet connectivity and Gemini API key quota.',
+        'Verify your server internet connectivity and Gemini API key quota/status in Google AI Studio.',
       ],
       advantages: [],
-      risks: ['External LLM response unavailable; falling back to deterministic calculations.'],
+      risks: ['External LLM response unavailable; falling back to deterministic physical calculations.'],
+      assumptions: ['Physical solar calculations remain accurate, deterministic, and unaffected.'],
+      next_steps: ['Retry the inquiry in a few moments or review model configuration.'],
+      sources: formattedSources,
+      timestamp: new Date().toISOString(),
+      error: execResult.errorCode || 'AI_PROVIDER_ERROR',
+      modelUsed: activeModelUsed,
+    };
+  }
+
+  let parsed: any;
+  try {
+    parsed = JSON.parse(execResult.candidateText);
+  } catch {
+    return {
+      configured: true,
+      summary: 'AI model generated non-standard JSON output. Physical calculations remain fully valid.',
+      recommendations: [
+        'Review the deterministic 3D raycast metrics and financial tabs directly.',
+      ],
+      advantages: [],
+      risks: ['AI JSON parsing failure.'],
       assumptions: ['Physical solar calculations remain accurate, deterministic, and unaffected.'],
       next_steps: ['Retry the inquiry in a few moments.'],
       sources: formattedSources,
       timestamp: new Date().toISOString(),
-      error: errorCode,
+      error: 'MALFORMED_AI_RESPONSE',
+      modelUsed: activeModelUsed,
     };
   }
+
+  // Strict schema validation for response structure (rejects malformed types, rejects [object Object])
+  const schemaValidation = validateAdvisorResponseSchema(parsed);
+  if (!schemaValidation.valid || !schemaValidation.data) {
+    return {
+      configured: true,
+      summary: `AI response schema validation failed: ${schemaValidation.error || 'Unknown format'}. Physical calculations remain fully valid.`,
+      recommendations: [
+        'Review the deterministic 3D raycast metrics and financial tabs directly.',
+      ],
+      advantages: [],
+      risks: ['AI response schema mismatch.'],
+      assumptions: ['Physical solar calculations remain accurate, deterministic, and unaffected.'],
+      next_steps: ['Retry the inquiry in a few moments.'],
+      sources: formattedSources,
+      timestamp: new Date().toISOString(),
+      error: 'MALFORMED_AI_RESPONSE',
+      modelUsed: activeModelUsed,
+    };
+  }
+
+  const { summary, recommendations, advantages, risks, assumptions, next_steps } = schemaValidation.data;
+
+  return {
+    configured: true,
+    summary,
+    recommendations,
+    advantages,
+    risks,
+    assumptions,
+    next_steps,
+    sources: formattedSources,
+    timestamp: new Date().toISOString(),
+    modelUsed: activeModelUsed,
+  };
 }

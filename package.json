@@ -13,6 +13,7 @@
     "test:calc": "tsx src/tests/calculations.test.ts",
     "test:integration": "tsx scripts/validateAll.js",
     "test:browser": "tsx scripts/browserTest.js",
+    "test:gemini": "tsx scripts/testGeminiConnection.ts",
     "test:all": "npm run build && tsx src/tests/calculations.test.ts && tsx scripts/validateAll.js && tsx scripts/browserTest.js"
   },
   "engines": {

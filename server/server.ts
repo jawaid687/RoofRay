@@ -156,7 +156,7 @@ export const server = http.createServer(async (req, res) => {
         version: '3.3.0',
         timestamp: new Date().toISOString(),
         aiProvider: 'Google Gemini',
-        modelConfigured: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+        modelConfigured: process.env.GEMINI_MODEL || 'gemini-3.8-flash',
         keyConfigured: isConfigured,
         authMethod: 'x-goog-api-key header (secured)',
         dailyQuota: {
