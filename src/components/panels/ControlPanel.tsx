@@ -31,6 +31,7 @@ export function ControlPanel() {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'planner' | 'manual' | 'analytics' | 'advisor' | 'rationale'>('planner');
   const [isReportOpen, setIsReportOpen] = useState(false);
+  const [isWide, setIsWide] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const [openSections, setOpenSections] = useState<Record<SectionKey, boolean>>({
@@ -63,7 +64,7 @@ export function ControlPanel() {
   };
 
   return (
-    <aside className="w-full lg:w-[440px] xl:w-[480px] h-[calc(100vh-4rem)] glass-panel border-l border-slate-800/80 flex flex-col shrink-0 z-10 overflow-hidden">
+    <aside className={`w-full ${isWide && activeTab === 'advisor' ? 'lg:w-[680px] xl:w-[760px]' : 'lg:w-[440px] xl:w-[480px]'} h-[calc(100vh-4rem)] glass-panel border-l border-slate-800/80 flex flex-col shrink-0 z-10 overflow-hidden transition-all duration-300`}>
       {/* Top Tab Switcher */}
       <div className="flex border-b border-slate-800/80 bg-slate-950/60 p-2 gap-1.5 shrink-0 overflow-x-auto">
         <button
@@ -127,10 +128,14 @@ export function ControlPanel() {
         </button>
       </div>
 
-      {/* Scrollable Content Body with Guaranteed Scroll Reset */}
+      {/* Content Body with Guaranteed Scroll Reset */}
       <div
         ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto p-4 space-y-4"
+        className={`flex-1 ${
+          activeTab === 'advisor'
+            ? 'overflow-hidden flex flex-col p-0'
+            : 'overflow-y-auto p-4 space-y-4'
+        }`}
       >
         {activeTab === 'planner' && (
           <>
@@ -293,9 +298,11 @@ export function ControlPanel() {
         )}
 
         {activeTab === 'advisor' && (
-          <div className="space-y-4">
-            <AiAdvisorPanel onOpenReportModal={() => setIsReportOpen(true)} />
-          </div>
+          <AiAdvisorPanel
+            onOpenReportModal={() => setIsReportOpen(true)}
+            isWide={isWide}
+            onToggleWide={() => setIsWide((prev) => !prev)}
+          />
         )}
 
         {activeTab === 'rationale' && (

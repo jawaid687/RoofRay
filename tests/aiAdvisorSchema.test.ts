@@ -454,6 +454,38 @@ export async function runAiAdvisorTests() {
       assert(inCorpus, `9.10: Source title "${src.title}" verified against knowledge corpus`);
       assert(!src.relevance.includes('undefined'), '9.10: Relevance string is properly formatted');
     }
+
+    // --- Test 10: Conversational Multi-Turn Experience ---
+    console.log('\n--- Test 10: Multi-Turn Conversation Experience ---');
+    const validChatPayload: SolarAdvisorRequest = {
+      ...validPayload,
+      userQuestion: 'What is the estimated payback period for this setup?',
+      conversationHistory: [
+        { role: 'user', content: 'Suggest optimal panel orientation and safety setbacks for a rooftop solar installation in Dhaka, Bangladesh.' },
+        { role: 'assistant', content: 'In Dhaka, Bangladesh, orient panels True South at 15° tilt with 0.8m setbacks.' },
+      ],
+    };
+
+    assert(validateAdvisorPayload(validChatPayload).valid, '10.1: Payload with conversationHistory validates cleanly');
+
+    // Reject non-array conversationHistory
+    const invalidHistoryType = { ...validPayload, conversationHistory: 'invalid' as any };
+    assert(!validateAdvisorPayload(invalidHistoryType).valid, '10.2: Non-array conversationHistory rejected');
+
+    // Reject invalid message role
+    const invalidRoleHistory = {
+      ...validPayload,
+      conversationHistory: [{ role: 'invalid_role' as any, content: 'Hello' }],
+    };
+    assert(!validateAdvisorPayload(invalidRoleHistory).valid, '10.3: Invalid message role in history rejected');
+
+    // Verify multi-turn location persistence (Dhaka mentioned in turn 1 is preserved in turn 2)
+    mockGeminiSuccess();
+    await handleSolarAdvisorRequest(validChatPayload, dummyKey);
+    const multiTurnText = capturedBody?.contents?.[0]?.parts?.[0]?.text || '';
+    assert(multiTurnText.includes('PRIOR CONVERSATION CONTEXT'), '10.4: Prior conversation history injected into user prompt');
+    assert(multiTurnText.includes('Dhaka, Bangladesh'), '10.5: Prior turn inquiry location preserved in conversational context');
+    assert(multiTurnText.includes('What is the estimated payback period for this setup?'), '10.6: Current follow-up question properly framed');
   } finally {
     globalThis.fetch = savedFetch;
   }

@@ -1,7 +1,13 @@
 import { retrieveGroundedContext } from '../rag/retrievalEngine';
 
+export interface ConversationMessageContext {
+  role: 'user' | 'assistant' | 'model';
+  content: string;
+}
+
 export interface SolarAdvisorRequest {
   userQuestion?: string;
+  conversationHistory?: ConversationMessageContext[];
   selectedBuilding: {
     id: string;
     name: string;
@@ -180,6 +186,27 @@ export function validateAdvisorPayload(body: any): { valid: boolean; error?: str
   // 6. User Question Length Guard
   if (body.userQuestion !== undefined && typeof body.userQuestion === 'string' && body.userQuestion.length > 1000) {
     return { valid: false, error: 'User question exceeds maximum allowed length of 1000 characters' };
+  }
+
+  // 7. Conversation History Guard
+  if (body.conversationHistory !== undefined) {
+    if (!Array.isArray(body.conversationHistory)) {
+      return { valid: false, error: 'Invalid conversationHistory (must be an array)' };
+    }
+    if (body.conversationHistory.length > 20) {
+      return { valid: false, error: 'conversationHistory exceeds maximum allowed limit of 20 items' };
+    }
+    for (const msg of body.conversationHistory) {
+      if (!msg || typeof msg !== 'object') {
+        return { valid: false, error: 'Invalid conversation message entry' };
+      }
+      if (typeof msg.content !== 'string' || msg.content.length > 4000) {
+        return { valid: false, error: 'Invalid conversation message content (must be string <= 4000 chars)' };
+      }
+      if (msg.role !== 'user' && msg.role !== 'assistant' && msg.role !== 'model') {
+        return { valid: false, error: 'Invalid conversation message role (must be user, assistant, or model)' };
+      }
+    }
   }
 
   return { valid: true };
@@ -656,7 +683,27 @@ export async function handleSolarAdvisorRequest(
   const effectiveModel = resolveGeminiModel(modelName);
 
   // 1. Resolve Location & Reconcile Explicit Query Location with Active 3D Model
-  const locationReconciliation = resolveLocationReconciliation(payload);
+  let locationReconciliation = resolveLocationReconciliation(payload);
+  if (!locationReconciliation.explicitQuestionLocation && payload.conversationHistory?.length) {
+    for (let i = payload.conversationHistory.length - 1; i >= 0; i--) {
+      const msg = payload.conversationHistory[i];
+      if (msg.role === 'user') {
+        const prevLoc = detectExplicitLocationInQuery(msg.content);
+        if (prevLoc) {
+          const bCity = payload.location?.city || '';
+          const bCountry = payload.location?.country || '';
+          const hasConflict = prevLoc.country !== bCountry || (Boolean(prevLoc.city) && Boolean(bCity) && !bCity.toLowerCase().includes(prevLoc.city!.toLowerCase()));
+          locationReconciliation = {
+            explicitQuestionLocation: prevLoc,
+            hasLocationConflict: hasConflict,
+            effectiveTargetLocation: prevLoc,
+            explanationNote: `Continuing discussion for ${prevLoc.city ? prevLoc.city + ', ' : ''}${prevLoc.country} based on prior conversational context.`,
+          };
+          break;
+        }
+      }
+    }
+  }
   const targetLoc = locationReconciliation.effectiveTargetLocation;
   const effectiveCountry = targetLoc.country;
   const effectiveCity = targetLoc.city;
@@ -808,9 +855,23 @@ VERIFIED KNOWLEDGE CITATIONS:
 ${retrievedContextText}
 `;
 
-  const userPrompt = `User Question / Scenario: "${userQuery}"
+  let conversationBlock = '';
+  if (payload.conversationHistory && payload.conversationHistory.length > 0) {
+    const recent = payload.conversationHistory.slice(-6);
+    conversationBlock = `
+PRIOR CONVERSATION CONTEXT (MULTI-TURN DIALOGUE):
+${recent
+  .map(
+    (m) =>
+      `[${m.role === 'user' ? 'User' : 'RoofRay AI'}] ${m.content.slice(0, 400)}`
+  )
+  .join('\n')}
+`;
+  }
 
-Provide a comprehensive, professional assessment formatted as valid JSON adhering to this schema:
+  const userPrompt = `${conversationBlock ? conversationBlock + '\n' : ''}User Question / Follow-up: "${userQuery}"
+
+Provide a comprehensive, conversational assessment formatted as valid JSON adhering to this schema:
 {
   "summary": "Concise executive overview of the solar system viability and primary takeaway${locationReconciliation.hasLocationConflict ? ` (must acknowledge ${targetLoc.city ? targetLoc.city + ', ' : ''}${targetLoc.country} without describing building as in ${payload.location.city})` : ''}",
   "recommendations": ["Actionable engineering and economic recommendations"],

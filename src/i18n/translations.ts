@@ -318,6 +318,27 @@ export interface TranslationSchema {
     keyAdvantages: string;
     risksLimitations: string;
     citationsGrounding: string;
+    welcomeTitle: string;
+    welcomeDesc: string;
+    suggestedViability: string;
+    suggestedPlacement: string;
+    suggestedShading: string;
+    suggestedPayback: string;
+    suggestedNetMetering: string;
+    suggestedOrientation: string;
+    chatInputPlaceholder: string;
+    analyzing: string;
+    newChat: string;
+    clearChat: string;
+    clearConfirm: string;
+    copy: string;
+    copied: string;
+    retry: string;
+    scrollToBottom: string;
+    expandWorkspace: string;
+    collapseWorkspace: string;
+    activeBuildingBadge: string;
+    inquiryLocationBadge: string;
   };
   solarReportModal: {
     title: string;
@@ -669,6 +690,27 @@ export const translations: Record<Language, TranslationSchema> = {
       keyAdvantages: 'Key Advantages',
       risksLimitations: 'Risks & Limitations',
       citationsGrounding: 'Technical & Policy Citations Grounding',
+      welcomeTitle: 'Your AI Solar Engineering Assistant',
+      welcomeDesc: 'Ask questions about rooftop solar potential, panel optimization, shading, energy generation and financial performance.',
+      suggestedViability: 'Analyze my rooftop solar viability.',
+      suggestedPlacement: 'Optimize solar panel placement.',
+      suggestedShading: 'Explain current shading conditions.',
+      suggestedPayback: 'Calculate solar investment payback.',
+      suggestedNetMetering: 'Check Bangladesh net-metering regulations.',
+      suggestedOrientation: 'Recommend optimal panel orientation.',
+      chatInputPlaceholder: 'Ask anything about your solar project (Enter to send, Shift+Enter for newline)...',
+      analyzing: 'Analyzing your solar data...',
+      newChat: 'New Chat',
+      clearChat: 'Clear Chat',
+      clearConfirm: 'Clear all messages in this conversation?',
+      copy: 'Copy',
+      copied: 'Copied!',
+      retry: 'Retry',
+      scrollToBottom: 'New message',
+      expandWorkspace: 'Expand Workspace',
+      collapseWorkspace: 'Collapse Workspace',
+      activeBuildingBadge: 'Active Simulation Data',
+      inquiryLocationBadge: 'Inquiry Location',
     },
     solarReportModal: {
       title: 'RoofRay Feasibility & Engineering Report',
@@ -1018,6 +1060,27 @@ export const translations: Record<Language, TranslationSchema> = {
       keyAdvantages: 'প্রধান সুবিধাসমূহ',
       risksLimitations: 'ঝুঁকি ও সীমাবদ্ধতা',
       citationsGrounding: 'প্রযুক্তিগত ও নীতিগত তথ্যসূত্র',
+      welcomeTitle: 'আপনার এআই সোলার ইঞ্জিনিয়ারিং সহকারী',
+      welcomeDesc: 'ছাদের সৌর সম্ভাবনা, প্যানেল অপ্টিমাইজেশন, শেডিং, বিদ্যুৎ উৎপাদন এবং আর্থিক কর্মক্ষমতা সম্পর্কে প্রশ্ন করুন।',
+      suggestedViability: 'আমার ছাদের সৌর কার্যক্ষমতা বিশ্লেষণ করুন।',
+      suggestedPlacement: 'সোলার প্যানেলের বিন্যাস অপ্টিমাইজ করুন।',
+      suggestedShading: 'বর্তমান ছায়া পরিস্থিতি ব্যাখ্যা করুন।',
+      suggestedPayback: 'সৌর বিনিয়োগের পে-ব্যাক হিসাব করুন।',
+      suggestedNetMetering: 'বাংলাদেশের নেট-মিটারিং নীতিমালা যাচাই করুন।',
+      suggestedOrientation: 'অনুকূল প্যানেল ওরিয়েন্টেশন প্রস্তাব করুন।',
+      chatInputPlaceholder: 'আপনার সোলার প্রকল্প সম্পর্কে যা কিছু জিজ্ঞাসা করুন (Enter পাঠান, Shift+Enter নতুন লাইন)...',
+      analyzing: 'আপনার সৌর তথ্য বিশ্লেষণ করা হচ্ছে...',
+      newChat: 'নতুন চ্যাট',
+      clearChat: 'চ্যাট মুছুন',
+      clearConfirm: 'এই কথোপকথনের সব বার্তা মুছে ফেলতে চান?',
+      copy: 'কপি',
+      copied: 'কপি হয়েছে!',
+      retry: 'পুনরায় চেষ্টা',
+      scrollToBottom: 'নতুন বার্তা',
+      expandWorkspace: 'চ্যাট বড় করুন',
+      collapseWorkspace: 'সাধারণ আকার',
+      activeBuildingBadge: 'সক্রিয় সিমুলেশন ডেটা',
+      inquiryLocationBadge: 'অনুসন্ধানকৃত এলাকা',
     },
     solarReportModal: {
       title: 'রূফরে সৌর সম্ভাব্যতা ও প্রকৌশল রিপোর্ট',

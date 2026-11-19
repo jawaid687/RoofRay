@@ -309,6 +309,96 @@ async function runBrowserTests() {
 
     const pageScrollAfterCanvasWheel = await evaluate('window.scrollY');
     assert(pageScrollAfterCanvasWheel === 0, 'Page window scroll remains locked at 0 during 3D canvas interaction');
+
+    // ==========================================
+    // Suite 5: AI Advisor Conversational Chatbot E2E
+    // ==========================================
+    console.log('\n5. Testing AI Advisor Conversational Chatbot E2E...');
+    // Click AI Advisor tab
+    const tabClicked = await evaluate(`(() => {
+      const buttons = Array.from(document.querySelectorAll('button'));
+      const advTab = buttons.find(b => b.innerText.includes('AI Advisor'));
+      if (advTab) {
+        advTab.click();
+        return true;
+      }
+      return false;
+    })()`);
+    assert(tabClicked, 'AI Advisor tab button located and clicked');
+    await new Promise((r) => setTimeout(r, 600));
+
+    // Verify Welcome Screen title
+    const welcomeTitleFound = await evaluate(`(() => {
+      return document.body.innerText.includes('Your AI Solar Engineering Assistant');
+    })()`);
+    assert(welcomeTitleFound, 'AI Advisor mounts Welcome Screen with "Your AI Solar Engineering Assistant"');
+
+    // Verify Suggested Prompts
+    const suggestedCount = await evaluate(`(() => {
+      const text = document.body.innerText;
+      let count = 0;
+      if (text.includes('Analyze my rooftop solar viability')) count++;
+      if (text.includes('Optimize solar panel placement')) count++;
+      if (text.includes('Explain current shading conditions')) count++;
+      if (text.includes('Calculate solar investment payback')) count++;
+      if (text.includes('Check Bangladesh net-metering regulations')) count++;
+      if (text.includes('Recommend optimal panel orientation')) count++;
+      return count;
+    })()`);
+    assert(suggestedCount === 6, 'All 6 suggested question prompts are rendered on welcome screen');
+
+    // Verify Fixed Message Composer
+    const composerExists = await evaluate(`(() => {
+      const ta = document.querySelector('textarea');
+      return Boolean(ta && ta.placeholder.includes('Ask anything about your solar project'));
+    })()`);
+    assert(composerExists, 'Fixed multiline message composer with placeholder mounted');
+
+    // Click suggested prompt "Explain current shading conditions."
+    const promptClicked = await evaluate(`(() => {
+      const buttons = Array.from(document.querySelectorAll('button'));
+      const btn = buttons.find(b => b.innerText.includes('Explain current shading conditions'));
+      if (btn) {
+        btn.click();
+        return true;
+      }
+      return false;
+    })()`);
+    assert(promptClicked, 'Suggested prompt button clicked to initiate conversation');
+    await new Promise((r) => setTimeout(r, 600));
+
+    // Verify User Message Bubble is created
+    const userMessageBubble = await evaluate(`(() => {
+      const text = document.body.innerText;
+      return text.includes('Explain current shading conditions');
+    })()`);
+    assert(userMessageBubble, 'User question bubble rendered in conversation history');
+
+    // Check thinking indicator or response container
+    const thinkingIndicator = await evaluate(`(() => {
+      const text = document.body.innerText;
+      return text.includes('Analyzing your solar data') || text.includes('RoofRay Advisor') || text.includes('RoofRay AI');
+    })()`);
+    assert(thinkingIndicator, 'Thinking indicator or assistant response container active');
+
+    // Check New Chat / Clear reset functionality
+    const newChatButton = await evaluate(`(() => {
+      const buttons = Array.from(document.querySelectorAll('button'));
+      const btn = buttons.find(b => b.title === 'Start New Chat');
+      if (btn) {
+        btn.click();
+        return true;
+      }
+      return false;
+    })()`);
+    assert(newChatButton, 'New Chat button clicked to reset conversation');
+    await new Promise((r) => setTimeout(r, 400));
+
+    // Verify welcome screen is restored after New Chat
+    const welcomeRestored = await evaluate(`(() => {
+      return document.body.innerText.includes('Your AI Solar Engineering Assistant');
+    })()`);
+    assert(welcomeRestored, 'Welcome screen cleanly restored after New Chat reset');
   } finally {
     // Teardown
     if (ws) {
