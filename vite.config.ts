@@ -1,38 +1,11 @@
-import { defineConfig, Plugin } from 'vite';
+import { defineConfig, loadEnv, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
-import fs from 'fs';
-
-// Auto-load .env into process.env for dev server middleware (Node 18+ compatible)
-if (fs.existsSync('.env')) {
-  if (typeof process.loadEnvFile === 'function') {
-    try {
-      process.loadEnvFile('.env');
-    } catch {
-      // ignore
-    }
-  } else {
-    try {
-      const content = fs.readFileSync('.env', 'utf-8');
-      for (const line of content.split(/\r?\n/)) {
-        const trimmed = line.trim();
-        if (!trimmed || trimmed.startsWith('#')) continue;
-        const eqIdx = trimmed.indexOf('=');
-        if (eqIdx > 0) {
-          const key = trimmed.slice(0, eqIdx).trim();
-          let val = trimmed.slice(eqIdx + 1).trim();
-          if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
-            val = val.slice(1, -1);
-          }
-          if (!(key in process.env)) process.env[key] = val;
-        }
-      }
-    } catch {
-      // ignore
-    }
-  }
-}
-
-import { handleSolarAdvisorRequest, validateAdvisorPayload, checkRateLimit } from './src/server/advisorService';
+import {
+  handleSolarAdvisorRequest,
+  validateAdvisorPayload,
+  checkRateLimit,
+  resolveGeminiModel,
+} from './src/server/advisorService';
 
 function solarAdvisorApiPlugin(): Plugin {
   return {
@@ -54,8 +27,12 @@ function solarAdvisorApiPlugin(): Plugin {
               version: '3.3.0',
               timestamp: new Date().toISOString(),
               aiProvider: 'Google Gemini',
-              modelConfigured: process.env.GEMINI_MODEL || 'gemini-3.8-flash',
-              keyConfigured: Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'your_gemini_api_key_here' && process.env.GEMINI_API_KEY.trim().length > 10),
+              modelConfigured: resolveGeminiModel(),
+              keyConfigured: Boolean(
+                process.env.GEMINI_API_KEY &&
+                process.env.GEMINI_API_KEY !== 'your_gemini_api_key_here' &&
+                process.env.GEMINI_API_KEY.trim().length > 10
+              ),
               authMethod: 'x-goog-api-key header (secured)',
             })
           );
@@ -113,10 +90,24 @@ function solarAdvisorApiPlugin(): Plugin {
 }
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [react(), solarAdvisorApiPlugin()],
-  server: {
-    port: 3000,
-    open: false,
-  },
+export default defineConfig(({ mode }) => {
+  // Use Vite's official loadEnv to reliably read .env for Node 18+ compatibility
+  const env = loadEnv(mode, process.cwd(), '');
+
+  // Explicitly copy ONLY the required server-side variables into process.env
+  // Never expose secrets through import.meta.env or VITE_ prefixed variables
+  if (env.GEMINI_API_KEY) {
+    process.env.GEMINI_API_KEY = env.GEMINI_API_KEY;
+  }
+  if (env.GEMINI_MODEL) {
+    process.env.GEMINI_MODEL = env.GEMINI_MODEL;
+  }
+
+  return {
+    plugins: [react(), solarAdvisorApiPlugin()],
+    server: {
+      port: 3000,
+      open: false,
+    },
+  };
 });

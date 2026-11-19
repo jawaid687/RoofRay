@@ -39,7 +39,7 @@ export function loadEnvFileCompat(filePath: string = '.env'): void {
 
 loadEnvFileCompat();
 
-import { handleSolarAdvisorRequest, validateAdvisorPayload, checkRateLimit } from '../src/server/advisorService.js';
+import { handleSolarAdvisorRequest, validateAdvisorPayload, checkRateLimit, resolveGeminiModel } from '../src/server/advisorService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -156,7 +156,7 @@ export const server = http.createServer(async (req, res) => {
         version: '3.3.0',
         timestamp: new Date().toISOString(),
         aiProvider: 'Google Gemini',
-        modelConfigured: process.env.GEMINI_MODEL || 'gemini-3.8-flash',
+        modelConfigured: resolveGeminiModel(),
         keyConfigured: isConfigured,
         authMethod: 'x-goog-api-key header (secured)',
         dailyQuota: {

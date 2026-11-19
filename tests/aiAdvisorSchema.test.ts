@@ -4,6 +4,8 @@ import {
   checkRateLimit,
   handleSolarAdvisorRequest,
   SolarAdvisorRequest,
+  resolveGeminiModel,
+  executeGeminiRequest,
 } from '../src/server/advisorService';
 
 export async function runAiAdvisorTests() {
@@ -164,6 +166,114 @@ export async function runAiAdvisorTests() {
     risks: [12345],
   };
   assert(!validateAdvisorResponseSchema(numberInArray).valid, 'Numeric item inside string array rejected');
+
+  // -----------------------------------------------------------------
+  // Test 7: Centralized Model Configuration Resolution
+  // -----------------------------------------------------------------
+  const origModelEnv = process.env.GEMINI_MODEL;
+  delete process.env.GEMINI_MODEL;
+  assert(resolveGeminiModel() === 'gemini-3.5-flash-lite', 'Default model resolves to gemini-3.5-flash-lite');
+  assert(resolveGeminiModel(' custom-model ') === 'custom-model', 'Custom model argument resolves and trims');
+  process.env.GEMINI_MODEL = 'env-specified-model';
+  assert(resolveGeminiModel() === 'env-specified-model', 'Environment variable GEMINI_MODEL takes precedence');
+  if (origModelEnv !== undefined) {
+    process.env.GEMINI_MODEL = origModelEnv;
+  } else {
+    delete process.env.GEMINI_MODEL;
+  }
+
+  // -----------------------------------------------------------------
+  // Test 8: Deterministic Mock Provider Error & Safety Diagnostics
+  // -----------------------------------------------------------------
+  const originalFetch = globalThis.fetch;
+  const dummyKey = 'test_secret_gemini_key_12345';
+
+  try {
+    function mockFetchResponse(status: number, statusText: string, bodyJson: unknown) {
+      globalThis.fetch = (async () => ({
+        ok: status >= 200 && status < 300,
+        status,
+        statusText,
+        json: async () => bodyJson,
+        text: async () => JSON.stringify(bodyJson),
+      })) as unknown as typeof fetch;
+    }
+
+    // 8.1: HTTP 400 - Invalid Request
+    mockFetchResponse(400, 'Bad Request', {
+      error: { code: 400, message: 'Invalid JSON payload structure', status: 'INVALID_ARGUMENT' },
+    });
+    const res400 = await executeGeminiRequest('gemini-3.5-flash-lite', dummyKey, 'sys', 'usr');
+    assert(res400.httpStatus === 400 && res400.errorCode === 'INVALID_REQUEST', 'HTTP 400 parsed as INVALID_REQUEST');
+
+    // 8.2: HTTP 401 - Authentication Error
+    mockFetchResponse(401, 'Unauthorized', {
+      error: { code: 401, message: 'API key expired', status: 'UNAUTHENTICATED' },
+    });
+    const res401 = await executeGeminiRequest('gemini-3.5-flash-lite', dummyKey, 'sys', 'usr');
+    assert(res401.httpStatus === 401 && res401.errorCode === 'AUTHENTICATION_FAILED', 'HTTP 401 parsed as AUTHENTICATION_FAILED');
+    assert(res401.userMessage === 'Gemini authentication or project permission needs attention.', 'HTTP 401 formatted user-facing message');
+
+    // 8.3: HTTP 403 - Permission Error
+    mockFetchResponse(403, 'Forbidden', {
+      error: { code: 403, message: 'Generative Language API has not been used in project', status: 'PERMISSION_DENIED' },
+    });
+    const res403 = await executeGeminiRequest('gemini-3.5-flash-lite', dummyKey, 'sys', 'usr');
+    assert(res403.httpStatus === 403 && res403.errorCode === 'PERMISSION_DENIED', 'HTTP 403 parsed as PERMISSION_DENIED');
+    assert(res403.userMessage === 'Gemini authentication or project permission needs attention.', 'HTTP 403 formatted user-facing message');
+
+    // 8.4: HTTP 404 - Model Unavailable
+    mockFetchResponse(404, 'Not Found', {
+      error: { code: 404, message: 'models/gemini-unsupported is not found', status: 'NOT_FOUND' },
+    });
+    const res404 = await executeGeminiRequest('gemini-unsupported', dummyKey, 'sys', 'usr');
+    assert(res404.httpStatus === 404 && res404.errorCode === 'MODEL_UNAVAILABLE', 'HTTP 404 parsed as MODEL_UNAVAILABLE');
+    assert(res404.userMessage === 'The configured Gemini model is unavailable. Please verify the model configuration.', 'HTTP 404 formatted user-facing message');
+
+    // 8.5: HTTP 429 - Rate Limit Exceeded
+    mockFetchResponse(429, 'Too Many Requests', {
+      error: { code: 429, message: 'Resource has been exhausted', status: 'RESOURCE_EXHAUSTED' },
+    });
+    const res429 = await executeGeminiRequest('gemini-3.5-flash-lite', dummyKey, 'sys', 'usr');
+    assert(res429.httpStatus === 429 && res429.errorCode === 'RATE_LIMIT_EXCEEDED', 'HTTP 429 parsed as RATE_LIMIT_EXCEEDED');
+    assert(res429.userMessage === 'Gemini AI Advisor has temporarily reached its API usage limit. Your deterministic solar calculations remain available.', 'HTTP 429 formatted user-facing message');
+
+    // 8.6: HTTP 503 - Service Unavailable
+    mockFetchResponse(503, 'Service Unavailable', {
+      error: { code: 503, message: 'Model is currently experiencing high demand', status: 'UNAVAILABLE' },
+    });
+    const res503 = await executeGeminiRequest('gemini-3.5-flash-lite', dummyKey, 'sys', 'usr');
+    assert(res503.httpStatus === 503 && res503.errorCode === 'SERVICE_UNAVAILABLE', 'HTTP 503 parsed as SERVICE_UNAVAILABLE');
+    assert(res503.userMessage === 'Google Gemini service is temporarily unavailable or experiencing high demand. Your deterministic solar calculations remain available.', 'HTTP 503 formatted user-facing message');
+
+    // 8.7: Timeout Simulation
+    globalThis.fetch = (async () => {
+      const err = new Error('The operation was aborted');
+      err.name = 'AbortError';
+      throw err;
+    }) as unknown as typeof fetch;
+    const resTimeout = await executeGeminiRequest('gemini-3.5-flash-lite', dummyKey, 'sys', 'usr', 100);
+    assert(resTimeout.errorCode === 'TIMEOUT', 'AbortError classified as TIMEOUT');
+    assert(resTimeout.userMessage.includes('timed out'), 'Timeout user message returned');
+
+    // 8.8: No Automatic Model Fallback
+    mockFetchResponse(503, 'Service Unavailable', {
+      error: { code: 503, message: 'High demand spike' },
+    });
+    const advisorRes503 = await handleSolarAdvisorRequest(validPayload, dummyKey, 'gemini-3.5-flash-lite');
+    assert(advisorRes503.modelUsed === 'gemini-3.5-flash-lite', 'No silent fallback: modelUsed strictly remains gemini-3.5-flash-lite');
+    assert(!JSON.stringify(advisorRes503).includes('gemini-2.5-flash'), 'Outdated fallback gemini-2.5-flash is never referenced');
+
+    // 8.9: Secret API Key Redaction in Error Messages
+    mockFetchResponse(500, 'Internal Server Error', {
+      error: { code: 500, message: `Key ${dummyKey} failed server verification` },
+    });
+    const resRedact = await executeGeminiRequest('gemini-3.5-flash-lite', dummyKey, 'sys', 'usr');
+    assert(!resRedact.safeMessage.includes(dummyKey), 'Raw API secret is strictly stripped from safeMessage');
+    assert(resRedact.safeMessage.includes('[REDACTED_API_KEY]'), 'Key replaced with [REDACTED_API_KEY] marker');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 
   console.log(`\n========================================`);
   console.log(`AI Advisor Schema Tests: ${passed} passed, ${failed} failed.`);

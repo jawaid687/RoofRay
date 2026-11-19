@@ -192,7 +192,7 @@ cp .env.example .env
 Edit `.env` to configure your Gemini API key (optional for local physical simulation; required for live AI recommendations):
 ```env
 GEMINI_API_KEY=your_actual_gemini_api_key_here
-GEMINI_MODEL=gemini-3.8-flash
+GEMINI_MODEL=gemini-3.5-flash-lite
 PORT=3000
 ```
 
@@ -226,7 +226,7 @@ RoofRay V3 is pre-configured for zero-friction cloud deployment on **Render**:
    - **Start Command:** `npm start`
 3. Add Environment Variables:
    - `GEMINI_API_KEY`: Your Gemini API key from Google AI Studio.
-   - `GEMINI_MODEL`: `gemini-3.8-flash` (default).
+   - `GEMINI_MODEL`: `gemini-3.5-flash-lite` (default).
    - `NODE_ENV`: `production`.
    *(Render automatically assigns `PORT`)*.
 4. Deploy: The service serves the landing page at `/`, app at `/app`, and `/api/ai/*` with 100% server-side API key protection.

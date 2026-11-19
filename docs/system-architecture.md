@@ -52,7 +52,7 @@ flowchart TD
         subgraph LLMIntegration ["Official Google Gemini API"]
             GeminiClient["HTTPS REST Client (JSON Output Mode)"]
             KeyStore["Server Secret Storage (GEMINI_API_KEY)"]
-            ModelConfig["Configurable Model (gemini-3.8-flash)"]
+            ModelConfig["Configurable Model (gemini-3.5-flash-lite)"]
         end
     end
 

@@ -298,8 +298,14 @@ export function validateAdvisorResponseSchema(parsed: unknown): AdvisorResponseS
   };
 }
 
-export const DEFAULT_GEMINI_MODEL = 'gemini-3.8-flash';
-export const STABLE_FALLBACK_MODEL = 'gemini-2.5-flash';
+export const DEFAULT_GEMINI_MODEL = 'gemini-3.5-flash-lite';
+
+export function resolveGeminiModel(customModel?: string): string {
+  const envModel = process.env.GEMINI_MODEL?.trim();
+  if (envModel) return envModel;
+  if (customModel?.trim()) return customModel.trim();
+  return DEFAULT_GEMINI_MODEL;
+}
 
 interface GeminiApiResponse {
   candidates?: Array<{
@@ -319,21 +325,24 @@ interface GeminiApiResponse {
   };
 }
 
-async function executeGeminiRequest(
-  targetModel: string,
-  key: string,
-  systemPrompt: string,
-  userPrompt: string,
-  timeoutMs: number = 18000
-): Promise<{
+export interface GeminiExecutionResult {
   ok: boolean;
   httpStatus: number;
   statusText: string;
   candidateText?: string;
   errorCode: string;
+  userMessage: string;
   safeMessage: string;
   providerStatus?: string;
-}> {
+}
+
+export async function executeGeminiRequest(
+  targetModel: string,
+  key: string,
+  systemPrompt: string,
+  userPrompt: string,
+  timeoutMs: number = 25000
+): Promise<GeminiExecutionResult> {
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent`;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -374,28 +383,36 @@ async function executeGeminiRequest(
       }
 
       let errorCode = 'AI_PROVIDER_ERROR';
+      let userMessage = 'Google Gemini service encountered an error. Your deterministic solar calculations remain available.';
       let safeMessage = `Gemini API error (HTTP ${res.status}): ${rawMsg}`;
 
       if (res.status === 400) {
         errorCode = 'INVALID_REQUEST';
+        userMessage = 'Invalid request payload or configuration for AI Advisor.';
         safeMessage = `Invalid request or configuration (HTTP 400). Provider detail: ${rawMsg}${providerStatus ? ` [${providerStatus}]` : ''}`;
       } else if (res.status === 401) {
         errorCode = 'AUTHENTICATION_FAILED';
+        userMessage = 'Gemini authentication or project permission needs attention.';
         safeMessage = `Authentication failed (HTTP 401). Verify that your Gemini API key is valid. Provider detail: ${rawMsg}`;
       } else if (res.status === 403) {
         errorCode = 'PERMISSION_DENIED';
+        userMessage = 'Gemini authentication or project permission needs attention.';
         safeMessage = `Permission or API restriction failure (HTTP 403). Ensure Generative Language API is enabled and project permissions are active. Provider detail: ${rawMsg}${providerStatus ? ` [${providerStatus}]` : ''}`;
       } else if (res.status === 404) {
         errorCode = 'MODEL_UNAVAILABLE';
-        safeMessage = `Model "${targetModel}" is not available or unsupported for this API endpoint (HTTP 404). Provider detail: ${rawMsg}`;
+        userMessage = 'The configured Gemini model is unavailable. Please verify the model configuration.';
+        safeMessage = `The configured Gemini model "${targetModel}" is unavailable (HTTP 404). Provider detail: ${rawMsg}`;
       } else if (res.status === 429) {
         errorCode = 'RATE_LIMIT_EXCEEDED';
+        userMessage = 'Gemini AI Advisor has temporarily reached its API usage limit. Your deterministic solar calculations remain available.';
         safeMessage = `Gemini rate limit or quota exceeded (HTTP 429). Provider detail: ${rawMsg}`;
       } else if (res.status === 503) {
         errorCode = 'SERVICE_UNAVAILABLE';
+        userMessage = 'Google Gemini service is temporarily unavailable or experiencing high demand. Your deterministic solar calculations remain available.';
         safeMessage = `Model "${targetModel}" is currently experiencing temporary high demand or outage (HTTP 503). Provider detail: ${rawMsg}`;
       } else if (res.status >= 500) {
         errorCode = 'PROVIDER_ERROR';
+        userMessage = 'Google Gemini service encountered an internal error. Your deterministic solar calculations remain available.';
         safeMessage = `Google Gemini service error (HTTP ${res.status}). Provider detail: ${rawMsg}`;
       }
 
@@ -404,6 +421,7 @@ async function executeGeminiRequest(
         httpStatus: res.status,
         statusText: res.statusText,
         errorCode,
+        userMessage,
         safeMessage,
         providerStatus,
       };
@@ -416,6 +434,7 @@ async function executeGeminiRequest(
         httpStatus: 200,
         statusText: 'OK',
         errorCode: 'MALFORMED_AI_RESPONSE',
+        userMessage: 'Gemini returned an empty candidate content block. Your deterministic solar calculations remain available.',
         safeMessage: 'Gemini returned an empty or invalid candidate content block.',
       };
     }
@@ -426,17 +445,20 @@ async function executeGeminiRequest(
       statusText: 'OK',
       candidateText,
       errorCode: '',
+      userMessage: '',
       safeMessage: '',
     };
   } catch (err: unknown) {
     clearTimeout(timeoutId);
     let errorCode = 'AI_PROVIDER_ERROR';
+    let userMessage = 'Failed to communicate with Google Gemini service. Your deterministic solar calculations remain available.';
     let safeMessage = 'An unexpected error occurred while communicating with the AI advisor provider.';
 
     if (err instanceof Error) {
       if (err.name === 'AbortError') {
         errorCode = 'TIMEOUT';
-        safeMessage = 'Gemini API request timed out after 25 seconds.';
+        userMessage = 'Gemini API request timed out. Your deterministic solar calculations remain available.';
+        safeMessage = `Gemini API request timed out after ${Math.round(timeoutMs / 1000)} seconds.`;
       } else {
         safeMessage = err.message;
         if (key) {
@@ -450,6 +472,7 @@ async function executeGeminiRequest(
       httpStatus: 0,
       statusText: 'FETCH_ERROR',
       errorCode,
+      userMessage,
       safeMessage,
     };
   }
@@ -462,7 +485,7 @@ export async function handleSolarAdvisorRequest(
 ): Promise<SolarAdvisorResponse> {
   const rawKey = apiKey !== undefined ? apiKey : (process.env.GEMINI_API_KEY || '');
   const effectiveKey = rawKey.trim().replace(/^["']|["']$/g, '').trim();
-  const effectiveModel = process.env.GEMINI_MODEL || modelName || DEFAULT_GEMINI_MODEL;
+  const effectiveModel = resolveGeminiModel(modelName);
 
   // 1. Perform Lexical RAG Retrieval
   const userQuery = payload.userQuestion || 'Provide an engineering and financial solar recommendation for this rooftop layout';
@@ -573,28 +596,22 @@ Provide a comprehensive, professional assessment formatted as valid JSON adherin
 }`;
 
   // 4. Dispatch to Gemini API via secured header
-  let activeModelUsed = effectiveModel;
   let execResult = await executeGeminiRequest(effectiveModel, effectiveKey, systemPrompt, userPrompt);
 
-  // Resilient Fallback: If primary model encounters timeout, 5xx (e.g. 503 high demand), or 404, fallback to stable production model
-  if (
-    !execResult.ok &&
-    (execResult.httpStatus >= 500 || execResult.httpStatus === 404 || execResult.errorCode === 'TIMEOUT') &&
-    effectiveModel !== STABLE_FALLBACK_MODEL
-  ) {
-    console.warn(`[RoofRay Advisor] Model "${effectiveModel}" failed (${execResult.errorCode || 'HTTP ' + execResult.httpStatus}). Attempting fallback to "${STABLE_FALLBACK_MODEL}"...`);
-    const fallbackResult = await executeGeminiRequest(STABLE_FALLBACK_MODEL, effectiveKey, systemPrompt, userPrompt, 25000);
-    if (fallbackResult.ok) {
-      const reason = execResult.errorCode === 'TIMEOUT' ? 'TIMEOUT_HIGH_LATENCY' : (execResult.errorCode || 'HTTP ' + execResult.httpStatus);
-      execResult = fallbackResult;
-      activeModelUsed = `${STABLE_FALLBACK_MODEL} (fallback from ${effectiveModel}: ${reason})`;
-    }
+  // Temporary 503 handling: allow at most one bounded retry on the SAME configured model
+  // Do not retry 404 or 429 automatically. Do not silently fallback to a different model.
+  if (!execResult.ok && execResult.httpStatus === 503) {
+    console.warn(`[RoofRay Advisor] Model "${effectiveModel}" returned HTTP 503. Performing bounded retry in 1500ms...`);
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    execResult = await executeGeminiRequest(effectiveModel, effectiveKey, systemPrompt, userPrompt);
   }
 
   if (!execResult.ok || !execResult.candidateText) {
+    console.error(`[RoofRay Advisor Diagnostics] ${execResult.errorCode} (${execResult.httpStatus}): ${execResult.safeMessage}`);
+    const displaySummary = execResult.userMessage || execResult.safeMessage;
     return {
       configured: true,
-      summary: execResult.safeMessage,
+      summary: displaySummary,
       recommendations: [
         'Review the deterministic 3D raycast metrics and financial tabs directly.',
         'Verify your server internet connectivity and Gemini API key quota/status in Google AI Studio.',
@@ -606,7 +623,7 @@ Provide a comprehensive, professional assessment formatted as valid JSON adherin
       sources: formattedSources,
       timestamp: new Date().toISOString(),
       error: execResult.errorCode || 'AI_PROVIDER_ERROR',
-      modelUsed: activeModelUsed,
+      modelUsed: effectiveModel,
     };
   }
 
@@ -627,7 +644,7 @@ Provide a comprehensive, professional assessment formatted as valid JSON adherin
       sources: formattedSources,
       timestamp: new Date().toISOString(),
       error: 'MALFORMED_AI_RESPONSE',
-      modelUsed: activeModelUsed,
+      modelUsed: effectiveModel,
     };
   }
 
@@ -647,7 +664,7 @@ Provide a comprehensive, professional assessment formatted as valid JSON adherin
       sources: formattedSources,
       timestamp: new Date().toISOString(),
       error: 'MALFORMED_AI_RESPONSE',
-      modelUsed: activeModelUsed,
+      modelUsed: effectiveModel,
     };
   }
 
@@ -663,6 +680,6 @@ Provide a comprehensive, professional assessment formatted as valid JSON adherin
     next_steps,
     sources: formattedSources,
     timestamp: new Date().toISOString(),
-    modelUsed: activeModelUsed,
+    modelUsed: effectiveModel,
   };
 }
