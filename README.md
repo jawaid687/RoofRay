@@ -64,7 +64,7 @@ Bangladesh is a first-class supported region in RoofRay V3:
   - Turnkey EPC Installation Cost (SREDA accredited benchmark: ৳85,000/kW; configurable).
   - Base Permitting & Net-Metering Fee: ৳25,000.
   - **Missing Input Protection:** Zero or absent tariff inputs explicitly return `paybackYears: null` to avoid deceptive payback projections.
-- **Carbon Accounting:** National grid emission factor of **0.637 kg CO₂/kWh** (Department of Environment / SREDA 2023 National Study) alongside the global IEA baseline (0.420 kg CO₂/kWh).
+- **Carbon Accounting:** National grid emission factor of **0.620 kg CO₂/kWh** (Department of Environment / SREDA 2023 National Study, 2021–2023 reporting period) alongside the global IEA baseline (0.420 kg CO₂/kWh).
 - **Bilingual Interface:** Real-time language switch between **English** and **বাংলা** with centralized translation dictionaries.
 
 > *Engineering Notice: 3D buildings represent simulated archetype geometries for raycasting; selecting a city updates astronomical ephemeris and solar irradiance calculations.*
@@ -93,11 +93,11 @@ Located in `src/server/advisorService.ts`, `src/rag/retrievalEngine.ts`, and `sr
   - **Payload Validation & Bounds Checking:** Pre-validates latitude ($-90^\circ$ to $+90^\circ$), longitude ($-180^\circ$ to $+180^\circ$), building dimensions ($0.1\text{m}$ to $500\text{m}$), panel wattage ($50\text{W}$ to $2000\text{W}$), tilt ($0^\circ$ to $90^\circ$), and user query length ($\le 1000$ characters).
   - **Directory Traversal & CORS Defense:** Server strictly validates canonical file paths against `dist/`, enforces whitelisted CORS origins, limits request body sizes ($\le 100\text{KB}$), and returns HTTP 404 JSON for unmatched `/api/*` routes.
 - **Verified Knowledge Corpus:**
-  - *SREDA Net-Metering Guidelines (2018/2021):* 70% sanctioned load cap, 3-phase connection rule, bi-directional meter testing.
+  - *SREDA Net-Metering Guidelines (2025):* Up to 100% sanctioned load cap, both single-phase and three-phase consumer eligibility, 80% distribution transformer cap for MV/HT/EHT, IEC 62116 anti-islanding (<= 2s), and IEC 61727 / IEEE 1547 grid interconnection.
   - *BPDB Retail Tariff Schedule (2024):* LT-A progressive residential slabs and LT-E commercial rates.
   - *NREL PV Fundamentals:* Optimal fixed tilt (~latitude facing South), bypass diode behavior under partial shading, and thermal derating.
   - *NASA POWER Database:* South Asian horizontal irradiance benchmarks (4.5 to 5.2 kWh/m²/day) and monsoon cloud cover attenuation.
-  - *DoE Grid Factor:* Bangladesh national grid baseline (0.637 kg CO₂/kWh).
+  - *DoE Grid Factor:* Bangladesh national grid baseline (0.620 kg CO₂/kWh, 2021–2023 reporting period).
 - **Honest Unconfigured State:** If `GEMINI_API_KEY` is not configured on the server, the UI displays clear setup instructions along with authentic Lexical RAG citations rather than a deceptive mock response.
 
 ---

@@ -10,6 +10,8 @@ import {
   resolveLocationReconciliation,
 } from '../src/server/advisorService';
 import { KNOWLEDGE_CORPUS } from '../src/rag/knowledge/corpus';
+import { calculateEmissions } from '../src/calculations/emissions';
+import { LexicalRetrievalEngine } from '../src/rag/retrievalEngine';
 
 export async function runAiAdvisorTests() {
   console.log('🤖 Starting AI Solar Advisor Schema & Safety Test Suite...\n');
@@ -71,7 +73,7 @@ export async function runAiAdvisorTests() {
     environmentalResult: {
       annualCO2ReductionTonnes: 7.1,
       equivalentTreesPlanted: 320,
-      gridEmissionFactorKgPerKWh: 0.637,
+      gridEmissionFactorKgPerKWh: 0.62,
       gridEmissionFactorSource: 'DoE & SREDA Bangladesh',
     },
     panelConfig: {
@@ -486,6 +488,122 @@ export async function runAiAdvisorTests() {
     assert(multiTurnText.includes('PRIOR CONVERSATION CONTEXT'), '10.4: Prior conversation history injected into user prompt');
     assert(multiTurnText.includes('Dhaka, Bangladesh'), '10.5: Prior turn inquiry location preserved in conversational context');
     assert(multiTurnText.includes('What is the estimated payback period for this setup?'), '10.6: Current follow-up question properly framed');
+
+    // -----------------------------------------------------------------
+    // Test 11: Priority 7 Regulatory RAG, Carbon & Financial Transparency Suite
+    // -----------------------------------------------------------------
+    console.log('\n--- Test 11: Regulatory RAG, Carbon & Financial Transparency Suite ---');
+
+    // 11.1: Single-phase consumer eligibility under 2025 guidelines
+    const sreda2025Chunk = KNOWLEDGE_CORPUS.find((c) => c.id === 'sreda-net-metering-guidelines-2025');
+    assert(Boolean(sreda2025Chunk), '11.1: SREDA Net Metering Guidelines 2025 chunk exists in knowledge corpus');
+    assert(
+      Boolean(sreda2025Chunk?.content.includes('both single-phase and three-phase electricity consumers')),
+      '11.1: 2025 guidelines explicitly include single-phase consumers'
+    );
+
+    // 11.2: Three-phase consumer eligibility and inverter phase matching
+    assert(
+      Boolean(sreda2025Chunk?.content.includes('Inverter phase output must strictly match the consumer service connection phase')),
+      '11.2: 2025 guidelines enforce matching inverter phase to consumer service connection'
+    );
+
+    // 11.3: 100% sanctioned-load AC capacity limit
+    assert(
+      Boolean(sreda2025Chunk?.content.includes('100% of the consumer sanctioned load')),
+      '11.3: 2025 guidelines specify 100% sanctioned load cap (superseding 70%)'
+    );
+    mockGeminiSuccess();
+    await handleSolarAdvisorRequest(dhakaPayload, dummyKey);
+    const dhakaPrompt = capturedBody?.system_instruction?.parts?.[0]?.text || '';
+    assert(
+      dhakaPrompt.includes('100% of the consumer sanctioned load') || dhakaPrompt.includes('100% sanctioned load cap'),
+      '11.3: System prompt mandates 100% sanctioned load limit for Bangladesh'
+    );
+
+    // 11.4: 80% transformer capacity limit for applicable voltage classes
+    assert(
+      Boolean(sreda2025Chunk?.content.includes('80% of the rated distribution transformer')),
+      '11.4: 2025 guidelines enforce 80% distribution transformer/substation limit for MV/HT/EHT'
+    );
+
+    // 11.5: IEC 62116 / IEC 61727 / IEEE 1547 anti-islanding <= 2.0s requirement
+    const standardsChunk = KNOWLEDGE_CORPUS.find((c) => c.id === 'sreda-technical-standards');
+    assert(Boolean(standardsChunk), '11.5: SREDA technical standards chunk exists');
+    assert(
+      Boolean(standardsChunk?.content.includes('IEC 62116')) &&
+      Boolean(standardsChunk?.content.includes('IEC 61727 or IEEE 1547')) &&
+      (Boolean(standardsChunk?.content.includes('2.0 seconds')) || Boolean(standardsChunk?.content.includes('2 seconds'))),
+      '11.5: Standards accurately distinguish IEC 62116 anti-islanding testing, IEC 61727/IEEE 1547 interconnection, and <= 2.0s disconnect'
+    );
+
+    // 11.6: 0.62 emission-factor calculation (6056 kWh × 0.62 / 1000 = 3.755 tonnes CO2)
+    const carbonCalc = calculateEmissions(6056, 0.62);
+    assert(carbonCalc.annualCO2ReductionKg === 3755, '11.6: 6,056 kWh yields exactly 3,755 kg CO2 reduction at 0.62 kg/kWh');
+    assert(carbonCalc.annualCO2ReductionTonnes === 3.755, '11.6: 6,056 kWh yields exactly 3.755 tonnes CO2 reduction');
+    assert(
+      Boolean(carbonCalc.gridEmissionFactorSource?.includes('2021–2023 reporting period')),
+      '11.6: Grid emission factor explicitly cites 2021-2023 reporting period'
+    );
+
+    // 11.7: Rajshahi vs Dhaka location synchronization for Meridian Commercial Tower
+    const meridianPayload: SolarAdvisorRequest = {
+      ...validPayload,
+      selectedBuilding: {
+        id: 'bldg-2',
+        name: 'Meridian Commercial Tower',
+        width: 14,
+        length: 15,
+        height: 26,
+        roofType: 'flat',
+        obstaclesCount: 2,
+        city: 'Rajshahi',
+        country: 'Bangladesh',
+        latitude: 24.3636,
+        longitude: 88.6241,
+      },
+      userQuestion: 'What is the optimal solar panel orientation for Meridian Commercial Tower in Bangladesh?',
+    };
+    const meridianRecon = resolveLocationReconciliation(meridianPayload);
+    assert(
+      meridianRecon.effectiveTargetLocation.city === 'Rajshahi' &&
+      meridianRecon.effectiveTargetLocation.latitude === 24.3636 &&
+      meridianRecon.effectiveTargetLocation.country === 'Bangladesh',
+      '11.7: Meridian Commercial Tower synchronizes to Rajshahi, Bangladesh (24.3636°N, 88.6241°E)'
+    );
+    assert(
+      meridianRecon.hasLocationConflict === false,
+      '11.7: Query for Meridian Tower does not falsely conflict or default to Dhaka'
+    );
+
+    // 11.8: Missing interval consumption data financial disclosure
+    assert(
+      dhakaPrompt.includes('annual energy coverage') &&
+      dhakaPrompt.includes('Do NOT claim actual real-time self-consumption without 15-minute / hourly interval smart meter load profile data'),
+      '11.8: Missing interval consumption data disclosure enforced in system prompt'
+    );
+
+    // 11.9: Flat-tariff vs actual net-metering savings disclosure & 20-year projection limitations
+    assert(
+      dhakaPrompt.includes('annualized flat-tariff net-metering estimate') &&
+      dhakaPrompt.includes('Annual PV module degradation (~0.5%/year)') &&
+      dhakaPrompt.includes('Inverter replacement required around year 10–12') &&
+      dhakaPrompt.includes('operations and maintenance costs (O&M ~1%/year of capex)'),
+      '11.9: Flat-tariff and 20-year lifecycle disclosures (degradation, inverter replacement, O&M) mandated'
+    );
+
+    // 11.10: Correct citation retrieval from 2025 guideline over 2018
+    const engine = new LexicalRetrievalEngine(KNOWLEDGE_CORPUS);
+    const sredaSearchResults = engine.search('Bangladesh SREDA net metering guidelines sanctioned load', 3);
+    assert(sredaSearchResults.length > 0, '11.10: Search for SREDA net metering returns results');
+    assert(
+      sredaSearchResults[0].chunk.id === 'sreda-net-metering-guidelines-2025',
+      `11.10: SREDA 2025 guideline ranks #1 (${sredaSearchResults[0].chunk.id}) over 2018 historical reference`
+    );
+    assert(
+      sredaSearchResults[0].chunk.publicationYear === 2025,
+      '11.10: Top ranked chunk is official 2025 publication'
+    );
   } finally {
     globalThis.fetch = savedFetch;
   }

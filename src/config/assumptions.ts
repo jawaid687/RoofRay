@@ -220,8 +220,8 @@ export const SIMULATION_ASSUMPTIONS = {
   
   // Bangladesh Specific Grid Emission Factor
   // Source: Department of Environment (DoE) & SREDA "Grid Emission Factor for the National Grid System of Bangladesh", 2023.
-  // Dominant generation mix: Natural gas (~55%), Coal (~18%), Fuel oil (~15%), Renewables/Import (~12%).
-  bangladeshGridEmissionFactorKgPerKWh: 0.637, // 0.637 kg CO2 / kWh displaced
+  // Reported Combined Margin (CM) grid emission factor for the 2021–2023 reporting period: 0.62 tCO2/MWh (0.620 kg CO2/kWh).
+  bangladeshGridEmissionFactorKgPerKWh: 0.62, // 0.62 kg CO2 / kWh displaced
   
   treesEquivalentPerTonneCO2: 45,   // ~45 seedling trees grown for 10 years per tonne CO2
   milesDrivenPerKgCO2: 2.5,         // Average EPA vehicle equivalence

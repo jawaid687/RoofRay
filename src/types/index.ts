@@ -27,6 +27,10 @@ export interface Building {
   readonly defaultMonthlyKWh: number;
   readonly color?: string;
   readonly description?: string;
+  readonly city?: string;
+  readonly country?: string;
+  readonly latitude?: number;
+  readonly longitude?: number;
 }
 
 export type HeatmapMode = 'live' | 'annual' | 'monthly';

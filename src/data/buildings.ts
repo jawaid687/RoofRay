@@ -50,6 +50,10 @@ export const INITIAL_BUILDINGS: Building[] = [
     id: 'bldg-2',
     name: 'Meridian Commercial Tower',
     type: 'commercial',
+    city: 'Rajshahi',
+    country: 'Bangladesh',
+    latitude: 24.3636,
+    longitude: 88.6241,
     position: [-16, 0, 16],
     width: 14,
     length: 15,
@@ -57,7 +61,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     roofType: 'flat',
     defaultMonthlyKWh: 3800,
     color: '#4c5d73', // Mid Slate
-    description: '8-story commercial glass tower casting prominent dynamic shadows across the neighboring low-rise roofs.',
+    description: '8-story commercial glass tower located in Rajshahi, Bangladesh (24.3636°N, 88.6241°E), casting prominent dynamic shadows across neighboring low-rise roofs.',
     roofObstacles: [
       {
         id: 'obs-2-1',

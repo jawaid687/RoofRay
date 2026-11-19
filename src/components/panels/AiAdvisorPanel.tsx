@@ -122,7 +122,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
         },
         {
           id: 'bd-netmetering',
-          text: t.aiAdvisor.suggestedBdNetMetering || 'Check Bangladesh SREDA 70% net-metering limit.',
+          text: t.aiAdvisor.suggestedBdNetMetering || 'Check Bangladesh SREDA 2025 Net Metering Guideline eligibility & capacity limits.',
           icon: ShieldCheck,
           color: 'text-purple-400',
         },
@@ -304,7 +304,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
     const country = (location.country || '').toLowerCase();
     if (country.includes('bangladesh')) {
       return [
-        'Explain Bangladesh SREDA 70% sanctioned load cap',
+        'Explain Bangladesh SREDA 2025 net metering and sanctioned load rules',
         'Show 20-year net savings breakdown in BDT',
         'What are BPDB bi-directional meter requirements?',
       ];
@@ -420,6 +420,10 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
         obstaclesCount: building.roofObstacles.length,
         roofOrientation: building.roofType === 'flat' ? 'horizontal flat (0° tilt)' : building.roofType,
         roofAzimuthDeg: location.northOffsetDeg || 0,
+        city: building.city || (building.id === 'bldg-2' ? 'Rajshahi' : undefined),
+        country: building.country || (building.id === 'bldg-2' ? 'Bangladesh' : undefined),
+        latitude: building.latitude ?? (building.id === 'bldg-2' ? 24.3636 : undefined),
+        longitude: building.longitude ?? (building.id === 'bldg-2' ? 88.6241 : undefined),
       },
       location: {
         city: location.city,

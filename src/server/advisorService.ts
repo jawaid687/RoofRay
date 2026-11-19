@@ -18,6 +18,10 @@ export interface SolarAdvisorRequest {
     obstaclesCount: number;
     roofOrientation?: string;
     roofAzimuthDeg?: number;
+    city?: string;
+    country?: string;
+    latitude?: number;
+    longitude?: number;
   };
   location: {
     city: string;
@@ -376,9 +380,18 @@ export function detectExplicitLocationInQuery(query?: string): DetectedLocation 
     }
   }
 
+  if (/\b(meridian commercial tower|meridian tower)\b/i.test(lower)) {
+    return {
+      city: 'Rajshahi',
+      country: 'Bangladesh',
+      latitude: 24.3636,
+      longitude: 88.6241,
+      hemisphere: 'Northern',
+    };
+  }
+
   if (/\b(bangladesh|bd)\b/i.test(lower)) {
     return {
-      city: 'Dhaka',
       country: 'Bangladesh',
       latitude: 23.8103,
       longitude: 90.4125,
@@ -438,10 +451,24 @@ export function detectExplicitLocationInQuery(query?: string): DetectedLocation 
 
 export function resolveLocationReconciliation(payload: SolarAdvisorRequest): LocationReconciliation {
   const queryLoc = detectExplicitLocationInQuery(payload.userQuestion);
-  const buildingCity = payload.location?.city || '';
-  const buildingCountry = payload.location?.country || '';
-  const buildingLat = typeof payload.location?.latitude === 'number' ? payload.location.latitude : 0;
-  const buildingLon = typeof payload.location?.longitude === 'number' ? payload.location.longitude : 0;
+
+  // Single Source of Truth: Check if selected building configuration defines its own location (e.g. Meridian Commercial Tower in Rajshahi)
+  const isMeridianTower =
+    payload.selectedBuilding?.name?.toLowerCase().includes('meridian') ||
+    payload.selectedBuilding?.id === 'bldg-2';
+
+  const buildingCity =
+    payload.selectedBuilding?.city ||
+    (isMeridianTower ? 'Rajshahi' : payload.location?.city || '');
+  const buildingCountry =
+    payload.selectedBuilding?.country ||
+    (isMeridianTower ? 'Bangladesh' : payload.location?.country || '');
+  const buildingLat =
+    payload.selectedBuilding?.latitude ??
+    (isMeridianTower ? 24.3636 : typeof payload.location?.latitude === 'number' ? payload.location.latitude : 0);
+  const buildingLon =
+    payload.selectedBuilding?.longitude ??
+    (isMeridianTower ? 88.6241 : typeof payload.location?.longitude === 'number' ? payload.location.longitude : 0);
   const buildingHemisphere = buildingLat >= 0 ? 'Northern' : 'Southern';
 
   if (!queryLoc) {
@@ -464,8 +491,10 @@ export function resolveLocationReconciliation(payload: SolarAdvisorRequest): Loc
 
   const isSameCity =
     !queryLoc.city ||
-    buildingCity.toLowerCase().includes(queryLoc.city.toLowerCase()) ||
-    queryLoc.city.toLowerCase().includes(buildingCity.toLowerCase());
+    (Boolean(buildingCity) && Boolean(queryLoc.city) && (
+      buildingCity.toLowerCase().includes(queryLoc.city.toLowerCase()) ||
+      queryLoc.city.toLowerCase().includes(buildingCity.toLowerCase())
+    ));
 
   if (isSameCountry && isSameCity) {
     return {
@@ -474,8 +503,8 @@ export function resolveLocationReconciliation(payload: SolarAdvisorRequest): Loc
       effectiveTargetLocation: {
         city: queryLoc.city || buildingCity,
         country: queryLoc.country,
-        latitude: queryLoc.latitude,
-        longitude: queryLoc.longitude,
+        latitude: queryLoc.city ? queryLoc.latitude : buildingLat,
+        longitude: queryLoc.city ? queryLoc.longitude : buildingLon,
         hemisphere: queryLoc.hemisphere,
       },
     };
@@ -791,14 +820,14 @@ MANDATORY LOCATION RULES:
 2. DO NOT DESCRIBE THE BUILDING AS BEING IN ${payload.location.city.toUpperCase()}: Under NO circumstances describe the installation as being in ${payload.location.city} or state "The ${payload.energyProfile.installedCapacityKW} kW solar rooftop installation at ${payload.selectedBuilding.name} in ${payload.location.city}...".
 3. EXPLAIN THE DISTINCTION IN YOUR SUMMARY: Clearly explain in your summary that you are applying the physical rooftop dimensions (${payload.selectedBuilding.width}m x ${payload.selectedBuilding.length}m, ${payload.selectedBuilding.obstaclesCount} obstacles) and system layout (${payload.energyProfile.installedCapacityKW} kW) of the active 3D model to the requested location of ${targetLoc.city ? targetLoc.city + ', ' : ''}${targetLoc.country}.
 4. SOLAR ORIENTATION & EPHEMERIS: Use ${targetLoc.country}'s geographic reality (${targetLoc.hemisphere} Hemisphere, latitude ~${targetLoc.latitude}°). Panels must face the equator (${targetLoc.hemisphere === 'Northern' ? 'due True South / Azimuth 180°' : 'due True North / Azimuth 0°'}). In ${targetLoc.city || targetLoc.country}, an optimal fixed tilt of ~15° balances year-round insolation with monsoon rain self-cleaning and reduced wind uplift.
-5. REGULATORY & ECONOMIC FRAMEWORK: Apply ${targetLoc.country}'s regulatory guidelines (e.g. SREDA Net Metering Guidelines 2018 in Bangladesh: 70% sanctioned load cap, 3-phase grid connection). DO NOT apply US tariffs, California NEM 3.0, or US tax incentives when answering for ${targetLoc.country}.
+5. REGULATORY & ECONOMIC FRAMEWORK: Apply ${targetLoc.country}'s regulatory guidelines (e.g. SREDA Net Metering Guidelines 2025 in Bangladesh: 100% sanctioned load cap, single-phase and three-phase consumer eligibility, 80% distribution transformer cap for MT/HT/EHT). DO NOT apply US tariffs, California NEM 3.0, or US tax incentives when answering for ${targetLoc.country}.
 ================================================================================
 `;
   } else {
     locationDirective = `
 GEOGRAPHICAL & BUILDING CONTEXT:
-- Location: ${payload.location.city}, ${payload.location.country} (Lat: ${payload.location.latitude}°, Lon: ${payload.location.longitude}°, Timezone: ${payload.location.timezone}, ${targetLoc.hemisphere} Hemisphere)
-- Building: "${payload.selectedBuilding.name}" in its active location of ${payload.location.city}, ${payload.location.country}.
+- Location: ${targetLoc.city || payload.location.city}, ${targetLoc.country || payload.location.country} (Lat: ${targetLoc.latitude}°, Lon: ${targetLoc.longitude}°, Timezone: ${payload.location.timezone}, ${targetLoc.hemisphere} Hemisphere)
+- Building: "${payload.selectedBuilding.name}" in its active location of ${targetLoc.city || payload.location.city}, ${targetLoc.country || payload.location.country}.
 `;
   }
 
@@ -821,19 +850,38 @@ STRICT GROUNDING & RESPONSIBLE AI RULES:
    - Never mix or convert currencies: use ${payload.financialResult.currency || 'USD'} (${currencySymbol}) consistently as calculated by RoofRay.
 
 2. CITATION GROUNDING & REGULATORY DISTINCTION:
-   - Ground regulatory, net-metering, and design recommendations in the verified technical citations provided.
+   - Ground regulatory, net-metering, and design recommendations in the verified technical citations provided (prioritize SREDA Net Metering Guidelines 2025).
    - Distinguish strictly between legally mandated requirements and general engineering recommendations:
-     * Mandated Bangladesh Regulations (SREDA / BPDB): 70% sanctioned load cap, mandatory three-phase utility connection, bi-directional net meters, and IEEE 1547 / IEC 62116 anti-islanding within 2 seconds.
+     * Mandated Bangladesh Regulations (SREDA Net Metering Guidelines 2025 / BPDB):
+       - Eligibility: Both single-phase and three-phase consumers qualify for rooftop grid-tied solar. Inverter phase output must strictly match the consumer service connection phase.
+       - AC Capacity Limit: Installed AC inverter capacity must not exceed 100% of the consumer sanctioned load (replacing the former 70% limit, which remains only as historical reference; do NOT present 70% as a universal current requirement).
+       - Transformer Capacity Limit: For medium-voltage (MV), high-voltage (HV), and extra-high-voltage (EHT) consumers, total connected solar capacity must not exceed 80% of distribution transformer/substation rated capacity.
+       - Grid Interconnection & Anti-Islanding Standards: Inverters must be tested according to IEC 62116 for anti-islanding (mandatory automatic disconnection within <= 2.0 seconds of utility power interruption) and comply with applicable utility interface standards (IEC 61727 or IEEE 1547). Do NOT claim all standards must be applied simultaneously.
+       - Utility-grade bi-directional net energy meters required for energy accounting.
      * General Engineering Recommendations: 0.8m to 1.5m perimeter setbacks and 0.5m to 1.0m obstacle clearances are engineering design best practices for wind mitigation, maintenance access, and firefighter pathway egress. DO NOT claim 0.5m or 0.8m is an official statutory SREDA code without verified citation.
      * Never present an international NREL publication as a Bangladesh government regulation.
 
-3. CLEAR-SKY VS ACTUAL & FINANCIAL TRANSPARENCY:
-   - Explicitly note that the raycasted annual generation is a clear-sky geometric simulation and recommend on-site shading or structural audits.
-   - Refer to the ${payload.energyProfile.solarCoveragePercent}% metric specifically as "annual energy coverage" (ratio of annual solar generation to annual electricity consumption demand).
-   - Do NOT claim actual real-time self-consumption without interval load profiles; clarify that bill savings represent annualized net-metering / retail energy offset under the applied flat tariff (${currencySymbol}${payload.financialResult.tariffPerKWh !== undefined ? payload.financialResult.tariffPerKWh : 'N/A'}/kWh).
-   - Clearly distinguish theoretical clear-sky raycast savings (${currencySymbol}${annualSavings.toLocaleString()}/yr) from verified utility-billed financial outcomes.
+3. FINANCIAL TRANSPARENCY, GENERATION VS CONSUMPTION & LIFECYCLE LIMITATIONS:
+   - Annual Energy Coverage vs Real-Time Self-Consumption: Refer to the ${payload.energyProfile.solarCoveragePercent}% metric specifically as "annual energy coverage" (ratio of annual solar generation to annual electricity consumption demand). Do NOT claim actual real-time self-consumption without 15-minute / hourly interval smart meter load profile data.
+   - Tariff Modeling & Flat-Tariff Net Metering: Bill savings (${currencySymbol}${annualSavings.toLocaleString()}/yr) represent an annualized flat-tariff net-metering estimate under the applied tariff (${currencySymbol}${payload.financialResult.tariffPerKWh !== undefined ? payload.financialResult.tariffPerKWh : 'N/A'}/kWh).
+   - Distinguish transparently among:
+     * Theoretical generation (simulated clear-sky raycast generation: ${payload.energyProfile.annualGenerationKWh.toLocaleString()} kWh/yr).
+     * Instantaneous self-consumption (solar energy consumed behind the meter during daylight hours).
+     * Grid export surplus (${payload.energyProfile.surplusKWh.toLocaleString()} kWh/yr surplus delivered to utility).
+     * Grid import (utility electricity drawn during nights and cloudy periods).
+     * Export credits vs retail offset (credited at wholesale net-metering settlement rate vs retail offset).
+   - 20-Year Financial Lifecycle Disclosures: Explicitly disclose that 20-year net savings (${currencySymbol}${twentyYearNet.toLocaleString()}) is a simplified linear projection that does not account for:
+     * Annual PV module degradation (~0.5%/year).
+     * Inverter replacement required around year 10–12 of operation.
+     * Recurring operations and maintenance costs (O&M ~1%/year of capex).
+     * Financial discount rates or inflation.
 
-4. STRUCTURED OUTPUT:
+4. CARBON EMISSION FACTOR & REPORTING PERIOD:
+   - For Bangladesh grid calculations, use the verified Department of Environment (DoE) & SREDA reported combined margin factor of 0.62 tCO2/MWh (0.62 kg CO2/kWh) for the 2021–2023 reporting period.
+   - Do NOT cite or use unverified figures such as 0.637 kg CO2/kWh.
+   - Calculate transparently: Annual Generation (kWh) × 0.62 / 1000 = Tonnes CO2/yr (e.g. 6,056 kWh × 0.62 / 1000 = 3.755 tonnes CO2/yr).
+
+5. STRUCTURED OUTPUT:
    - Return your response strictly as valid JSON adhering to the specified schema.
 
 STRUCTURED SOLAR CONTEXT:
@@ -852,7 +900,7 @@ STRUCTURED SOLAR CONTEXT:
 - Estimated Payback: ${payload.financialResult.paybackYears !== null ? `${payload.financialResult.paybackYears} years` : 'Unspecified tariff'}
 - 20-Year Net Benefit: ${currencySymbol}${twentyYearNet.toLocaleString()} (ROI: ${payload.financialResult.roiPercent}%)
 - Environmental Offset: ${payload.environmentalResult.annualCO2ReductionTonnes} tonnes CO2/yr (~${payload.environmentalResult.equivalentTreesPlanted} trees)
-- Grid Emission Factor: ${payload.environmentalResult.gridEmissionFactorKgPerKWh || 0.42} kg CO2/kWh (${payload.environmentalResult.gridEmissionFactorSource || 'Benchmark'})
+- Grid Emission Factor: ${payload.environmentalResult.gridEmissionFactorKgPerKWh || (effectiveCountry === 'Bangladesh' ? 0.62 : 0.42)} kg CO2/kWh (${payload.environmentalResult.gridEmissionFactorSource || 'Benchmark'})
 
 VERIFIED KNOWLEDGE CITATIONS:
 ${retrievedContextText}

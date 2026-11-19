@@ -94,10 +94,10 @@ async function runValidation() {
         tariffPerKWh: 10.5,
       },
       environmentalResult: {
-        annualCO2ReductionTonnes: 7.31,
+        annualCO2ReductionTonnes: 7.11,
         equivalentTreesPlanted: 121,
-        gridEmissionFactorKgPerKWh: 0.637,
-        gridEmissionFactorSource: 'Department of Environment (DoE) & SREDA Bangladesh (2023 Grid Emission Factors Report)',
+        gridEmissionFactorKgPerKWh: 0.62,
+        gridEmissionFactorSource: 'Department of Environment (DoE) & SREDA Bangladesh (2023 Grid Emission Factors Report, 2021–2023 reporting period: 0.620 kg CO2/kWh)',
       },
       panelConfig: {
         panelName: 'Mono PERC 425W',
@@ -269,8 +269,8 @@ async function runValidation() {
   assert(finResult80.exportCreditRatio === 0.8, '80% export credit ratio recorded');
 
   // Location-dependent emissions test
-  const bdEmissions = calculateEmissions(10000, 0.637, 'DoE & SREDA Bangladesh National Grid Factor (2023): 0.637 kg CO2/kWh');
-  assert(bdEmissions.annualCO2ReductionKg === 6370, 'Bangladesh grid emission yields 6,370 kg CO2 abated for 10,000 kWh');
+  const bdEmissions = calculateEmissions(10000, 0.62, 'DoE & SREDA Bangladesh National Grid Factor (2023, 2021–2023 reporting period): 0.620 kg CO2/kWh');
+  assert(bdEmissions.annualCO2ReductionKg === 6200, 'Bangladesh grid emission yields 6,200 kg CO2 abated for 10,000 kWh');
   assert(bdEmissions.gridEmissionFactorSource.includes('DoE & SREDA'), 'Bangladesh source explicitly attributed');
 
   // ----------------------------------------------------

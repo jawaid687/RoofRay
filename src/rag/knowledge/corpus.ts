@@ -1,19 +1,32 @@
 import { KnowledgeChunk } from '../types';
 
 export const KNOWLEDGE_CORPUS: KnowledgeChunk[] = [
-  // 1. SREDA Net Metering Guidelines
+  // 1. SREDA Net Metering Guidelines 2025 (Official Active Regulatory Standard)
   {
-    id: 'sreda-net-metering-eligibility',
-    sourceTitle: 'Net Metering Guidelines for Rooftop Solar Systems in Bangladesh',
+    id: 'sreda-net-metering-guidelines-2025',
+    sourceTitle: 'Net Metering Guidelines 2025',
+    authorOrg: 'Sustainable and Renewable Energy Development Authority (SREDA), Power Division, Ministry of Power, Energy & Mineral Resources, GoB',
+    officialUrl: 'http://www.sreda.gov.bd/files/Net_Metering_Guidelines_2025.pdf',
+    publicationYear: 2025,
+    section: 'Section 4 (Consumer Eligibility) & Section 5 (System Capacity & Substation Limits)',
+    category: 'policy_bangladesh',
+    title: 'SREDA Net Metering Guidelines 2025: Consumer Eligibility, Capacity Limits, and Grid Interconnection',
+    content:
+      'Under the official SREDA Net Metering Guidelines 2025 (superseding the outdated 2018 framework), both single-phase and three-phase electricity consumers connected to utility distribution entities (BPDB, DPDC, DESCO, BREB, WZPDCL, NESCO) are eligible to install rooftop grid-tied solar systems. The installed AC inverter capacity must not exceed 100% of the consumer sanctioned load, replacing the former 70% limit which remains only as historical reference. Inverter phase output must strictly match the consumer service connection phase (single-phase inverters for single-phase connections, three-phase inverters for three-phase connections). For medium-voltage (MV), high-voltage (HV), and extra-high-voltage (EHT) consumers, total connected solar capacity must not exceed 80% of the rated distribution transformer or substation capacity to safeguard network stability and prevent transformer saturation.',
+    keywords: ['sreda', 'net metering 2025', 'net metering', 'guidelines 2025', 'sanctioned load', '100%', 'single-phase', 'three-phase', 'transformer capacity', '80%', 'bangladesh', 'grid tied', 'inverter phase', 'bpdb', 'desco', 'dpdc', 'breb'],
+  },
+  {
+    id: 'sreda-net-metering-guidelines-2018-historical',
+    sourceTitle: 'Net Metering Guidelines for Rooftop Solar Systems in Bangladesh (2018 - Superseded)',
     authorOrg: 'Sustainable and Renewable Energy Development Authority (SREDA), Power Division, GoB',
     officialUrl: 'http://www.sreda.gov.bd/files/Net_Metering_Guidelines_2018.pdf',
     publicationYear: 2018,
-    section: 'Section 5.1 (Capacity Limitations) & Section 4.2 (Technical Eligibility)',
+    section: 'Section 5.1 (Former 70% Capacity Limit) & Section 4.2 (Former 3-Phase Requirement)',
     category: 'policy_bangladesh',
-    title: 'SREDA Net-Metering System Capacity Limit and Consumer Eligibility',
+    title: 'SREDA Net Metering Guidelines 2018 (Historical Reference - Superseded)',
     content:
-      'Under the SREDA Net Metering Guidelines (Section 5.1), any consumer receiving three-phase electricity connection from utility distribution entities (DPDC, DESCO, BPDB, BREB, WZPDCL, NESCO) is eligible for rooftop grid-tied solar. The maximum installed AC capacity of the rooftop solar system shall not exceed 70% of the consumer sanctioned load, up to a maximum cap of 3 MW AC per consumer facility. The system must utilize utility-grade bi-directional net energy meters certified by utility testing labs.',
-    keywords: ['sreda', 'net metering', 'sanctioned load', '70%', 'bangladesh', 'bi-directional meter', 'desco', 'dpdc', 'bpdb', 'breb', 'grid tied'],
+      'Historical Reference (Superseded by 2025 Guidelines): The original 2018 SREDA Net Metering Guidelines previously restricted eligibility exclusively to three-phase consumers and capped solar AC inverter capacity at 70% of sanctioned load (up to a 3 MW AC ceiling). Under the current 2025 Guidelines, these provisions have been updated: both single-phase and three-phase consumers now qualify, AC capacity is permitted up to 100% of sanctioned load, and an 80% distribution transformer limit applies for MT/HT/EHT consumers. The 70% limit is no longer a universal current requirement.',
+    keywords: ['sreda 2018', 'historical', 'superseded', '70% cap', 'three-phase only', 'former guidelines', 'sanctioned load'],
   },
   {
     id: 'sreda-net-metering-settlement',
@@ -36,10 +49,10 @@ export const KNOWLEDGE_CORPUS: KnowledgeChunk[] = [
     publicationYear: 2021,
     section: 'Clause 4.3 (Anti-Islanding Protection) & Clause 6.1 (Roof Clearance Setbacks)',
     category: 'policy_bangladesh',
-    title: 'SREDA Safety, Anti-Islanding Protection and Rooftop Clearances',
+    title: 'SREDA Inverter Grid Interconnection, Anti-Islanding Protection and Rooftop Clearances',
     content:
-      'Grid-tied inverters must conform to IEEE 1547 and IEC 62116 standards, incorporating automatic anti-islanding protection to disconnect from the grid within 2 seconds of utility power interruption. Physical installation requires at least 0.8 meter perimeter buffer around roof parapets for wind uplift resistance and firefighter pathway access, plus 0.5m setback around overhead obstacles and utility shafts.',
-    keywords: ['inverter', 'anti-islanding', 'ieee 1547', 'iec 62116', 'setback', 'firefighter', 'safety', 'clearance', 'wind uplift'],
+      'Grid-tied solar inverters must comply with recognized international grid-interconnection standards, specifically IEC 61727 (Characteristics of the utility interface) or IEEE 1547 (Interconnection and Interoperability of Distributed Energy Resources). For anti-islanding testing and certification, inverters must be tested according to IEC 62116 (Test procedure of islanding prevention measures for utility-interconnected photovoltaic inverters). The inverter must feature automatic anti-islanding protection that disconnects from the utility distribution network within 2.0 seconds (<= 2 seconds) upon loss of utility power or grid outage. Interconnection compliance requires either IEC 61727 or IEEE 1547 alongside IEC 62116 anti-islanding test certification, rather than mandating simultaneous compliance with all standards. Physical array installation requires minimum 0.8m perimeter setback buffers for wind uplift mitigation and firefighter access, plus 0.5m setback around rooftop obstacles.',
+    keywords: ['inverter', 'anti-islanding', 'iec 62116', 'iec 61727', 'ieee 1547', '2 seconds', '2.0 seconds', 'disconnection', 'testing', 'grid interconnection', 'setback', 'firefighter', 'safety', 'clearance'],
   },
 
   // 2. BPDB Tariffs & Economics
@@ -137,7 +150,7 @@ export const KNOWLEDGE_CORPUS: KnowledgeChunk[] = [
     category: 'carbon_accounting',
     title: 'Verified Grid Emission Factor for Carbon Reduction Calculations',
     content:
-      'The Department of Environment and SREDA established the baseline Grid Emission Factor (GEF) for the national grid of Bangladesh at 0.637 kg CO2 per kWh of displaced grid electricity. Because Bangladesh’s grid generation relies heavily on fossil fuels (indigenous and imported natural gas ~55%, imported coal ~18%, heavy fuel oil ~15%), each megawatt-hour of rooftop solar generation offsets significantly more greenhouse gas emissions than the global average grid factor of 0.420 kg CO2/kWh.',
-    keywords: ['grid emission factor', 'carbon', 'co2', 'doe', 'sreda', 'bangladesh', '0.637', 'emissions', 'displacement', 'unfccc'],
+      'The Department of Environment (DoE) and SREDA established the verified baseline Grid Emission Factor for the national electricity grid of Bangladesh with a reported Combined Margin (CM) of 0.62 tCO2/MWh (0.620 kg CO2 per kWh) for the 2021–2023 reporting period. Operating Margin (OM) is approximately 0.65 to 0.67 tCO2/MWh and Build Margin (BM) is approximately 0.53 to 0.56 tCO2/MWh, yielding the 0.62 tCO2/MWh combined margin. Each megawatt-hour of distributed rooftop solar generation displaces grid electricity based on this 0.62 kg CO2/kWh factor (e.g. 6,056 kWh × 0.62 / 1000 = 3.755 tonnes CO2/year). Earlier unverified figures such as 0.637 kg CO2/kWh are not substantiated by the official combined margin table.',
+    keywords: ['grid emission factor', 'carbon', 'co2', 'doe', 'sreda', 'bangladesh', '0.62', '0.620', '0.637', 'combined margin', 'emissions', 'displacement', 'unfccc', 'reporting period'],
   },
 ];

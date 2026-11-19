@@ -16,12 +16,12 @@ export function calculateEmissions(
 
   const source = sourceDescription || (
     emissionFactor === SIMULATION_ASSUMPTIONS.bangladeshGridEmissionFactorKgPerKWh
-      ? 'DoE & SREDA Bangladesh National Grid Emission Factor (2023): 0.637 kg CO2/kWh'
+      ? 'DoE & SREDA Bangladesh National Grid Emission Factor (2023, 2021–2023 reporting period): 0.620 kg CO2/kWh'
       : 'IEA Global Average Grid Intensity Benchmark (2022): 0.420 kg CO2/kWh'
   );
 
   const annualCO2ReductionKg = Math.round(annualGenerationKWh * emissionFactor);
-  const annualCO2ReductionTonnes = Math.round((annualCO2ReductionKg / 1000) * 10) / 10;
+  const annualCO2ReductionTonnes = Math.round((annualCO2ReductionKg / 1000) * 1000) / 1000;
 
   const equivalentTreesPlanted = Math.round(
     annualCO2ReductionTonnes * SIMULATION_ASSUMPTIONS.treesEquivalentPerTonneCO2

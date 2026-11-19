@@ -89,7 +89,7 @@ export function runBangladeshLocalizationTests() {
   assert(bdtDefaults.currencySymbol === '৳', 'BDT default currency symbol is ৳');
   assert(bdtDefaults.tariffPerKWh === SIMULATION_ASSUMPTIONS.bangladeshDefaultTariffBDT, 'BDT default tariff matches ৳10.50/kWh');
   assert(bdtDefaults.costPerKW === SIMULATION_ASSUMPTIONS.bangladeshCostPerKW_BDT, 'BDT default turnkey cost matches ৳85,000/kW');
-  assert(bdtDefaults.gridEmissionFactor === SIMULATION_ASSUMPTIONS.bangladeshGridEmissionFactorKgPerKWh, 'BDT grid emission factor is 0.637 kg CO2/kWh');
+  assert(bdtDefaults.gridEmissionFactor === SIMULATION_ASSUMPTIONS.bangladeshGridEmissionFactorKgPerKWh, 'BDT grid emission factor is 0.62 kg CO2/kWh');
 
   console.log(`\n========================================`);
   console.log(`Bangladesh Localization Tests: ${passed} passed, ${failed} failed.`);

@@ -103,6 +103,26 @@ export class LexicalRetrievalEngine {
         }
       }
 
+      // Jurisdiction boost: prioritize Bangladesh policy chunks when query touches Bangladesh context
+      const isBangladeshQuery = queryTokens.some((t) =>
+        ['bangladesh', 'bd', 'sreda', 'bpdb', 'desco', 'dpdc', 'breb', 'nesco', 'wzpdcl', 'dhaka', 'rajshahi', 'chattogram', 'sylhet', 'khulna', 'barishal', 'rangpur', 'mymensingh'].includes(t)
+      );
+      if (isBangladeshQuery && chunk.category.includes('bangladesh')) {
+        score += 2.0;
+      }
+
+      // Recency boost: 2025 official guidelines receive priority over older publications
+      if (chunk.publicationYear >= 2025) {
+        score *= 1.35; // 35% boost for active 2025 guidelines
+      } else if (chunk.publicationYear >= 2023) {
+        score *= 1.10;
+      }
+
+      // Historical/superseded penalty: prevent outdated guidelines from outranking active regulations
+      if (chunk.id.includes('historical') || chunk.title.includes('Historical') || chunk.title.includes('Superseded')) {
+        score *= 0.50; // Down-weight superseded 2018 guideline
+      }
+
       if (score > 0) {
         results.push({
           chunk,
@@ -138,7 +158,7 @@ export function retrieveGroundedContext(
   // Construct enriched search query
   let enrichedQuery = userQuery;
   if (context?.country === 'Bangladesh' || context?.currency === 'BDT') {
-    enrichedQuery += ' bangladesh sreda net metering bpdb tariff';
+    enrichedQuery += ' bangladesh sreda net metering 2025 bpdb tariff';
   }
   if (context?.hasShading) {
     enrichedQuery += ' shading losses derating obstacles';
@@ -149,7 +169,7 @@ export function retrieveGroundedContext(
   // If no direct query match, provide default foundational chunks based on region
   if (results.length === 0) {
     const fallbackIds = context?.country === 'Bangladesh'
-      ? ['sreda-net-metering-eligibility', 'bpdb-retail-tariff-structure', 'nrel-shading-derating-impact']
+      ? ['sreda-net-metering-guidelines-2025', 'bpdb-retail-tariff-structure', 'nrel-shading-derating-impact']
       : ['nrel-tilt-and-orientation', 'nrel-shading-derating-impact', 'sreda-technical-standards'];
 
     return fallbackIds

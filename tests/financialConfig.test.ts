@@ -110,7 +110,7 @@ export function runFinancialConfigTests() {
   assert(globalEmissions.annualCO2ReductionKg === Math.round(annualGenerationKWh * 0.420), 'Global emissions use 0.420 kg CO2/kWh');
 
   const bdEmissions = calculateEmissions(annualGenerationKWh, SIMULATION_ASSUMPTIONS.bangladeshGridEmissionFactorKgPerKWh);
-  assert(bdEmissions.annualCO2ReductionKg === Math.round(annualGenerationKWh * 0.637), 'Bangladesh emissions use 0.637 kg CO2/kWh');
+  assert(bdEmissions.annualCO2ReductionKg === Math.round(annualGenerationKWh * 0.62), 'Bangladesh emissions use 0.62 kg CO2/kWh');
   assert(bdEmissions.annualCO2ReductionKg > globalEmissions.annualCO2ReductionKg, 'Bangladesh grid emissions offset is higher due to fossil generation mix');
   assert(Boolean(bdEmissions.gridEmissionFactorSource?.includes('DoE & SREDA')), 'Bangladesh emission source is attributed to DoE & SREDA');
 

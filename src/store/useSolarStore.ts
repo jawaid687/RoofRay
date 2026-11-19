@@ -311,7 +311,7 @@ function computeDerivedSnapshots(
     : SIMULATION_ASSUMPTIONS.gridEmissionFactorKgPerKWh;
   const activeEmissionFactor = customEmissionFactor ?? defaultEmissionFactor;
   const emissionSource = isBangladeshGrid
-    ? 'DoE & SREDA Bangladesh National Grid Factor (2023): 0.637 kg CO2/kWh'
+    ? 'DoE & SREDA Bangladesh National Grid Factor (2023, 2021–2023 reporting period): 0.620 kg CO2/kWh'
     : 'IEA Global Grid Average (2022): 0.420 kg CO2/kWh';
 
   const environmentalResult = calculateEmissions(
