@@ -1,7 +1,9 @@
 import { useSolarStore } from '../../store/useSolarStore';
+import { useLanguage } from '../../i18n/useLanguage';
 import { Play, CheckCircle2, X } from 'lucide-react';
 
 export function DemoTourOverlay() {
+  const { t } = useLanguage();
   const isDemoPlaying = useSolarStore((s) => s.isDemoPlaying);
   const demoStep = useSolarStore((s) => s.demoStep);
   const demoStatusText = useSolarStore((s) => s.demoStatusText);
@@ -22,9 +24,9 @@ export function DemoTourOverlay() {
 
         <div>
           <div className="font-semibold text-slate-100 flex items-center gap-2">
-            <span>Automated Hackathon Demo</span>
+            <span>{t.demoTour.title}</span>
             <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono">
-              Step {demoStep}/6
+              {t.demoTour.step} {demoStep}/6
             </span>
           </div>
           <div className="text-xs text-slate-300 font-mono mt-0.5 max-w-md">

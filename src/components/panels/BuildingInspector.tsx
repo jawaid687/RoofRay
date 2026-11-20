@@ -77,15 +77,15 @@ export function BuildingInspector() {
 
         <div className="grid grid-cols-3 gap-2 text-center">
           <div className="p-2 rounded-lg bg-slate-950 border border-slate-800/80">
-            <div className="text-[10px] text-slate-400 uppercase font-mono">X (Width)</div>
+            <div className="text-[10px] text-slate-400 uppercase font-mono">{t.buildingInspector.widthX}</div>
             <div className="text-sm font-bold text-slate-100 font-mono mt-0.5">{building.width} m</div>
           </div>
           <div className="p-2 rounded-lg bg-slate-950 border border-slate-800/80">
-            <div className="text-[10px] text-slate-400 uppercase font-mono">Z (Length)</div>
+            <div className="text-[10px] text-slate-400 uppercase font-mono">{t.buildingInspector.lengthZ}</div>
             <div className="text-sm font-bold text-slate-100 font-mono mt-0.5">{building.length} m</div>
           </div>
           <div className="p-2 rounded-lg bg-slate-950 border border-slate-800/80">
-            <div className="text-[10px] text-slate-400 uppercase font-mono">Y (Height)</div>
+            <div className="text-[10px] text-slate-400 uppercase font-mono">{t.buildingInspector.heightY}</div>
             <div className="text-sm font-bold text-slate-100 font-mono mt-0.5">{building.height} m</div>
           </div>
         </div>
@@ -114,14 +114,14 @@ export function BuildingInspector() {
             <Box className="w-3.5 h-3.5 text-amber-400" />
             {t.buildingInspector.obstacles} ({building.roofObstacles.length})
           </span>
-          <span className="text-[10px] font-mono text-slate-400">0.5m buffer</span>
+          <span className="text-[10px] font-mono text-slate-400">{t.buildingInspector.buffer05m}</span>
         </div>
 
         {/* Obstacle List */}
         <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
           {building.roofObstacles.length === 0 ? (
             <div className="text-[11px] text-slate-400 py-3 text-center">
-              No rooftop obstacles present on this roof.
+              {t.buildingInspector.noObstacles}
             </div>
           ) : (
             building.roofObstacles.map((obs) => (
@@ -139,7 +139,7 @@ export function BuildingInspector() {
                   </div>
                 </div>
                 <span className="text-[9px] uppercase font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">
-                  {obs.type.replace('_', ' ')}
+                  {t.buildingInspector.obstacleTypes[obs.type] || obs.type.replace('_', ' ')}
                 </span>
               </div>
             ))

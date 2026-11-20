@@ -159,7 +159,13 @@ export function LandingPage() {
 
           {/* Main Headline */}
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.15]">
-            Turn Every Rooftop Into a <span className="bg-gradient-to-r from-amber-400 via-emerald-400 to-sky-400 bg-clip-text text-transparent">Smarter Solar Opportunity.</span>
+            {language === 'bn' ? (
+              <span>{t.hero.headline}</span>
+            ) : (
+              <>
+                Turn Every Rooftop Into a <span className="bg-gradient-to-r from-amber-400 via-emerald-400 to-sky-400 bg-clip-text text-transparent">Smarter Solar Opportunity.</span>
+              </>
+            )}
           </h1>
 
           {/* Subheadline */}
@@ -280,14 +286,14 @@ export function LandingPage() {
             {/* Card 1 */}
             <div className="p-6 rounded-3xl bg-slate-950/70 border border-slate-800 hover:border-slate-700 transition-all space-y-4">
               <div className="space-y-1">
-                <span className="text-[10px] font-mono font-bold text-red-400 uppercase tracking-wider">Problem 01</span>
+                <span className="text-[10px] font-mono font-bold text-red-400 uppercase tracking-wider">{t.problemSolution.problemBadge || 'Problem'} 01</span>
                 <h3 className="text-base font-bold text-white">{t.problemSolution.p1Title}</h3>
                 <p className="text-xs text-slate-400 leading-relaxed">{t.problemSolution.p1Desc}</p>
               </div>
               <div className="pt-3 border-t border-slate-800/80 space-y-1">
                 <span className="text-[10px] font-mono font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>RoofRay Solution</span>
+                  <span>{t.problemSolution.solutionBadge || 'RoofRay Solution'}</span>
                 </span>
                 <h4 className="text-sm font-semibold text-slate-200">{t.problemSolution.s1Title}</h4>
                 <p className="text-xs text-slate-400 leading-relaxed">{t.problemSolution.s1Desc}</p>
@@ -297,14 +303,14 @@ export function LandingPage() {
             {/* Card 2 */}
             <div className="p-6 rounded-3xl bg-slate-950/70 border border-slate-800 hover:border-slate-700 transition-all space-y-4">
               <div className="space-y-1">
-                <span className="text-[10px] font-mono font-bold text-red-400 uppercase tracking-wider">Problem 02</span>
+                <span className="text-[10px] font-mono font-bold text-red-400 uppercase tracking-wider">{t.problemSolution.problemBadge || 'Problem'} 02</span>
                 <h3 className="text-base font-bold text-white">{t.problemSolution.p2Title}</h3>
                 <p className="text-xs text-slate-400 leading-relaxed">{t.problemSolution.p2Desc}</p>
               </div>
               <div className="pt-3 border-t border-slate-800/80 space-y-1">
                 <span className="text-[10px] font-mono font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>RoofRay Solution</span>
+                  <span>{t.problemSolution.solutionBadge || 'RoofRay Solution'}</span>
                 </span>
                 <h4 className="text-sm font-semibold text-slate-200">{t.problemSolution.s2Title}</h4>
                 <p className="text-xs text-slate-400 leading-relaxed">{t.problemSolution.s2Desc}</p>
@@ -314,14 +320,14 @@ export function LandingPage() {
             {/* Card 3 */}
             <div className="p-6 rounded-3xl bg-slate-950/70 border border-slate-800 hover:border-slate-700 transition-all space-y-4">
               <div className="space-y-1">
-                <span className="text-[10px] font-mono font-bold text-red-400 uppercase tracking-wider">Problem 03</span>
+                <span className="text-[10px] font-mono font-bold text-red-400 uppercase tracking-wider">{t.problemSolution.problemBadge || 'Problem'} 03</span>
                 <h3 className="text-base font-bold text-white">{t.problemSolution.p3Title}</h3>
                 <p className="text-xs text-slate-400 leading-relaxed">{t.problemSolution.p3Desc}</p>
               </div>
               <div className="pt-3 border-t border-slate-800/80 space-y-1">
                 <span className="text-[10px] font-mono font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>RoofRay Solution</span>
+                  <span>{t.problemSolution.solutionBadge || 'RoofRay Solution'}</span>
                 </span>
                 <h4 className="text-sm font-semibold text-slate-200">{t.problemSolution.s3Title}</h4>
                 <p className="text-xs text-slate-400 leading-relaxed">{t.problemSolution.s3Desc}</p>
@@ -331,14 +337,14 @@ export function LandingPage() {
             {/* Card 4 */}
             <div className="p-6 rounded-3xl bg-slate-950/70 border border-slate-800 hover:border-slate-700 transition-all space-y-4">
               <div className="space-y-1">
-                <span className="text-[10px] font-mono font-bold text-red-400 uppercase tracking-wider">Problem 04</span>
+                <span className="text-[10px] font-mono font-bold text-red-400 uppercase tracking-wider">{t.problemSolution.problemBadge || 'Problem'} 04</span>
                 <h3 className="text-base font-bold text-white">{t.problemSolution.p4Title}</h3>
                 <p className="text-xs text-slate-400 leading-relaxed">{t.problemSolution.p4Desc}</p>
               </div>
               <div className="pt-3 border-t border-slate-800/80 space-y-1">
                 <span className="text-[10px] font-mono font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>RoofRay Solution</span>
+                  <span>{t.problemSolution.solutionBadge || 'RoofRay Solution'}</span>
                 </span>
                 <h4 className="text-sm font-semibold text-slate-200">{t.problemSolution.s4Title}</h4>
                 <p className="text-xs text-slate-400 leading-relaxed">{t.problemSolution.s4Desc}</p>

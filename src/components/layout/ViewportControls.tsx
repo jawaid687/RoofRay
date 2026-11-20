@@ -1,4 +1,5 @@
 import { useSolarStore } from '../../store/useSolarStore';
+import { useLanguage } from '../../i18n/useLanguage';
 import {
   Sun,
   Eye,
@@ -13,6 +14,7 @@ import {
 } from 'lucide-react';
 
 export function ViewportControls() {
+  const { t } = useLanguage();
   const timeDecimal = useSolarStore((s) => s.dateTime.timeDecimal);
   const setTimeOfDay = useSolarStore((s) => s.setTimeOfDay);
   const sunState = useSolarStore((s) => s.sunState);
@@ -58,7 +60,7 @@ export function ViewportControls() {
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
             <div className="flex items-center gap-2">
               <Sun className="w-4 h-4 text-amber-400" />
-              <span className="font-semibold text-slate-200">NOAA Sun Model</span>
+              <span className="font-semibold text-slate-200">{t.viewportControls.noaaSunModel}</span>
               <span className="font-mono text-amber-300 font-bold bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md">
                 {sunState.formattedTime}
               </span>
@@ -73,10 +75,10 @@ export function ViewportControls() {
                     ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/30 ring-1 ring-amber-400'
                     : 'bg-slate-900/80 hover:bg-slate-800 text-slate-300 border border-slate-700/80'
                 }`}
-                title={isPlayingDay ? 'Pause Day Animation' : 'Play Day (Diurnal Sun Cycle)'}
+                title={isPlayingDay ? t.viewportControls.pause : t.viewportControls.playDay}
               >
                 {isPlayingDay ? <Pause className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
-                <span>{isPlayingDay ? 'Pause' : 'Play Day'}</span>
+                <span>{isPlayingDay ? t.viewportControls.pause : t.viewportControls.playDay}</span>
               </button>
 
               <button
@@ -86,10 +88,10 @@ export function ViewportControls() {
                     ? 'bg-sky-500 text-slate-950 font-bold shadow-md shadow-sky-500/30 ring-1 ring-sky-400'
                     : 'bg-slate-900/80 hover:bg-slate-800 text-slate-300 border border-slate-700/80'
                 }`}
-                title={isPlayingYear ? 'Pause Year Animation' : 'Play Year (Seasonal Solstice & Equinox Cycle)'}
+                title={isPlayingYear ? t.viewportControls.pause : t.viewportControls.playYear}
               >
                 {isPlayingYear ? <Pause className="w-3 h-3 fill-current" /> : <RotateCw className="w-3 h-3" />}
-                <span>{isPlayingYear ? 'Pause' : 'Play Year'}</span>
+                <span>{isPlayingYear ? t.viewportControls.pause : t.viewportControls.playYear}</span>
               </button>
 
               {/* Speed Multiplier */}
@@ -112,8 +114,8 @@ export function ViewportControls() {
             </div>
 
             <div className="flex items-center gap-3 text-[11px] text-slate-400 font-mono">
-              <span title="Solar elevation angle above horizon">Elev: {sunState.elevationDeg}°</span>
-              <span title="Solar azimuth relative to North">Az: {sunState.azimuthDeg}°</span>
+              <span title="Solar elevation angle above horizon">{t.viewportControls.elev}: {sunState.elevationDeg}°</span>
+              <span title="Solar azimuth relative to North">{t.viewportControls.az}: {sunState.azimuthDeg}°</span>
             </div>
           </div>
 
@@ -143,7 +145,7 @@ export function ViewportControls() {
                   title="Jump to Sunrise"
                 >
                   <Sunrise className="w-3 h-3 text-amber-400" />
-                  <span>Rise {sunState.sunrise.localTimeFormatted}</span>
+                  <span>{t.viewportControls.rise} {sunState.sunrise.localTimeFormatted}</span>
                 </button>
               )}
 
@@ -156,7 +158,7 @@ export function ViewportControls() {
                 title="Jump to Solar Noon"
               >
                 <Sun className="w-3 h-3 text-amber-400" />
-                <span>Noon {sunState.solarNoon.localTimeFormatted}</span>
+                <span>{t.viewportControls.noon} {sunState.solarNoon.localTimeFormatted}</span>
               </button>
 
               {sunState.sunset && (
@@ -166,7 +168,7 @@ export function ViewportControls() {
                   title="Jump to Sunset"
                 >
                   <Sunset className="w-3 h-3 text-orange-400" />
-                  <span>Set {sunState.sunset.localTimeFormatted}</span>
+                  <span>{t.viewportControls.set} {sunState.sunset.localTimeFormatted}</span>
                 </button>
               )}
             </div>
@@ -184,7 +186,7 @@ export function ViewportControls() {
                 title="Switch between Live Shading and Annual Exposure"
               >
                 <span className={`w-1.5 h-1.5 rounded-full ${heatmapMode === 'live' ? 'bg-emerald-400' : 'bg-amber-400'}`} />
-                <span>{heatmapMode === 'live' ? 'Live Shading' : 'Annual'}</span>
+                <span>{heatmapMode === 'live' ? t.viewportControls.liveShading : t.viewportControls.annual}</span>
               </button>
 
               {/* Heatmap Visibility Toggle */}
@@ -198,7 +200,7 @@ export function ViewportControls() {
                 title="Toggle Rooftop Solar Heatmap"
               >
                 <Layers className="w-3.5 h-3.5" />
-                <span>Heatmap</span>
+                <span>{t.viewportControls.heatmap}</span>
               </button>
 
               {/* Dynamic Shadows Toggle */}
@@ -212,7 +214,7 @@ export function ViewportControls() {
                 title="Toggle Real-Time Shadow Casting"
               >
                 {showShadows ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                <span>Shadows</span>
+                <span>{t.viewportControls.shadows}</span>
               </button>
 
               {/* 3D Sun Path Arc Toggle (FR-4.6) */}
@@ -226,7 +228,7 @@ export function ViewportControls() {
                 title="Toggle 3D Solar Path Arcs & Solstices"
               >
                 <Sun className="w-3.5 h-3.5 text-amber-400" />
-                <span>Sun Path</span>
+                <span>{t.viewportControls.sunPath}</span>
               </button>
 
               {/* 3D North Compass Rose Toggle (FR-4.6) */}
@@ -240,7 +242,7 @@ export function ViewportControls() {
                 title="Toggle 3D North Compass Rose"
               >
                 <CompassIcon className="w-3.5 h-3.5 text-red-400" />
-                <span>Compass</span>
+                <span>{t.viewportControls.compass}</span>
               </button>
             </div>
           </div>

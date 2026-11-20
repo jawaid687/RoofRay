@@ -57,9 +57,9 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
           <BarChart3 className="w-6 h-6 text-amber-400" />
         </div>
         <div className="space-y-1.5">
-          <h4 className="text-sm font-bold text-white">Financial Projections Unavailable</h4>
+          <h4 className="text-sm font-bold text-white">{t.financialSummary.emptyTitle}</h4>
           <p className="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
-            Generate a solar layout to view financial projections, capex estimations, payback periods, and utility tariff savings.
+            {t.financialSummary.emptyDesc}
           </p>
         </div>
         {onNavigateToPlanner && (
@@ -68,7 +68,7 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
             className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs inline-flex items-center gap-1.5 transition-all shadow-md shadow-amber-500/20 active:scale-95"
           >
             <Building2 className="w-3.5 h-3.5" />
-            <span>Go to Rooftop Planner</span>
+            <span>{t.financialSummary.goToPlanner}</span>
           </button>
         )}
       </div>
@@ -88,9 +88,9 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
         <div className="p-3 rounded-xl bg-amber-950/40 border border-amber-800/60 text-xs text-amber-200 flex items-start gap-2.5">
           <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
           <div className="space-y-0.5">
-            <span className="font-bold text-amber-300">Layout Outdated with Current Settings</span>
+            <span className="font-bold text-amber-300">{t.financialSummary.outdatedTitle}</span>
             <p className="text-[11px] text-amber-300/80 leading-relaxed">
-              Financial projections below reflect the last generated layout. Regenerate in Rooftop Planner to update calculations.
+              {t.financialSummary.outdatedDesc}
             </p>
           </div>
         </div>
@@ -134,7 +134,7 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
             label={t.energyDemand.installedCapacity}
             value={energy.installedCapacityKW}
             unit="kW"
-            subtext={`${energy.panelCount} active modules`}
+            subtext={`${energy.panelCount} ${t.financialSummary.activeModulesSubtext}`}
             variant="highlight"
           />
         </div>
@@ -143,7 +143,7 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
             label={t.energyDemand.annualGeneration}
             value={energy.annualGenerationKWh.toLocaleString()}
             unit="kWh/yr"
-            subtext={`Capacity factor: ${energy.averageCapacityFactorPercent}%`}
+            subtext={`${t.financialSummary.capacityFactorSubtext}: ${energy.averageCapacityFactorPercent}%`}
             variant="default"
           />
         </div>
@@ -151,7 +151,7 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
           <MetricCard
             label={t.financialSummary.capex}
             value={formatCurrency(financial.totalSystemCost, currency)}
-            subtext={`Turnkey + install (${currency})`}
+            subtext={`${t.financialSummary.turnkeyInstallSubtext} (${currency})`}
             variant="default"
           />
         </div>
@@ -160,7 +160,7 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
             label={t.financialSummary.annualSavings}
             value={formatCurrency(financial.annualSavings ?? financial.annualSavingsUSD, currency)}
             unit="/yr"
-            subtext={`At ${currencySymbol}${activeTariff}/kWh`}
+            subtext={`${t.financialSummary.atTariffSubtext} ${currencySymbol}${activeTariff}/kWh`}
             variant="success"
           />
         </div>
@@ -168,8 +168,8 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
           <MetricCard
             label={t.financialSummary.payback}
             value={financial.paybackYears !== null ? `${financial.paybackYears}` : '—'}
-            unit={financial.paybackYears !== null ? 'years' : ''}
-            subtext={`20-Yr Net: ${formatCurrency(financial.twentyYearNetSavings ?? financial.twentyYearNetSavingsUSD, currency)}`}
+            unit={financial.paybackYears !== null ? (t.financialSummary.years || 'years') : ''}
+            subtext={`${t.financialSummary.twentyYearNetSubtext}: ${formatCurrency(financial.twentyYearNetSavings ?? financial.twentyYearNetSavingsUSD, currency)}`}
             variant="warning"
           />
         </div>
@@ -177,7 +177,7 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
           label={t.financialSummary.carbonAbated}
           value={environmental.annualCO2ReductionTonnes}
           unit="t CO₂/yr"
-          subtext={`~${environmental.equivalentTreesPlanted} trees planted`}
+          subtext={`~${environmental.equivalentTreesPlanted} ${t.financialSummary.treesPlantedSubtext}`}
           variant="success"
         />
       </div>
@@ -185,7 +185,7 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
       {/* Net Metering & Grid Offset Bar */}
       <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-xs space-y-2">
         <div className="flex justify-between items-center text-slate-300">
-          <span>Electricity Demand Coverage</span>
+          <span>{t.financialSummary.demandCoverage}</span>
           <span className="font-mono font-bold text-amber-400">
             {energy.solarCoveragePercent}%
           </span>
@@ -197,14 +197,14 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
           />
         </div>
         <div className="flex justify-between text-[10px] text-slate-400 font-mono">
-          <span>Generation: {energy.annualGenerationKWh.toLocaleString()} kWh</span>
-          <span>Demand: {energy.annualConsumptionKWh.toLocaleString()} kWh</span>
+          <span>{t.financialSummary.generationLabel}: {energy.annualGenerationKWh.toLocaleString()} kWh</span>
+          <span>{t.financialSummary.demandLabel}: {energy.annualConsumptionKWh.toLocaleString()} kWh</span>
         </div>
         {energy.surplusKWh > 0 && (
           <div className="text-[11px] text-sky-400 font-mono pt-1 border-t border-slate-800 flex justify-between items-center">
-            <span>+ {energy.surplusKWh.toLocaleString()} kWh/yr grid export</span>
+            <span>+ {energy.surplusKWh.toLocaleString()} {t.financialSummary.gridExportLabel}</span>
             <span className="text-[10px] text-slate-500">
-              Net Metering Credit ({Math.round(activeExportCreditRatio * 100)}% wholesale rate)
+              {t.financialSummary.netMeteringCreditLabel} ({Math.round(activeExportCreditRatio * 100)}% {t.financialSummary.wholesaleRateLabel})
             </span>
           </div>
         )}
@@ -221,7 +221,7 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
             <span>{t.financialSummary.assumptionsToggle}</span>
           </div>
           <div className="flex items-center gap-1 text-[10px] text-slate-500">
-            <span>{showConfig ? 'Hide' : 'Configure'}</span>
+            <span>{showConfig ? t.financialSummary.hideConfig : t.financialSummary.showConfig}</span>
             {showConfig ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </div>
         </button>
@@ -231,7 +231,7 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
             <div className="grid grid-cols-2 gap-2.5">
               <div>
                 <label className="text-[10px] text-slate-400 font-mono block mb-1">
-                  Electricity Tariff ({currency}/kWh)
+                  {t.financialSummary.electricityTariff} ({currency}/kWh)
                 </label>
                 <input
                   type="number"
@@ -247,7 +247,7 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
 
               <div>
                 <label className="text-[10px] text-slate-400 font-mono block mb-1">
-                  Turnkey Cost / kW ({currency})
+                  {t.financialSummary.costPerKW} ({currency})
                 </label>
                 <input
                   type="number"
@@ -263,7 +263,7 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
 
               <div>
                 <label className="text-[10px] text-slate-400 font-mono block mb-1">
-                  Base Permitting & Meter Fee ({currency})
+                  {t.financialSummary.basePermitFee} ({currency})
                 </label>
                 <input
                   type="number"
@@ -279,7 +279,7 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
 
               <div>
                 <label className="text-[10px] text-slate-400 font-mono block mb-1">
-                  Export Credit Rate (% of tariff)
+                  {t.financialSummary.exportCreditRate}
                 </label>
                 <input
                   type="number"
@@ -297,7 +297,7 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
 
               <div className="col-span-2 sm:col-span-1">
                 <label className="text-[10px] text-slate-400 font-mono block mb-1">
-                  Grid Emission Factor (kg CO₂/kWh)
+                  {t.financialSummary.gridEmissionFactor}
                 </label>
                 <input
                   type="number"
@@ -314,11 +314,11 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
 
             {/* Assumptions & Limitations Callout */}
             <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800 text-[10px] text-slate-400 space-y-1 leading-relaxed">
-              <span className="font-semibold text-slate-300 block">Financial Assumptions & Boundaries (Engineering Disclosure):</span>
-              <p>• <strong>Flat Tariff Model:</strong> Calculations utilize a flat single-rate utility tariff. Progressive multi-slab utility billing structures are not simulated.</p>
-              <p>• <strong>Simplified Payback:</strong> Metrics do not model financing interest, cost of capital discount rates, annual PV degradation (~0.5%/yr), or inverter replacement at Year 10–12.</p>
-              <p>• <strong>Net-Metering Policy:</strong> Grid export in Bangladesh is capped at 70% of sanctioned consumer load under SREDA Section 5.1 guidelines.</p>
-              <p className="text-amber-400/90 font-medium">• <strong>Simulation Estimate:</strong> Financial projections are indicative planning models and do not represent guaranteed cash flows or formal vendor quotations.</p>
+              <span className="font-semibold text-slate-300 block">{t.financialSummary.disclosuresTitle}</span>
+              <p>• <strong>Flat Tariff Model:</strong> {t.financialSummary.flatTariffDisclosure}</p>
+              <p>• <strong>Simplified Payback:</strong> {t.financialSummary.paybackDisclosure}</p>
+              <p>• <strong>Net-Metering Policy:</strong> {t.financialSummary.netMeteringDisclosure}</p>
+              <p className="text-amber-400/90 font-medium">• <strong>Simulation Estimate:</strong> {t.financialSummary.simulationEstimateDisclosure}</p>
             </div>
 
             <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between">

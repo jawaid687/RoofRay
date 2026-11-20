@@ -321,6 +321,8 @@ function computeDerivedSnapshots(
     emissionSource
   );
 
+  const currentLang = typeof window !== 'undefined' && window.localStorage?.getItem('roofray_language') === 'bn' ? 'bn' : 'en';
+
   const solarRecommendation =
     bldg && analysis && placedPanels.length > 0
       ? generateSolarRecommendation(
@@ -331,7 +333,8 @@ function computeDerivedSnapshots(
           panelType,
           optimizationMode,
           maxPossiblePanels,
-          placedPanels
+          placedPanels,
+          currentLang
         )
       : null;
 

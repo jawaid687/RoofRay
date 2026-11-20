@@ -332,7 +332,7 @@ export function SolarAnalysisCard() {
                 <span>{t.solarAnalysis.satelliteClimatology}</span>
               </div>
               <div className="flex items-center gap-1 text-[10px] text-slate-500">
-                <span>{showNasaCard ? 'Hide' : 'Inspect'}</span>
+                <span>{showNasaCard ? t.solarAnalysis.hide : t.solarAnalysis.inspect}</span>
                 {showNasaCard ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
               </div>
             </button>
@@ -415,14 +415,14 @@ export function SolarAnalysisCard() {
               label={t.solarAnalysis.recommendedArea}
               value={annualAnalysisResult ? annualAnalysisResult.recommendedArea : (analysis?.recommendedInstallationArea ?? 0)}
               unit="m²"
-              subtext="Contiguous unshaded zone"
+              subtext={t.solarAnalysis.contiguousZoneSubtext || 'Contiguous unshaded zone'}
               variant="success"
             />
             <MetricCard
               label={t.solarAnalysis.annualInsolation}
               value={annualAnalysisResult ? annualAnalysisResult.averageAnnualKWhPerM2 : '--'}
               unit={annualAnalysisResult ? 'kWh/m²' : ''}
-              subtext="Clear-sky estimate"
+              subtext={t.solarAnalysis.clearSkySubtext || 'Clear-sky estimate'}
               variant="highlight"
             />
             <MetricCard
@@ -434,14 +434,14 @@ export function SolarAnalysisCard() {
                     ? `${Math.round(analysis.averageExposureScore * 100)}%`
                     : '--'
               }
-              subtext="12-month daylight factor"
+              subtext={t.solarAnalysis.daylightFactorSubtext || '12-month daylight factor'}
               variant="highlight"
             />
             <MetricCard
               label={t.solarAnalysis.obstacleFootprint}
               value={annualAnalysisResult ? annualAnalysisResult.obstacleArea : (analysis?.obstacleArea ?? 0)}
               unit="m²"
-              subtext="Physical HVAC & tanks"
+              subtext={t.solarAnalysis.obstacleSubtext || 'Physical HVAC & tanks'}
               variant="default"
             />
           </div>

@@ -102,14 +102,16 @@ export function LocationTimeCard() {
 
   // Format cardinal direction from azimuth
   const getCardinalDirection = (az: number): string => {
-    if (az >= 337.5 || az < 22.5) return 'North';
-    if (az >= 22.5 && az < 67.5) return 'North-East';
-    if (az >= 67.5 && az < 112.5) return 'East';
-    if (az >= 112.5 && az < 157.5) return 'South-East';
-    if (az >= 157.5 && az < 202.5) return 'South';
-    if (az >= 202.5 && az < 247.5) return 'South-West';
-    if (az >= 247.5 && az < 292.5) return 'West';
-    return 'North-West';
+    let key: string;
+    if (az >= 337.5 || az < 22.5) key = 'North';
+    else if (az >= 22.5 && az < 67.5) key = 'North-East';
+    else if (az >= 67.5 && az < 112.5) key = 'East';
+    else if (az >= 112.5 && az < 157.5) key = 'South-East';
+    else if (az >= 157.5 && az < 202.5) key = 'South';
+    else if (az >= 202.5 && az < 247.5) key = 'South-West';
+    else if (az >= 247.5 && az < 292.5) key = 'West';
+    else key = 'North-West';
+    return t.locationTime.cardinalDirections[key as keyof typeof t.locationTime.cardinalDirections] || key;
   };
 
   const formattedDateValue = `${dateTime.year}-${dateTime.month.toString().padStart(2, '0')}-${dateTime.day.toString().padStart(2, '0')}`;
@@ -266,9 +268,9 @@ export function LocationTimeCard() {
                 ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
                 : 'bg-slate-950 hover:bg-slate-800 text-slate-400 border-slate-800'
             }`}
-            title="Spring Equinox (Sun directly over equator)"
+            title="Spring Equinox"
           >
-            🌸 Mar 20<br />Equinox
+            {t.locationTime.seasonPresets.mar20}
           </button>
           <button
             onClick={() => handleSeasonPreset(6, 21)}
@@ -277,9 +279,9 @@ export function LocationTimeCard() {
                 ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
                 : 'bg-slate-950 hover:bg-slate-800 text-slate-400 border-slate-800'
             }`}
-            title="Summer Solstice (Highest sun in northern hemisphere)"
+            title="Summer Solstice"
           >
-            ☀️ Jun 21<br />Solstice
+            {t.locationTime.seasonPresets.jun21}
           </button>
           <button
             onClick={() => handleSeasonPreset(9, 22)}
@@ -288,9 +290,9 @@ export function LocationTimeCard() {
                 ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
                 : 'bg-slate-950 hover:bg-slate-800 text-slate-400 border-slate-800'
             }`}
-            title="Autumn Equinox (Equal day and night)"
+            title="Autumn Equinox"
           >
-            🍂 Sep 22<br />Equinox
+            {t.locationTime.seasonPresets.sep22}
           </button>
           <button
             onClick={() => handleSeasonPreset(12, 21)}
@@ -299,9 +301,9 @@ export function LocationTimeCard() {
                 ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
                 : 'bg-slate-950 hover:bg-slate-800 text-slate-400 border-slate-800'
             }`}
-            title="Winter Solstice (Lowest sun in northern hemisphere)"
+            title="Winter Solstice"
           >
-            ❄️ Dec 21<br />Solstice
+            {t.locationTime.seasonPresets.dec21}
           </button>
         </div>
 
@@ -316,7 +318,7 @@ export function LocationTimeCard() {
             }`}
           >
             {isPlayingYear ? <Pause className="w-3.5 h-3.5 fill-current" /> : <RotateCw className="w-3.5 h-3.5" />}
-            <span>{isPlayingYear ? 'Pause Annual Cycle' : 'Play Year (365-Day Cycle)'}</span>
+            <span>{isPlayingYear ? t.locationTime.pauseAnnual : t.locationTime.playYear}</span>
           </button>
 
           <div className="flex items-center gap-1 text-[10px] font-mono text-slate-400">
@@ -343,7 +345,7 @@ export function LocationTimeCard() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-300">
             <Clock className="w-4 h-4 text-amber-400" />
-            <span>Local Time of Day</span>
+            <span>{t.locationTime.localTimeOfDay}</span>
           </div>
           <div className="flex items-center gap-2">
             {/* Play Day Button */}
@@ -357,7 +359,7 @@ export function LocationTimeCard() {
               title="Play diurnal 24-hour sun cycle"
             >
               {isPlayingDay ? <Pause className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
-              <span>{isPlayingDay ? 'Pause' : 'Play Day'}</span>
+              <span>{isPlayingDay ? t.locationTime.pauseDay : t.locationTime.playDay}</span>
             </button>
             {/* Solar State Badge */}
             {sunState.isPolarDay && (
@@ -374,15 +376,15 @@ export function LocationTimeCard() {
               <>
                 {sunState.elevationDeg > 0 ? (
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
-                    Daylight
+                    {t.locationTime.daylight}
                   </span>
                 ) : sunState.elevationDeg >= -6 ? (
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                    Civil Twilight
+                    {t.locationTime.civilTwilight}
                   </span>
                 ) : (
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
-                    Night
+                    {t.locationTime.night}
                   </span>
                 )}
               </>
@@ -440,7 +442,7 @@ export function LocationTimeCard() {
         <div className="flex items-center justify-between text-xs font-semibold text-slate-300">
           <span className="flex items-center gap-1.5">
             <Compass className="w-3.5 h-3.5 text-sky-400" />
-            Astronomical Readout
+            {t.locationTime.astronomicalReadout}
           </span>
           <span className="text-[10px] font-mono text-slate-400">
             UTC: {sunState.utcDate.toISOString().slice(11, 16)}
@@ -449,7 +451,7 @@ export function LocationTimeCard() {
 
         <div className="grid grid-cols-2 gap-2 text-xs font-mono">
           <div className="p-2 rounded-lg bg-slate-950 border border-slate-800/80">
-            <div className="text-[10px] text-slate-400 uppercase">Solar Elevation</div>
+            <div className="text-[10px] text-slate-400 uppercase">{t.locationTime.solarElevation}</div>
             <div className="text-sm font-bold text-slate-100 mt-0.5 flex items-baseline gap-1">
               <span>{sunState.elevationDeg}°</span>
               <span className="text-[10px] text-slate-500 font-normal">
@@ -459,7 +461,7 @@ export function LocationTimeCard() {
           </div>
 
           <div className="p-2 rounded-lg bg-slate-950 border border-slate-800/80">
-            <div className="text-[10px] text-slate-400 uppercase">Solar Azimuth</div>
+            <div className="text-[10px] text-slate-400 uppercase">{t.locationTime.solarAzimuth}</div>
             <div className="text-sm font-bold text-slate-100 mt-0.5 flex items-baseline gap-1">
               <span>{sunState.azimuthDeg}°</span>
               <span className="text-[10px] text-sky-400 font-normal">
@@ -471,7 +473,7 @@ export function LocationTimeCard() {
           <div className="p-2 rounded-lg bg-slate-950 border border-slate-800/80">
             <div className="text-[10px] text-slate-400 uppercase flex items-center gap-1">
               <Sunrise className="w-3 h-3 text-amber-400" />
-              <span>Sunrise / Sunset</span>
+              <span>{t.locationTime.sunriseSunset}</span>
             </div>
             <div className="text-xs font-bold text-slate-200 mt-1">
               {sunState.isPolarDay
@@ -485,7 +487,7 @@ export function LocationTimeCard() {
           <div className="p-2 rounded-lg bg-slate-950 border border-slate-800/80">
             <div className="text-[10px] text-slate-400 uppercase flex items-center gap-1">
               <Sun className="w-3 h-3 text-amber-400" />
-              <span>Solar Noon / Day Len</span>
+              <span>{t.locationTime.solarNoonDayLen}</span>
             </div>
             <div className="text-xs font-bold text-slate-200 mt-1">
               {sunState.solarNoon.localTimeFormatted} ({sunState.solarNoon.elevationDeg}°) • {Math.floor(sunState.dayLengthMinutes / 60)}h {sunState.dayLengthMinutes % 60}m
@@ -499,7 +501,7 @@ export function LocationTimeCard() {
         <div className="flex items-center justify-between text-xs font-semibold text-slate-300">
           <span className="flex items-center gap-1.5">
             <Layers className="w-3.5 h-3.5 text-emerald-400" />
-            Heatmap Analysis Mode
+            {t.locationTime.heatmapModeTitle}
           </span>
           {heatmapMode === 'live' && liveShading && (
             <span className="text-[10px] font-mono text-emerald-400 font-bold">
@@ -529,7 +531,7 @@ export function LocationTimeCard() {
             }`}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-            <span>Live</span>
+            <span>{t.locationTime.liveMode}</span>
           </button>
 
           <button
@@ -541,7 +543,7 @@ export function LocationTimeCard() {
             }`}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-sky-400 shrink-0" />
-            <span>Annual</span>
+            <span>{t.locationTime.annualMode}</span>
           </button>
 
           <button
@@ -553,7 +555,7 @@ export function LocationTimeCard() {
             }`}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
-            <span>Monthly</span>
+            <span>{t.locationTime.monthlyMode}</span>
           </button>
         </div>
 
@@ -561,20 +563,14 @@ export function LocationTimeCard() {
         {heatmapMode === 'monthly' && (
           <div className="pt-1.5 border-t border-slate-800 space-y-1.5">
             <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono">
-              <span>Select Evaluation Month:</span>
+              <span>{t.locationTime.selectMonth}</span>
               <span className="text-amber-300 font-bold">
-                {[
-                  'January', 'February', 'March', 'April', 'May', 'June',
-                  'July', 'August', 'September', 'October', 'November', 'December',
-                ][selectedMonth]}
+                {t.locationTime.monthNames[selectedMonth]}
               </span>
             </div>
 
             <div className="grid grid-cols-6 gap-1 text-[10px] font-mono">
-              {[
-                'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-              ].map((monthName, idx) => (
+              {t.locationTime.monthNamesShort.map((monthName, idx) => (
                 <button
                   key={monthName}
                   onClick={() => setSelectedMonth(idx)}

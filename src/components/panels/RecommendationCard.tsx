@@ -1,4 +1,7 @@
+import { useMemo } from 'react';
 import { useSolarStore } from '../../store/useSolarStore';
+import { useLanguage } from '../../i18n/useLanguage';
+import { generateSolarRecommendation } from '../../calculations/recommendation';
 import { CheckCircle2, AlertOctagon, Cpu, Lightbulb, HelpCircle, Building2, AlertTriangle } from 'lucide-react';
 
 interface RecommendationCardProps {
@@ -6,10 +9,40 @@ interface RecommendationCardProps {
 }
 
 export function RecommendationCard({ onNavigateToPlanner }: RecommendationCardProps) {
-  const recommendation = useSolarStore((s) => s.solarRecommendation);
+  const { language, t } = useLanguage();
+  const selectedBuildingId = useSolarStore((s) => s.selectedBuildingId);
+  const buildings = useSolarStore((s) => s.buildings);
+  const analysisResults = useSolarStore((s) => s.analysisResults);
+  const energy = useSolarStore((s) => s.energyProfile);
+  const financial = useSolarStore((s) => s.financialResult);
+  // selectedPanelTypeId is read via getCurrentPanelType() below
+  const getCurrentPanelType = useSolarStore((s) => s.getCurrentPanelType);
+  const optimizationMode = useSolarStore((s) => s.optimizationMode);
+  const maxPossiblePanels = useSolarStore((s) => s.maxPossiblePanels);
   const placedPanels = useSolarStore((s) => s.placedPanels);
   const layoutStatus = useSolarStore((s) => s.layoutStatus);
   const analysisStatus = useSolarStore((s) => s.analysisStatus);
+
+  const bldg = buildings.find((b) => b.id === selectedBuildingId);
+  const analysis = selectedBuildingId ? analysisResults[selectedBuildingId] : undefined;
+  const panelType = getCurrentPanelType();
+
+  const recommendation = useMemo(() => {
+    if (bldg && analysis && placedPanels.length > 0) {
+      return generateSolarRecommendation(
+        bldg,
+        analysis,
+        energy,
+        financial,
+        panelType,
+        optimizationMode,
+        maxPossiblePanels,
+        placedPanels,
+        language
+      );
+    }
+    return null;
+  }, [bldg, analysis, energy, financial, panelType, optimizationMode, maxPossiblePanels, placedPanels, language]);
 
   const hasPanels = placedPanels.length > 0 && !!recommendation && analysisStatus === 'analyzed';
   const isOutdated = layoutStatus === 'outdated';
@@ -22,9 +55,9 @@ export function RecommendationCard({ onNavigateToPlanner }: RecommendationCardPr
           <HelpCircle className="w-6 h-6 text-emerald-400" />
         </div>
         <div className="space-y-1.5">
-          <h4 className="text-sm font-bold text-white">No solar plan has been generated yet</h4>
+          <h4 className="text-sm font-bold text-white">{t.recommendation.noPlanTitle}</h4>
           <p className="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
-            Analyze the rooftop and generate a solar layout to see why RoofRay recommends the configuration.
+            {t.recommendation.noPlanDesc}
           </p>
         </div>
         {onNavigateToPlanner && (
@@ -33,7 +66,7 @@ export function RecommendationCard({ onNavigateToPlanner }: RecommendationCardPr
             className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold text-xs inline-flex items-center gap-1.5 transition-all shadow-md shadow-emerald-500/20 active:scale-95"
           >
             <Building2 className="w-3.5 h-3.5" />
-            <span>Go to Rooftop Planner</span>
+            <span>{t.recommendation.goToPlanner}</span>
           </button>
         )}
       </div>
@@ -47,9 +80,9 @@ export function RecommendationCard({ onNavigateToPlanner }: RecommendationCardPr
         <div className="p-3 rounded-xl bg-amber-950/40 border border-amber-800/60 text-xs text-amber-200 flex items-start gap-2.5">
           <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
           <div className="space-y-0.5">
-            <span className="font-bold text-amber-300">Rationale Reflects Previous Layout</span>
+            <span className="font-bold text-amber-300">{t.recommendation.outdatedTitle}</span>
             <p className="text-[11px] text-amber-300/80 leading-relaxed">
-              Optimization settings or building dimensions were modified. Regenerate in Rooftop Planner to update the technical rationale.
+              {t.recommendation.outdatedDesc}
             </p>
           </div>
         </div>
@@ -60,7 +93,7 @@ export function RecommendationCard({ onNavigateToPlanner }: RecommendationCardPr
         <div className="flex items-center gap-2">
           <Lightbulb className="w-4 h-4 text-amber-400 shrink-0" />
           <h3 className="text-xs font-bold text-sky-200 uppercase tracking-wider font-mono">
-            System Recommendation & Rationale
+            {t.recommendation.systemRecommendation}
           </h3>
         </div>
 
@@ -78,7 +111,7 @@ export function RecommendationCard({ onNavigateToPlanner }: RecommendationCardPr
         <div data-tour="why-shading" className="pt-2 border-t border-slate-800/80 space-y-2">
           <div className="text-[11px] font-semibold text-slate-200 flex items-center gap-1.5">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-            <span>Key Selection Factors</span>
+            <span>{t.recommendation.keyFactors}</span>
           </div>
           <ul className="space-y-1.5 pl-1">
             {recommendation.keyPoints.map((point, i) => (
@@ -95,7 +128,7 @@ export function RecommendationCard({ onNavigateToPlanner }: RecommendationCardPr
           <div data-tour="why-obstacles" className="pt-2 border-t border-slate-800/80 space-y-2">
             <div className="text-[11px] font-semibold text-slate-200 flex items-center gap-1.5">
               <AlertOctagon className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              <span>Spatial Exclusions & Shading Analysis</span>
+              <span>{t.recommendation.spatialExclusions}</span>
             </div>
             <ul className="space-y-1.5 pl-1">
               {recommendation.exclusions.map((exclusion, i) => (
@@ -112,7 +145,7 @@ export function RecommendationCard({ onNavigateToPlanner }: RecommendationCardPr
         <div data-tour="why-advantages" className="pt-2 border-t border-slate-800/80 space-y-2">
           <div className="text-[11px] font-semibold text-slate-200 flex items-center gap-1.5">
             <Cpu className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-            <span>Installation Specifications & Compliance</span>
+            <span>{t.recommendation.technicalCompliance}</span>
           </div>
           <ul className="space-y-1.5 pl-1">
             {recommendation.technicalHighlights.map((tech, i) => (

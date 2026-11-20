@@ -8,6 +8,7 @@ export interface ConversationMessageContext {
 export interface SolarAdvisorRequest {
   userQuestion?: string;
   conversationHistory?: ConversationMessageContext[];
+  language?: 'en' | 'bn';
   selectedBuilding: {
     id: string;
     name: string;
@@ -120,6 +121,9 @@ export function validateAdvisorPayload(body: any): { valid: boolean; error?: str
   }
 
   // 1. Location Validation
+  if (body.language !== undefined && body.language !== 'en' && body.language !== 'bn') {
+    return { valid: false, error: 'Invalid language (must be "en" or "bn")' };
+  }
   const loc = body.location;
   if (typeof loc.city !== 'string' || loc.city.trim().length === 0 || loc.city.length > 100) {
     return { valid: false, error: 'Invalid location city (must be 1-100 characters)' };
@@ -761,6 +765,36 @@ export async function handleSolarAdvisorRequest(
 
   // 3. Check if API Key is configured
   if (!effectiveKey || effectiveKey === 'your_gemini_api_key_here' || effectiveKey.length < 10) {
+    if (payload.language === 'bn') {
+      return {
+        configured: false,
+        summary: 'লাইভ এআই সৌর মূল্যায়ন তৈরির জন্য সার্ভার-সাইড Gemini API কি কনফিগার করা প্রয়োজন।',
+        recommendations: [
+          'সার্ভারের .env ফাইলে GEMINI_API_KEY কনফিগার করুন।',
+          'Google AI Studio (https://aistudio.google.com) থেকে একটি ফ্রি বা বাণিজ্যিক API কি সংগ্রহ করুন।',
+          'লাইভ সৌরবিদ্যুৎ সুপারিশ সক্রিয় করতে RoofRay অ্যাপ্লিকেশন পুনরায় চালু করুন।',
+        ],
+        advantages: [
+          'এআই ছাড়াও সম্পূর্ণ ফিজিক্যাল রেইকাস্ট সিমুলেশন ও আর্থিক হিসাব ১০০% সক্রিয় এবং অপরিবর্তিত থাকে।',
+        ],
+        risks: [
+          'API ক্রিডেনশিয়াল কনফিগার না করা পর্যন্ত লাইভ এলএলএম সিন্থেসিস স্থগিত থাকবে।',
+        ],
+        assumptions: [
+          'GEMINI_API_KEY কনফিগার না থাকলে কোনো বাহ্যিক API কল পাঠানো হয় না।',
+        ],
+        next_steps: [
+          'একটি .env ফাইল তৈরি করে লিখুন: GEMINI_API_KEY=your_key_here',
+          `ঐচ্ছিক: সেট করুন GEMINI_MODEL=${DEFAULT_GEMINI_MODEL}`,
+        ],
+        sources: formattedSources,
+        timestamp: new Date().toISOString(),
+        error: 'MISSING_API_KEY',
+        setupGuide:
+          'এআই সোলার অ্যাডভাইজর চালু করতে:\n১. https://aistudio.google.com থেকে API কি নিন\n২. .env ফাইলে GEMINI_API_KEY=আপনার_কি যোগ করুন\n৩. RoofRay পুনরায় চালু করুন',
+      };
+    }
+
     return {
       configured: false,
       summary: 'AI Solar Advisor requires a server-side Gemini API key configuration to generate live natural-language evaluations.',
@@ -835,7 +869,16 @@ GEOGRAPHICAL & BUILDING CONTEXT:
 Your role is to interpret the user's solar configuration and provide explainable, rigorous recommendations.
 
 ${locationDirective}
-
+${payload.language === 'bn' ? `
+================================================================================
+CRITICAL LANGUAGE DIRECTIVE (BENGALI / বাংলা LOCALIZATION):
+- The user has selected বাংলা (Bengali) as the active interface language.
+- You MUST write the ENTIRE JSON response (summary, recommendations, advantages, risks, assumptions, next_steps) in natural, grammatically correct, highly fluent, professional Bengali (বাংলা).
+- Do not produce awkward or machine-translated literal phrasing. Write as an authoritative Bangladeshi solar engineer and financial consultant.
+- Use natural terminology (e.g. সৌরবিদ্যুৎ উৎপাদনের সম্ভাবনা, নেট মিটারিং, অনুমোদিত লোড, ছাদের প্রতিবন্ধকতা, দ্বিমুখী মিটার, বিনিয়োগ ফেরতের সময়, বার্ষিক বিদ্যুৎ সাশ্রয়, নিট ক্যাশ লাভ).
+- Keep international engineering units and statutory acronyms intact (e.g. SREDA, BPDB, IEEE 1547, IEC 62116, IEC 61727, kW, kWh, kWh/m², ৳/BDT, USD, CO₂, ROI, Gemini, Inverter).
+================================================================================
+` : ''}
 STRICT GROUNDING & RESPONSIBLE AI RULES:
 1. SINGLE SOURCE OF TRUTH (STRICT NUMERICAL ACCURACY):
    - You must NOT recalculate, guess, or invent physical solar production, capacity, or financial figures. Use ONLY the exact numbers provided in the structured context below.
@@ -946,6 +989,26 @@ Provide a comprehensive, conversational assessment formatted as valid JSON adher
 
   if (!execResult.ok || !execResult.candidateText) {
     console.error(`[RoofRay Advisor Diagnostics] ${execResult.errorCode} (${execResult.httpStatus}): ${execResult.safeMessage}`);
+    if (payload.language === 'bn') {
+      return {
+        configured: true,
+        summary: execResult.errorCode === 'RATE_LIMIT_EXCEEDED'
+          ? 'Gemini এআই সাময়িকভাবে ব্যবহারের সীমায় পৌঁছেছে। আপনার সৌর হিসাব ও সিমুলেশন সম্পূর্ণ সক্রিয় রয়েছে।'
+          : 'Google Gemini সার্ভিসের সাথে যোগাযোগে সাময়িক সমস্যা দেখা দিয়েছে। আপনার ফিজিক্যাল সোলার হিসাব ও সিমুলেশন সম্পূর্ণ কার্যকর রয়েছে।',
+        recommendations: [
+          'সরাসরি থ্রি-ডি রেইকাস্ট সিমুলেশন ও ফিনান্সিয়াল অ্যানালিটিক্স ট্যাব পর্যালোচনা করুন।',
+          'সার্ভারের ইন্টারনেট সংযোগ এবং Google AI Studio-তে Gemini API কোটা যাচাই করুন।',
+        ],
+        advantages: [],
+        risks: ['বাহ্যিক এলএলএম উত্তর অনুপলব্ধ; ডিটারমিনিস্টিক ফিজিক্যাল গণনার ওপর ভিত্তি করে কাজ চলছে।'],
+        assumptions: ['ফিজিক্যাল সৌর হিসাব ও সিমুলেশন নির্ভুল ও সম্পূর্ণ অপরিবর্তিত রয়েছে।'],
+        next_steps: ['কিছুক্ষণ পর আবার চেষ্টা করুন অথবা মডেল কনফিগারেশন পরীক্ষা করুন।'],
+        sources: formattedSources,
+        timestamp: new Date().toISOString(),
+        error: execResult.errorCode || 'AI_PROVIDER_ERROR',
+        modelUsed: effectiveModel,
+      };
+    }
     const displaySummary = execResult.userMessage || execResult.safeMessage;
     return {
       configured: true,
@@ -969,6 +1032,23 @@ Provide a comprehensive, conversational assessment formatted as valid JSON adher
   try {
     parsed = JSON.parse(execResult.candidateText);
   } catch {
+    if (payload.language === 'bn') {
+      return {
+        configured: true,
+        summary: 'এআই মডেলের আউটপুট পার্স করতে সমস্যা হয়েছে। আপনার ফিজিক্যাল সোলার হিসাব সম্পূর্ণ কার্যকর রয়েছে।',
+        recommendations: [
+          'সরাসরি থ্রি-ডি রেইকাস্ট সিমুলেশন ও ফিনান্সিয়াল অ্যানালিটিক্স ট্যাব পর্যালোচনা করুন।',
+        ],
+        advantages: [],
+        risks: ['এআই ফরম্যাট প্রক্রিয়াকরণে ত্রুটি।'],
+        assumptions: ['ফিজিক্যাল সৌর হিসাব ও সিমুলেশন নির্ভুল ও সম্পূর্ণ অপরিবর্তিত রয়েছে।'],
+        next_steps: ['কিছুক্ষণ পর প্রশ্নটি পুনরায় পাঠান।'],
+        sources: formattedSources,
+        timestamp: new Date().toISOString(),
+        error: 'MALFORMED_AI_RESPONSE',
+        modelUsed: effectiveModel,
+      };
+    }
     return {
       configured: true,
       summary: 'AI model generated non-standard JSON output. Physical calculations remain fully valid.',

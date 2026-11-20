@@ -10,10 +10,10 @@ export function EnergyDemandCard() {
   const annualConsumptionKWh = monthlyConsumptionKWh * 12;
 
   const presets = [
-    { label: 'Apartment', kwh: 450, icon: Home },
-    { label: 'Townhouse', kwh: 650, icon: Home },
-    { label: 'Family Home', kwh: 950, icon: Home },
-    { label: 'Commercial', kwh: 2400, icon: Building2 },
+    { label: t.energyDemand.presets.apartment, kwh: 450, icon: Home },
+    { label: t.energyDemand.presets.townhouse, kwh: 650, icon: Home },
+    { label: t.energyDemand.presets.familyHome, kwh: 950, icon: Home },
+    { label: t.energyDemand.presets.commercial, kwh: 2400, icon: Building2 },
   ];
 
   return (
@@ -54,7 +54,7 @@ export function EnergyDemandCard() {
 
         {/* Quick Presets */}
         <div className="pt-2 border-t border-slate-800/80">
-          <div className="text-[11px] text-slate-400 mb-1.5">{t.energyDemand.monthlyConsumption} Presets</div>
+          <div className="text-[11px] text-slate-400 mb-1.5">{t.energyDemand.monthlyConsumption} {t.energyDemand.presetsLabel}</div>
           <div className="grid grid-cols-4 gap-1.5">
             {presets.map((preset) => (
               <button
