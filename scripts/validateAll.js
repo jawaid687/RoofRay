@@ -8,7 +8,7 @@ import { translations } from '../src/i18n/translations.ts';
 import { PANEL_TYPES } from '../src/data/panelTypes.ts';
 
 async function runValidation() {
-  console.log('🧪 Starting RoofRay V3.4 Comprehensive Validation Suite...\n');
+  console.log('🧪 Starting RoofRay Comprehensive Validation Suite...\n');
   let passed = 0;
   let failed = 0;
 

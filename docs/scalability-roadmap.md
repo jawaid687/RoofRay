@@ -1,4 +1,4 @@
-# RoofRay V3 — Scalability Roadmap & Engineering Horizon
+# RoofRay — Scalability Roadmap & Engineering Horizon
 
 **Track:** International AI Builders Congress 2026 — Idea to Unicorn  
 **Topic:** Technical Roadmap from Prototype to Unicorn-Scale Infrastructure  

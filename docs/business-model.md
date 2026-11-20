@@ -1,4 +1,4 @@
-# RoofRay V3 — Business Model & Market Viability
+# RoofRay — Business Model & Market Viability
 
 **Track:** International AI Builders Congress 2026 — Idea to Unicorn  
 **Venture Type:** B2B CleanTech SaaS & Solar Lead Intelligence Platform  

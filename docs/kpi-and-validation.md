@@ -1,4 +1,4 @@
-# RoofRay V3 — KPIs, Testing & Empirical Validation
+# RoofRay — KPIs, Testing & Empirical Validation
 
 **Track:** International AI Builders Congress 2026 — Idea to Unicorn  
 **Standard:** Rigorous Quality Assurance, Test Coverage & Performance Budgets  

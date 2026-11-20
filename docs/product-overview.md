@@ -1,4 +1,4 @@
-# RoofRay V3 — Product Overview & Feature Matrix
+# RoofRay — Product Overview & Feature Matrix
 
 **Platform:** RoofRay (Version 3.0)  
 **Track:** International AI Builders Congress 2026 — Idea to Unicorn  
@@ -13,7 +13,7 @@ RoofRay is an AI-powered 3D solar planning, simulation, and recommendation platf
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│                           ROOFRAY V3                             │
+│                           ROOFRAY                                │
 │                                                                  │
 │   [Public Landing Page /]           [Interactive Solar Studio /app]   │
 │   • Climate-tech SaaS design        • 3D R3F/Three.js Digital Twin    │

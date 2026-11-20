@@ -26,7 +26,7 @@ function loadEnv() {
 loadEnv();
 
 async function runGeminiConnectionTest() {
-  console.log('🤖 RoofRay V3.3 — Live Gemini API Connection Verification\n');
+  console.log('🤖 RoofRay — Live Gemini API Connection Verification\n');
   console.log('================================================================');
 
   // 1. Read GEMINI_API_KEY from private environment

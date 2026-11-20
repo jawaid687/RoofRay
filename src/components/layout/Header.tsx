@@ -3,8 +3,9 @@ import { useSolarStore } from '../../store/useSolarStore';
 import { useGuidanceStore } from '../../store/useGuidanceStore';
 import { useRouter } from '../../router/Router';
 import { useLanguage } from '../../i18n/useLanguage';
-import { Sun, Play, RotateCcw, Building2, Home, FileText, HelpCircle } from 'lucide-react';
+import { Play, RotateCcw, Building2, Home, FileText, HelpCircle } from 'lucide-react';
 import { SolarReportModal } from '../ui/SolarReportModal';
+import { RoofRayLogo } from '../ui/RoofRayLogo';
 
 export function Header() {
   const selectedBuildingId = useSolarStore((s) => s.selectedBuildingId);
@@ -26,24 +27,15 @@ export function Header() {
         {/* Brand & Logo */}
         <div className="flex items-center gap-4">
           <div
-            className="flex items-center gap-2.5 cursor-pointer group"
+            className="flex items-center gap-3 cursor-pointer group"
             onClick={() => navigate('/')}
             title="Return to Public Landing Page"
           >
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-600 via-amber-500 to-yellow-400 p-0.5 shadow-lg shadow-amber-500/20 flex items-center justify-center group-hover:scale-105 transition-transform">
-              <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-                <Sun className="w-4 h-4 text-amber-400 animate-spin-slow" />
-              </div>
-            </div>
+            <RoofRayLogo size={36} />
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-lg font-bold tracking-tight text-white flex items-center gap-1 font-sans">
-                  Roof<span className="text-amber-400">Ray</span>
-                </h1>
-                <span className="hidden sm:inline-block text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">
-                  AI STUDIO v3.0
-                </span>
-              </div>
+              <h1 className="text-lg font-bold tracking-tight text-white flex items-center gap-1 font-sans">
+                Roof<span className="text-amber-400">Ray</span>
+              </h1>
               <p className="hidden md:block text-[10px] text-slate-400">
                 Interactive 3D Solar Rooftop Planning & Shade Analysis
               </p>

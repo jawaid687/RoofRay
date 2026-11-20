@@ -1,4 +1,4 @@
-# RoofRay V3 — Data Flow & State Lifecycles
+# RoofRay — Data Flow & State Lifecycles
 
 **Track:** International AI Builders Congress 2026 — Idea to Unicorn  
 **Topic:** End-to-End Data Pipeline, Transformation Lifecycles, and External APIs  

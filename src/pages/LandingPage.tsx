@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useRouter } from '../router/Router';
 import { useLanguage } from '../i18n/useLanguage';
+import { RoofRayLogo } from '../components/ui/RoofRayLogo';
 import {
   Sun,
   Sparkles,
@@ -52,20 +53,11 @@ export function LandingPage() {
       <header className="sticky top-0 z-40 w-full glass-panel border-b border-slate-800/80 backdrop-blur-xl bg-slate-950/70">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Logo & Brand */}
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-600 via-amber-500 to-yellow-400 p-0.5 shadow-lg shadow-amber-500/20 flex items-center justify-center">
-              <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-                <Sun className="w-4 h-4 text-amber-400 animate-spin-slow" />
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xl font-bold tracking-tight text-white font-sans">
-                Roof<span className="text-amber-400">Ray</span>
-              </span>
-              <span className="hidden sm:inline-block text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                v3.0 AI
-              </span>
-            </div>
+          <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+            <RoofRayLogo size={36} />
+            <span className="text-xl font-bold tracking-tight text-white font-sans">
+              Roof<span className="text-amber-400">Ray</span>
+            </span>
           </div>
 
           {/* Desktop Navigation Links */}
@@ -624,11 +616,11 @@ export function LandingPage() {
       <footer className="border-t border-slate-800/80 bg-slate-950/80 text-xs text-slate-500 py-12 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
-                <Sun className="w-4 h-4" />
-              </div>
-              <span className="text-base font-bold text-white">RoofRay</span>
+            <div className="flex items-center gap-2.5">
+              <RoofRayLogo size={32} />
+              <span className="text-base font-bold text-white font-sans">
+                Roof<span className="text-amber-400">Ray</span>
+              </span>
             </div>
 
             <div className="flex flex-wrap items-center gap-6 text-xs text-slate-400">
