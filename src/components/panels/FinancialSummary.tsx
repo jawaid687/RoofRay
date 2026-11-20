@@ -52,7 +52,7 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
   // Empty state when no solar layout exists
   if (!hasPanels) {
     return (
-      <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 text-center space-y-4">
+      <div data-tour="econ-capacity" className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 text-center space-y-4">
         <div className="w-12 h-12 mx-auto rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
           <BarChart3 className="w-6 h-6 text-amber-400" />
         </div>
@@ -129,40 +129,50 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
 
       {/* Primary KPI Grid */}
       <div className="grid grid-cols-2 gap-2">
-        <MetricCard
-          label={t.energyDemand.installedCapacity}
-          value={energy.installedCapacityKW}
-          unit="kW"
-          subtext={`${energy.panelCount} active modules`}
-          variant="highlight"
-        />
-        <MetricCard
-          label={t.energyDemand.annualGeneration}
-          value={energy.annualGenerationKWh.toLocaleString()}
-          unit="kWh/yr"
-          subtext={`Capacity factor: ${energy.averageCapacityFactorPercent}%`}
-          variant="default"
-        />
-        <MetricCard
-          label={t.financialSummary.capex}
-          value={formatCurrency(financial.totalSystemCost, currency)}
-          subtext={`Turnkey + install (${currency})`}
-          variant="default"
-        />
-        <MetricCard
-          label={t.financialSummary.annualSavings}
-          value={formatCurrency(financial.annualSavings ?? financial.annualSavingsUSD, currency)}
-          unit="/yr"
-          subtext={`At ${currencySymbol}${activeTariff}/kWh`}
-          variant="success"
-        />
-        <MetricCard
-          label={t.financialSummary.payback}
-          value={financial.paybackYears !== null ? `${financial.paybackYears}` : '—'}
-          unit={financial.paybackYears !== null ? 'years' : ''}
-          subtext={`20-Yr Net: ${formatCurrency(financial.twentyYearNetSavings ?? financial.twentyYearNetSavingsUSD, currency)}`}
-          variant="warning"
-        />
+        <div data-tour="econ-capacity">
+          <MetricCard
+            label={t.energyDemand.installedCapacity}
+            value={energy.installedCapacityKW}
+            unit="kW"
+            subtext={`${energy.panelCount} active modules`}
+            variant="highlight"
+          />
+        </div>
+        <div data-tour="econ-demand">
+          <MetricCard
+            label={t.energyDemand.annualGeneration}
+            value={energy.annualGenerationKWh.toLocaleString()}
+            unit="kWh/yr"
+            subtext={`Capacity factor: ${energy.averageCapacityFactorPercent}%`}
+            variant="default"
+          />
+        </div>
+        <div data-tour="econ-capex">
+          <MetricCard
+            label={t.financialSummary.capex}
+            value={formatCurrency(financial.totalSystemCost, currency)}
+            subtext={`Turnkey + install (${currency})`}
+            variant="default"
+          />
+        </div>
+        <div data-tour="econ-savings">
+          <MetricCard
+            label={t.financialSummary.annualSavings}
+            value={formatCurrency(financial.annualSavings ?? financial.annualSavingsUSD, currency)}
+            unit="/yr"
+            subtext={`At ${currencySymbol}${activeTariff}/kWh`}
+            variant="success"
+          />
+        </div>
+        <div data-tour="econ-lifecycle">
+          <MetricCard
+            label={t.financialSummary.payback}
+            value={financial.paybackYears !== null ? `${financial.paybackYears}` : '—'}
+            unit={financial.paybackYears !== null ? 'years' : ''}
+            subtext={`20-Yr Net: ${formatCurrency(financial.twentyYearNetSavings ?? financial.twentyYearNetSavingsUSD, currency)}`}
+            variant="warning"
+          />
+        </div>
         <MetricCard
           label={t.financialSummary.carbonAbated}
           value={environmental.annualCO2ReductionTonnes}

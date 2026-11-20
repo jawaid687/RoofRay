@@ -115,7 +115,7 @@ export function LocationTimeCard() {
   const formattedDateValue = `${dateTime.year}-${dateTime.month.toString().padStart(2, '0')}-${dateTime.day.toString().padStart(2, '0')}`;
 
   return (
-    <div className="space-y-4">
+    <div data-tour="location-time" className="space-y-4">
       {/* City Presets & Location Header */}
       <div className="space-y-2 p-3.5 rounded-xl bg-slate-900/60 border border-slate-800">
         <div className="flex items-center justify-between">

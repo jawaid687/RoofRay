@@ -65,7 +65,7 @@ export function ViewportControls() {
             </div>
 
             {/* Play Day & Play Year Animation Controls (FR-2.4) */}
-            <div className="flex items-center gap-1.5">
+            <div data-tour="sun-simulation" className="flex items-center gap-1.5">
               <button
                 onClick={togglePlayDay}
                 className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all ${
@@ -172,7 +172,7 @@ export function ViewportControls() {
             </div>
 
             {/* Visual Toggles */}
-            <div className="flex flex-wrap items-center gap-1.5">
+            <div data-tour="viz-controls" className="flex flex-wrap items-center gap-1.5">
               {/* Heatmap Mode Quick Toggle */}
               <button
                 onClick={() => setHeatmapMode(heatmapMode === 'live' ? 'annual' : 'live')}

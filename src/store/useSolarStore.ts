@@ -1782,10 +1782,53 @@ export const useSolarStore = create<SolarStoreState>((set, get) => {
     },
 
     fitFullModel: () => {
-      set((state) => ({
-        cameraFocusTarget: [0, 8, 5],
-        cameraPositionTarget: [-54, 48, 62],
-        cameraResetTrigger: state.cameraResetTrigger + 1,
+      const state = get();
+      const buildings = state.buildings;
+
+      // Calculate relevant 3D scene bounding box across all neighborhood buildings
+      // Excludes ground plane and decorative terrain/trees
+      let minX = Infinity;
+      let maxX = -Infinity;
+      let minZ = Infinity;
+      let maxZ = -Infinity;
+      let maxHeight = 0;
+
+      if (buildings && buildings.length > 0) {
+        buildings.forEach((b) => {
+          const halfW = b.width / 2;
+          const halfL = b.length / 2;
+          minX = Math.min(minX, b.position[0] - halfW);
+          maxX = Math.max(maxX, b.position[0] + halfW);
+          minZ = Math.min(minZ, b.position[2] - halfL);
+          maxZ = Math.max(maxZ, b.position[2] + halfL);
+          maxHeight = Math.max(maxHeight, b.height);
+        });
+      } else {
+        minX = -44;
+        maxX = 43;
+        minZ = -30;
+        maxZ = 40;
+        maxHeight = 26;
+      }
+
+      const centerX = (minX + maxX) / 2;
+      const centerZ = (minZ + maxZ) / 2;
+      const centerY = maxHeight * 0.32;
+
+      const spanX = maxX - minX;
+      const spanZ = maxZ - minZ;
+      const sceneSpan = Math.max(spanX, spanZ, 84);
+
+      // Camera distance and angle calculated to comfortably fit all buildings within 42deg FOV without clipping
+      const camDist = sceneSpan * 0.72;
+      const camX = centerX - camDist * 0.65;
+      const camY = maxHeight + camDist * 0.52;
+      const camZ = centerZ + camDist * 0.76;
+
+      set((s) => ({
+        cameraFocusTarget: [Math.round(centerX), Math.round(centerY), Math.round(centerZ)],
+        cameraPositionTarget: [Math.round(camX), Math.round(camY), Math.round(camZ)],
+        cameraResetTrigger: s.cameraResetTrigger + 1,
       }));
     },
 

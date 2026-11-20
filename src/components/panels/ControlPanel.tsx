@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useLanguage } from '../../i18n/useLanguage';
+import { useGuidanceStore } from '../../store/useGuidanceStore';
 import { LocationTimeCard } from './LocationTimeCard';
 import { BuildingInspector } from './BuildingInspector';
 import { SolarAnalysisCard } from './SolarAnalysisCard';
@@ -34,6 +35,21 @@ export function ControlPanel() {
   const [isWide, setIsWide] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  const notifyTabChange = useGuidanceStore((s) => s.notifyTabChange);
+  const activeSectionTab = useGuidanceStore((s) => s.activeSectionTab);
+
+  // Sync activeTab when guidance store switches tab
+  useEffect(() => {
+    if (activeSectionTab && activeSectionTab !== activeTab) {
+      setActiveTab(activeSectionTab);
+    }
+  }, [activeSectionTab, activeTab]);
+
+  // Initial tab notification on mount
+  useEffect(() => {
+    notifyTabChange('planner');
+  }, [notifyTabChange]);
+
   const [openSections, setOpenSections] = useState<Record<SectionKey, boolean>>({
     location: true,
     building: true,
@@ -58,6 +74,7 @@ export function ControlPanel() {
 
   const handleTabChange = (tab: 'planner' | 'manual' | 'analytics' | 'advisor' | 'rationale') => {
     setActiveTab(tab);
+    notifyTabChange(tab);
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTop = 0;
     }

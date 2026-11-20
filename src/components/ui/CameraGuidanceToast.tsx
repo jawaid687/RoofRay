@@ -1,87 +1,47 @@
-import { useState, useEffect, useCallback } from 'react';
 import { useSolarStore } from '../../store/useSolarStore';
+import { useGuidanceStore } from '../../store/useGuidanceStore';
+import { useLanguage } from '../../i18n/useLanguage';
 import { Maximize2, X, Compass } from 'lucide-react';
 
-const STORAGE_KEY = 'roofray_camera_guidance_dismissed';
-
 export function CameraGuidanceToast() {
-  const [visible, setVisible] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
-    try {
-      return !window.localStorage.getItem(STORAGE_KEY);
-    } catch {
-      return false;
-    }
-  });
-
+  const isCameraGuidanceOpen = useGuidanceStore((s) => s.isCameraGuidanceOpen);
+  const dismissCameraGuidance = useGuidanceStore((s) => s.dismissCameraGuidance);
   const fitFullModel = useSolarStore((s) => s.fitFullModel);
+  const { t } = useLanguage();
 
-  const dismiss = useCallback(() => {
-    setVisible(false);
-    if (typeof window !== 'undefined') {
-      try {
-        window.localStorage.setItem(STORAGE_KEY, 'true');
-      } catch {
-        // ignore
-      }
-    }
-  }, []);
+  if (!isCameraGuidanceOpen) return null;
 
   const handleFitFull = () => {
     fitFullModel();
-    dismiss();
+    dismissCameraGuidance(true);
   };
 
-  useEffect(() => {
-    if (!visible) return;
-
-    // Auto-dismiss after 8 seconds
-    const timer = setTimeout(() => {
-      dismiss();
-    }, 8000);
-
-    // Auto-dismiss on user camera interaction (mouse wheel or drag gesture)
-    const handleInteraction = (e: Event) => {
-      // If clicking inside the toast itself, don't dismiss immediately
-      const target = e.target as HTMLElement | null;
-      if (target?.closest('#camera-guidance-toast')) return;
-      dismiss();
-    };
-
-    window.addEventListener('wheel', handleInteraction, { passive: true, once: true });
-    window.addEventListener('pointerdown', handleInteraction, { passive: true, once: true });
-
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('wheel', handleInteraction);
-      window.removeEventListener('pointerdown', handleInteraction);
-    };
-  }, [visible, dismiss]);
-
-  if (!visible) return null;
+  const handleGotIt = () => {
+    dismissCameraGuidance(true);
+  };
 
   return (
     <div
       id="camera-guidance-toast"
       className="absolute top-4 left-4 z-20 max-w-sm pointer-events-auto animate-fade-in"
     >
-      <div className="glass-panel bg-slate-900/90 border border-purple-500/40 rounded-xl p-3.5 shadow-2xl backdrop-blur-xl flex flex-col gap-2.5">
+      <div className="glass-panel bg-slate-900/95 border border-purple-500/40 rounded-xl p-3.5 shadow-2xl backdrop-blur-xl flex flex-col gap-2.5">
         <div className="flex items-start gap-2.5">
           <div className="w-7 h-7 rounded-lg bg-purple-500/20 border border-purple-500/40 flex items-center justify-center shrink-0 text-purple-300 mt-0.5">
             <Compass className="w-4 h-4" />
           </div>
 
           <div className="flex-1 pr-1">
-            <div className="text-xs font-semibold text-slate-100 flex items-center gap-1.5">
-              <span>Explore 3D Neighborhood</span>
+            <div className="text-xs font-bold text-white flex items-center gap-1.5">
+              <span>{t.cameraGuidance?.heading || 'Welcome to RoofRay!'}</span>
             </div>
             <p className="text-[11px] text-slate-300 leading-relaxed mt-0.5">
-              Zoom out for a better view! Use your mouse scroll wheel or trackpad to explore the complete 3D model and surrounding buildings.
+              {t.cameraGuidance?.message || 'Zoom out for a better view of the complete 3D building model.'}
             </p>
           </div>
 
           <button
-            onClick={dismiss}
+            onClick={handleGotIt}
             className="p-1 rounded-md text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors shrink-0 -mr-1 -mt-1"
             title="Dismiss notice"
           >
@@ -96,14 +56,14 @@ export function CameraGuidanceToast() {
             title="Reset camera to complete neighborhood view"
           >
             <Maximize2 className="w-3 h-3" />
-            <span>Fit Full Model</span>
+            <span>{t.cameraGuidance?.fitFullModel || 'Fit Full Model'}</span>
           </button>
 
           <button
-            onClick={dismiss}
-            className="px-2 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[11px] font-medium transition-colors"
+            onClick={handleGotIt}
+            className="px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white text-[11px] font-medium transition-colors"
           >
-            Got it
+            {t.cameraGuidance?.gotIt || 'Got It'}
           </button>
         </div>
       </div>

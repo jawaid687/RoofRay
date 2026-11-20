@@ -16,7 +16,7 @@ export function HeatmapLegend() {
   if (!showHeatmap || !selectedBuildingId) return null;
 
   return (
-    <div className="absolute top-20 left-4 z-10 glass-panel rounded-xl p-3 text-xs text-slate-200 pointer-events-auto shadow-2xl border border-slate-700/50 backdrop-blur-md max-w-[260px]">
+    <div data-tour="heatmap-legend" className="absolute top-20 left-4 z-10 glass-panel rounded-xl p-3 text-xs text-slate-200 pointer-events-auto shadow-2xl border border-slate-700/50 backdrop-blur-md max-w-[260px]">
       <div className="font-semibold text-slate-300 mb-2 flex items-center justify-between gap-4">
         <span>
           {heatmapMode === 'live'

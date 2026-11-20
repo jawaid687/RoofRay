@@ -23,7 +23,7 @@ export function BuildingInspector() {
   const roofAreaSqFt = Math.round(roofAreaM2 * SIMULATION_ASSUMPTIONS.sqMetersToSqFeet);
 
   return (
-    <div className="space-y-4">
+    <div data-tour="building-inspector" className="space-y-4">
       {/* Building Selector Dropdown */}
       <div className="space-y-1.5">
         <label className="text-[11px] font-semibold text-slate-400 flex items-center justify-between">
