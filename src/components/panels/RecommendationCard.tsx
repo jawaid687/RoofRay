@@ -77,14 +77,9 @@ export function RecommendationCard({ onNavigateToPlanner }: RecommendationCardPr
     <div className="space-y-3.5">
       {/* Outdated Notice if settings changed */}
       {isOutdated && (
-        <div className="p-3 rounded-xl bg-amber-950/40 border border-amber-800/60 text-xs text-amber-200 flex items-start gap-2.5">
-          <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-          <div className="space-y-0.5">
-            <span className="font-bold text-amber-300">{t.recommendation.outdatedTitle}</span>
-            <p className="text-[11px] text-amber-300/80 leading-relaxed">
-              {t.recommendation.outdatedDesc}
-            </p>
-          </div>
+        <div className="p-2.5 rounded-lg bg-amber-950/40 border border-amber-800/60 text-xs text-amber-200 flex items-center gap-2">
+          <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+          <span className="text-[11px] font-medium">{t.recommendation.outdatedDesc || 'Settings modified — re-optimization suggested.'}</span>
         </div>
       )}
 

@@ -53,15 +53,15 @@ export function ViewportControls() {
   };
 
   return (
-    <div className="absolute bottom-6 left-6 right-6 lg:right-auto lg:left-6 z-10 pointer-events-auto">
-      <div className="glass-panel rounded-2xl p-4 shadow-2xl border border-slate-800/90 max-w-xl backdrop-blur-xl">
-        <div className="flex flex-col gap-3">
+    <div className="absolute bottom-5 left-5 right-5 lg:right-auto lg:left-5 z-10 pointer-events-auto">
+      <div className="glass-panel bg-[#0c1424]/95 rounded-xl p-3 shadow-xl border border-slate-800/90 max-w-xl backdrop-blur-md">
+        <div className="flex flex-col gap-2.5">
           {/* Header Row: Sun Time, Playback Controls & Coordinates */}
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
             <div className="flex items-center gap-2">
-              <Sun className="w-4 h-4 text-amber-400" />
+              <Sun className="w-3.5 h-3.5 text-amber-400" />
               <span className="font-semibold text-slate-200">{t.viewportControls.noaaSunModel}</span>
-              <span className="font-mono text-amber-300 font-bold bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md">
+              <span className="font-mono text-amber-300 font-bold bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded text-[11px]">
                 {sunState.formattedTime}
               </span>
             </div>
@@ -70,9 +70,9 @@ export function ViewportControls() {
             <div data-tour="sun-simulation" className="flex items-center gap-1.5">
               <button
                 onClick={togglePlayDay}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all ${
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${
                   isPlayingDay
-                    ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/30 ring-1 ring-amber-400'
+                    ? 'bg-amber-400 text-slate-950 font-bold shadow-sm'
                     : 'bg-slate-900/80 hover:bg-slate-800 text-slate-300 border border-slate-700/80'
                 }`}
                 title={isPlayingDay ? t.viewportControls.pause : t.viewportControls.playDay}
@@ -83,9 +83,9 @@ export function ViewportControls() {
 
               <button
                 onClick={togglePlayYear}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all ${
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${
                   isPlayingYear
-                    ? 'bg-sky-500 text-slate-950 font-bold shadow-md shadow-sky-500/30 ring-1 ring-sky-400'
+                    ? 'bg-sky-400 text-slate-950 font-bold shadow-sm'
                     : 'bg-slate-900/80 hover:bg-slate-800 text-slate-300 border border-slate-700/80'
                 }`}
                 title={isPlayingYear ? t.viewportControls.pause : t.viewportControls.playYear}
@@ -95,14 +95,14 @@ export function ViewportControls() {
               </button>
 
               {/* Speed Multiplier */}
-              <div className="flex items-center rounded-lg bg-slate-950 border border-slate-800 p-0.5 text-[10px] font-mono">
+              <div className="flex items-center rounded-md bg-slate-950 border border-slate-800 p-0.5 text-[10px] font-mono">
                 {[1, 2, 4].map((spd) => (
                   <button
                     key={spd}
                     onClick={() => setPlaySpeed(spd)}
                     className={`px-1.5 py-0.5 rounded transition-colors ${
                       playSpeed === spd
-                        ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30'
+                        ? 'bg-amber-400 text-slate-950 font-bold'
                         : 'text-slate-400 hover:text-slate-200'
                     }`}
                     title={`Playback speed: ${spd}x`}
@@ -113,15 +113,15 @@ export function ViewportControls() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3 text-[11px] text-slate-400 font-mono">
+            <div className="flex items-center gap-2.5 text-[11px] text-slate-400 font-mono">
               <span title="Solar elevation angle above horizon">{t.viewportControls.elev}: {sunState.elevationDeg}°</span>
               <span title="Solar azimuth relative to North">{t.viewportControls.az}: {sunState.azimuthDeg}°</span>
             </div>
           </div>
 
           {/* Time Slider (00:00 to 24:00) */}
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] font-mono text-slate-400 w-9">00:00</span>
+          <div className="flex items-center gap-2.5">
+            <span className="text-[10px] font-mono text-slate-400 w-8">00:00</span>
             <input
               type="range"
               min={0}
@@ -129,9 +129,9 @@ export function ViewportControls() {
               step={0.1}
               value={timeDecimal}
               onChange={(e) => setTimeOfDay(parseFloat(e.target.value))}
-              className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-500 hover:accent-amber-400"
+              className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-400 hover:accent-amber-300"
             />
-            <span className="text-[10px] font-mono text-slate-400 w-9 text-right">24:00</span>
+            <span className="text-[10px] font-mono text-slate-400 w-8 text-right">24:00</span>
           </div>
 
           {/* Quick Sun Anchors & Scene Toggles */}
@@ -141,11 +141,12 @@ export function ViewportControls() {
               {sunState.sunrise && (
                 <button
                   onClick={handleJumpSunrise}
-                  className="px-2 py-1 rounded-md bg-slate-900/60 hover:bg-slate-800 text-slate-300 flex items-center gap-1 border border-slate-800"
-                  title="Jump to Sunrise"
+                  className="px-2 py-1 rounded-md bg-slate-900/60 hover:bg-slate-800 text-slate-300 flex items-center gap-1 border border-slate-800 text-[10px]"
+                  title={`Jump to Sunrise (${sunState.sunrise.localTimeFormatted})`}
+                  aria-label="Jump to Sunrise"
                 >
                   <Sunrise className="w-3 h-3 text-amber-400" />
-                  <span>{t.viewportControls.rise} {sunState.sunrise.localTimeFormatted}</span>
+                  <span>{sunState.sunrise.localTimeFormatted}</span>
                 </button>
               )}
 
@@ -154,95 +155,98 @@ export function ViewportControls() {
                   const parts = sunState.solarNoon.localTimeFormatted.split(':').map(Number);
                   setTimeOfDay(parts[0] + parts[1] / 60);
                 }}
-                className="px-2 py-1 rounded-md bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 flex items-center gap-1 border border-amber-500/30 font-semibold"
-                title="Jump to Solar Noon"
+                className="px-2 py-1 rounded-md bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 flex items-center gap-1 border border-amber-500/30 font-semibold text-[10px]"
+                title={`Jump to Solar Noon (${sunState.solarNoon.localTimeFormatted})`}
+                aria-label="Jump to Solar Noon"
               >
                 <Sun className="w-3 h-3 text-amber-400" />
-                <span>{t.viewportControls.noon} {sunState.solarNoon.localTimeFormatted}</span>
+                <span>{sunState.solarNoon.localTimeFormatted}</span>
               </button>
 
               {sunState.sunset && (
                 <button
                   onClick={handleJumpSunset}
-                  className="px-2 py-1 rounded-md bg-slate-900/60 hover:bg-slate-800 text-slate-300 flex items-center gap-1 border border-slate-800"
-                  title="Jump to Sunset"
+                  className="px-2 py-1 rounded-md bg-slate-900/60 hover:bg-slate-800 text-slate-300 flex items-center gap-1 border border-slate-800 text-[10px]"
+                  title={`Jump to Sunset (${sunState.sunset.localTimeFormatted})`}
+                  aria-label="Jump to Sunset"
                 >
-                  <Sunset className="w-3 h-3 text-orange-400" />
-                  <span>{t.viewportControls.set} {sunState.sunset.localTimeFormatted}</span>
+                  <Sunset className="w-3 h-3 text-amber-400" />
+                  <span>{sunState.sunset.localTimeFormatted}</span>
                 </button>
               )}
             </div>
 
-            {/* Visual Toggles */}
-            <div data-tour="viz-controls" className="flex flex-wrap items-center gap-1.5">
+            {/* Visual Toggles (Icon-First Clean Design) */}
+            <div data-tour="viz-controls" className="flex items-center gap-1">
               {/* Heatmap Mode Quick Toggle */}
               <button
                 onClick={() => setHeatmapMode(heatmapMode === 'live' ? 'annual' : 'live')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-colors ${
                   heatmapMode === 'live'
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                    : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                    ? 'bg-slate-800 text-emerald-300 border border-emerald-500/40'
+                    : 'bg-slate-800 text-amber-300 border border-amber-500/40'
                 }`}
-                title="Switch between Live Shading and Annual Exposure"
+                title={`Mode: ${heatmapMode === 'live' ? 'Live Raycast' : 'Annual Exposure'}`}
+                aria-label="Toggle Heatmap Mode"
               >
                 <span className={`w-1.5 h-1.5 rounded-full ${heatmapMode === 'live' ? 'bg-emerald-400' : 'bg-amber-400'}`} />
-                <span>{heatmapMode === 'live' ? t.viewportControls.liveShading : t.viewportControls.annual}</span>
+                <span className="text-[10px] font-mono">{heatmapMode === 'live' ? 'Live' : 'Annual'}</span>
               </button>
 
               {/* Heatmap Visibility Toggle */}
               <button
                 onClick={() => setShowHeatmap(!showHeatmap)}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                className={`p-1.5 rounded-md text-xs transition-colors ${
                   showHeatmap
-                    ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40'
-                    : 'bg-slate-900/60 text-slate-400 border border-slate-800'
+                    ? 'bg-slate-800 text-sky-300 border border-sky-500/40'
+                    : 'bg-slate-900/60 text-slate-500 border border-slate-800'
                 }`}
-                title="Toggle Rooftop Solar Heatmap"
+                title={showHeatmap ? 'Hide Rooftop Solar Heatmap' : 'Show Rooftop Solar Heatmap'}
+                aria-label="Toggle Heatmap"
               >
                 <Layers className="w-3.5 h-3.5" />
-                <span>{t.viewportControls.heatmap}</span>
               </button>
 
               {/* Dynamic Shadows Toggle */}
               <button
                 onClick={() => setShowShadows(!showShadows)}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                className={`p-1.5 rounded-md text-xs transition-colors ${
                   showShadows
-                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                    : 'bg-slate-900/60 text-slate-400 border border-slate-800'
+                    ? 'bg-slate-800 text-amber-300 border border-amber-500/40'
+                    : 'bg-slate-900/60 text-slate-500 border border-slate-800'
                 }`}
-                title="Toggle Real-Time Shadow Casting"
+                title={showShadows ? 'Hide Shadows' : 'Show Shadows'}
+                aria-label="Toggle Shadows"
               >
-                {showShadows ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                <span>{t.viewportControls.shadows}</span>
+                {showShadows ? <Eye className="w-3.5 h-3.5 text-amber-400" /> : <EyeOff className="w-3.5 h-3.5 text-slate-500" />}
               </button>
 
-              {/* 3D Sun Path Arc Toggle (FR-4.6) */}
+              {/* 3D Sun Path Arc Toggle */}
               <button
                 onClick={() => setShowSunPath(!showSunPath)}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                className={`p-1.5 rounded-md text-xs transition-colors ${
                   showSunPath
-                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                    : 'bg-slate-900/60 text-slate-400 border border-slate-800'
+                    ? 'bg-slate-800 text-amber-300 border border-amber-500/40'
+                    : 'bg-slate-900/60 text-slate-500 border border-slate-800'
                 }`}
-                title="Toggle 3D Solar Path Arcs & Solstices"
+                title={showSunPath ? 'Hide 3D Sun Path' : 'Show 3D Sun Path'}
+                aria-label="Toggle Sun Path"
               >
                 <Sun className="w-3.5 h-3.5 text-amber-400" />
-                <span>{t.viewportControls.sunPath}</span>
               </button>
 
-              {/* 3D North Compass Rose Toggle (FR-4.6) */}
+              {/* 3D North Compass Rose Toggle */}
               <button
                 onClick={() => setShowCompass(!showCompass)}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                className={`p-1.5 rounded-md text-xs transition-colors ${
                   showCompass
-                    ? 'bg-red-500/20 text-red-300 border border-red-500/40'
-                    : 'bg-slate-900/60 text-slate-400 border border-slate-800'
+                    ? 'bg-slate-800 text-slate-200 border border-slate-600'
+                    : 'bg-slate-900/60 text-slate-500 border border-slate-800'
                 }`}
-                title="Toggle 3D North Compass Rose"
+                title={showCompass ? 'Hide Compass' : 'Show Compass'}
+                aria-label="Toggle Compass"
               >
-                <CompassIcon className="w-3.5 h-3.5 text-red-400" />
-                <span>{t.viewportControls.compass}</span>
+                <CompassIcon className="w-3.5 h-3.5 text-rose-400" />
               </button>
             </div>
           </div>

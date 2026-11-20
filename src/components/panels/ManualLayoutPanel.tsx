@@ -170,30 +170,33 @@ export function ManualLayoutPanel() {
           onClick={undo}
           disabled={history.past.length === 0}
           title="Undo (Ctrl+Z)"
+          aria-label="Undo"
           className="flex-1 py-1.5 px-2 rounded-lg font-medium text-[11px] bg-slate-900/80 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 border border-slate-800 flex items-center justify-center gap-1 transition-all"
         >
           <Undo2 className="w-3.5 h-3.5" />
-          <span>{t.manualLayout.undo} ({history.past.length})</span>
+          <span className="font-mono text-[10px]">({history.past.length})</span>
         </button>
 
         <button
           onClick={redo}
           disabled={history.future.length === 0}
           title="Redo (Ctrl+Y)"
+          aria-label="Redo"
           className="flex-1 py-1.5 px-2 rounded-lg font-medium text-[11px] bg-slate-900/80 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 border border-slate-800 flex items-center justify-center gap-1 transition-all"
         >
           <Redo2 className="w-3.5 h-3.5" />
-          <span>{t.manualLayout.redo} ({history.future.length})</span>
+          <span className="font-mono text-[10px]">({history.future.length})</span>
         </button>
 
         {selectedPanelIds.length > 0 && (
           <button
             onClick={deleteSelectedPanels}
             title="Delete Selected Panels (Del)"
+            aria-label="Delete"
             className="py-1.5 px-2.5 rounded-lg font-medium text-[11px] bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 flex items-center justify-center gap-1 transition-all"
           >
             <Trash2 className="w-3.5 h-3.5" />
-            <span>{t.manualLayout.delete} ({selectedPanelIds.length})</span>
+            <span className="font-mono text-[10px]">({selectedPanelIds.length})</span>
           </button>
         )}
 
@@ -201,10 +204,10 @@ export function ManualLayoutPanel() {
           <button
             onClick={clearAllPanels}
             title="Clear all panels"
-            className="py-1.5 px-2.5 rounded-lg font-medium text-[11px] bg-slate-900/60 hover:bg-red-500/20 text-slate-400 hover:text-red-300 border border-slate-800 hover:border-red-500/30 flex items-center justify-center gap-1 transition-all"
+            aria-label="Clear all"
+            className="p-1.5 rounded-lg font-medium text-[11px] bg-slate-900/60 hover:bg-red-500/20 text-slate-400 hover:text-red-300 border border-slate-800 hover:border-red-500/30 flex items-center justify-center transition-all"
           >
             <Trash2 className="w-3.5 h-3.5" />
-            <span>{t.manualLayout.clearAll}</span>
           </button>
         )}
       </div>

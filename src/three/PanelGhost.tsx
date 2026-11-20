@@ -57,9 +57,10 @@ export function PanelGhost({ building, panelType }: PanelGhostProps) {
     <group
       position={[localX, building.height + 0.16, localZ]}
       rotation={[-tiltRad, 0, 0]}
+      raycast={() => null}
     >
-      {/* Ghost Panel Translucent Surface */}
-      <mesh>
+      {/* Ghost Panel Translucent Surface - raycast disabled to let clicks pass through to roof hit plane */}
+      <mesh raycast={() => null}>
         <boxGeometry args={[width, 0.03, length]} />
         <meshStandardMaterial
           color={statusColor}
@@ -72,20 +73,27 @@ export function PanelGhost({ building, panelType }: PanelGhostProps) {
       </mesh>
 
       {/* Wireframe Perimeter Highlight */}
-      <lineSegments>
+      <lineSegments raycast={() => null}>
         <edgesGeometry args={[new THREE.BoxGeometry(width + 0.02, 0.04, length + 0.02)]} />
         <lineBasicMaterial color={borderColor} linewidth={2} />
       </lineSegments>
 
-      {/* 3D Floating Tooltip Attached to Cursor Panel (PRD FR-7.3) */}
+      {/* 3D Floating Tooltip safely offset above & north of panel so cursor & placement spot are never blocked (PRD FR-7.3) */}
       <Html
-        position={[0, 0.6, 0]}
+        position={[0, 0.85, -length / 2 - 0.45]}
         center
         distanceFactor={22}
-        className="pointer-events-none select-none z-50"
+        style={{
+          pointerEvents: 'none',
+          userSelect: 'none',
+        }}
+        className="pointer-events-none select-none z-30"
       >
-        <div className="glass-panel px-3 py-2 rounded-xl text-slate-100 shadow-2xl border border-slate-700/80 backdrop-blur-md min-w-[210px] space-y-1.5 font-sans">
-          <div className="flex items-center justify-between gap-3 text-[11px] font-semibold border-b border-slate-700/60 pb-1">
+        <div
+          style={{ pointerEvents: 'none', userSelect: 'none' }}
+          className="pointer-events-none select-none glass-panel px-3 py-1.5 rounded-xl text-slate-100 shadow-2xl border border-slate-700/80 backdrop-blur-md min-w-[190px] max-w-[220px] space-y-1 font-sans"
+        >
+          <div className="flex items-center justify-between gap-3 text-[11px] font-semibold border-b border-slate-700/60 pb-1 pointer-events-none select-none">
             <span style={{ color: borderColor }}>{badgeText}</span>
             <span className="font-mono text-[10px] text-slate-400 capitalize">
               {orientation}
@@ -93,7 +101,7 @@ export function PanelGhost({ building, panelType }: PanelGhostProps) {
           </div>
 
           {isValid ? (
-            <div className="space-y-1 text-[11px] font-mono">
+            <div className="space-y-0.5 text-[10px] font-mono pointer-events-none select-none">
               <div className="flex justify-between items-center text-slate-300">
                 <span>Annual Exposure:</span>
                 <span className="font-bold font-sans" style={{ color: borderColor }}>
@@ -107,9 +115,9 @@ export function PanelGhost({ building, panelType }: PanelGhostProps) {
                 </span>
               </div>
               <div className="flex justify-between items-center text-slate-300">
-                <span>Sunlight Right Now:</span>
+                <span>Sunlight Now:</span>
                 <span
-                  className={`text-[10px] font-sans font-semibold px-1.5 py-0.2 rounded ${
+                  className={`text-[9px] font-sans font-semibold px-1 rounded ${
                     isLitNow
                       ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
                       : 'bg-red-500/20 text-red-300 border border-red-500/30'
@@ -118,12 +126,12 @@ export function PanelGhost({ building, panelType }: PanelGhostProps) {
                   {isLitNow ? 'Lit by Sun' : 'In Shadow'}
                 </span>
               </div>
-              <div className="text-[9px] text-slate-400 text-center pt-1 font-sans border-t border-slate-800">
+              <div className="text-[9px] text-slate-400 text-center pt-0.5 font-sans border-t border-slate-800">
                 Click to place • Q / E rotate
               </div>
             </div>
           ) : (
-            <div className="space-y-1 text-[11px]">
+            <div className="space-y-0.5 text-[10px] pointer-events-none select-none">
               <div className="text-red-400 font-medium">
                 {rejectionDetail || 'Placement blocked at this spot.'}
               </div>

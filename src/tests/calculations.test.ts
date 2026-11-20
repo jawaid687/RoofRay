@@ -20,6 +20,9 @@ import { runFinancialConfigTests } from '../../tests/financialConfig.test';
 import { runRagTests } from '../../tests/ragRetrieval.test';
 import { runAiAdvisorTests } from '../../tests/aiAdvisorSchema.test';
 import { runNasaResourceTests } from '../../tests/nasaResource.test';
+import { runCrossPlatformBrowserTests } from '../../tests/crossPlatformBrowser.test';
+import { runSystemDesignTests } from '../../tests/systemDesignHoles.test';
+import { runUiCleanlinessAndIconsTests } from '../../tests/uiCleanlinessAndIcons.test';
 
 async function runUnitTests() {
   const sunResults = runSunPositionTests();
@@ -69,6 +72,21 @@ async function runUnitTests() {
 
   const aiResults = await runAiAdvisorTests();
   if (aiResults.failed > 0) {
+    process.exit(1);
+  }
+
+  const browserResults = runCrossPlatformBrowserTests();
+  if (browserResults.failed > 0) {
+    process.exit(1);
+  }
+
+  const systemDesignResults = await runSystemDesignTests();
+  if (systemDesignResults.failed > 0) {
+    process.exit(1);
+  }
+
+  const uiCleanlinessResults = runUiCleanlinessAndIconsTests();
+  if (uiCleanlinessResults.failed > 0) {
     process.exit(1);
   }
 

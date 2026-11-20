@@ -4,6 +4,7 @@ import os from 'os';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { server, startServer } from '../server/server.ts';
+import { resolveChromePath } from './resolveChrome.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,17 +25,28 @@ async function runBrowserTests() {
     }
   }
 
-  const serverPort = 3012;
+  let serverPort = 3012;
   const cdpPort = 9225;
   const tmpProfileDir = path.join(os.tmpdir(), `roofray-chrome-profile-${Date.now()}`);
   fs.mkdirSync(tmpProfileDir, { recursive: true });
 
-  // 1. Start RoofRay Production Server
-  await startServer(serverPort);
+  // 1. Start RoofRay Production Server with dynamic port collision fallback
+  try {
+    await startServer(serverPort);
+  } catch (err) {
+    if (err && err.code === 'EADDRINUSE') {
+      console.warn(`[browserTest] Port ${serverPort} in use, dynamically attempting port ${serverPort + 2}...`);
+      serverPort = 3014;
+      await startServer(serverPort);
+    } else {
+      throw err;
+    }
+  }
 
-  // 2. Launch Isolated Headless Chrome
-  const chromePath = process.env.CHROME_PATH || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-  const chromeProcess = spawn(chromePath, [
+  // 2. Launch Isolated Headless Chrome (Cross-platform resolution)
+  const chromePath = resolveChromePath();
+  const isLinux = os.platform() === 'linux';
+  const chromeArgs = [
     '--headless=new',
     '--window-size=1280,800',
     `--remote-debugging-port=${cdpPort}`,
@@ -44,8 +56,16 @@ async function runBrowserTests() {
     '--no-default-browser-check',
     '--disable-background-networking',
     '--disable-gpu',
-    'about:blank',
-  ]);
+  ];
+  if (isLinux) {
+    chromeArgs.push('--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage');
+  }
+  chromeArgs.push('about:blank');
+
+  const chromeProcess = spawn(chromePath, chromeArgs);
+  chromeProcess.on('error', (err) => {
+    console.error(`  ❌ FAIL: Failed to launch Chrome at "${chromePath}": ${err.message}`);
+  });
 
   let ws;
 
