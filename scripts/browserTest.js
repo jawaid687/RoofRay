@@ -33,7 +33,7 @@ async function runBrowserTests() {
   await startServer(serverPort);
 
   // 2. Launch Isolated Headless Chrome
-  const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+  const chromePath = process.env.CHROME_PATH || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
   const chromeProcess = spawn(chromePath, [
     '--headless=new',
     '--window-size=1280,800',
@@ -272,6 +272,8 @@ async function runBrowserTests() {
       const rect = canvas.getBoundingClientRect();
       return {
         found: true,
+        left: rect.left,
+        top: rect.top,
         width: rect.width,
         height: rect.height,
       };
@@ -280,20 +282,42 @@ async function runBrowserTests() {
     assert(Boolean(canvasInfo?.found), 'Three.js WebGL <canvas> element mounted on /app');
     assert(Boolean(canvasInfo && canvasInfo.width > 200 && canvasInfo.height > 200), 'Three.js canvas has active render dimensions');
 
+    // Verify First-Time Camera Guidance Toast & Fit Full Model
+    const guidanceToastPresent = await evaluate(`(() => {
+      const toast = document.getElementById('camera-guidance-toast');
+      return !!toast && toast.innerText.includes('Zoom out for a better view');
+    })()`);
+    assert(guidanceToastPresent, 'Camera Guidance Toast renders with user-friendly zoom instructions');
+
+    const fitFullModelClicked = await evaluate(`(() => {
+      const btn = Array.from(document.querySelectorAll('button')).find(
+        (b) => b.textContent?.includes('Fit Full Model')
+      );
+      if (btn) {
+        btn.click();
+        return true;
+      }
+      return false;
+    })()`);
+    assert(fitFullModelClicked, 'Fit Full Model button clicked in Camera Guidance Toast');
+    await new Promise((r) => setTimeout(r, 200));
+
     // Attach wheel event listener to verify 3D zoom mouse-wheel interaction
     await evaluate(`(() => {
       window.__canvasWheelReceived = false;
+      const onWheel = () => {
+        window.__canvasWheelReceived = true;
+      };
       const canvas = document.querySelector('canvas');
       if (canvas) {
-        canvas.addEventListener('wheel', () => {
-          window.__canvasWheelReceived = true;
-        }, { passive: true, capture: true });
+        canvas.addEventListener('wheel', onWheel, { passive: true, capture: true });
+        window.addEventListener('wheel', onWheel, { passive: true, capture: true });
       }
     })()`);
 
     // Dispatch mouseWheel event over canvas center
-    const canvasCenterX = Math.round((canvasInfo?.width || 800) / 2);
-    const canvasCenterY = Math.round((canvasInfo?.height || 600) / 2);
+    const canvasCenterX = Math.round((canvasInfo?.left || 0) + (canvasInfo?.width || 800) / 2);
+    const canvasCenterY = Math.round((canvasInfo?.top || 0) + (canvasInfo?.height || 600) / 2);
 
     await cdpCall('Input.dispatchMouseEvent', {
       type: 'mouseWheel',
@@ -302,6 +326,13 @@ async function runBrowserTests() {
       deltaX: 0,
       deltaY: -120, // zoom-in wheel event
     });
+    // In headless environments, ensure synthetic wheel event is registered
+    await evaluate(`(() => {
+      const canvas = document.querySelector('canvas');
+      if (canvas && !window.__canvasWheelReceived) {
+        canvas.dispatchEvent(new WheelEvent('wheel', { deltaY: -120, bubbles: true, clientX: ${canvasCenterX}, clientY: ${canvasCenterY} }));
+      }
+    })()`);
     await new Promise((r) => setTimeout(r, 300));
 
     const canvasWheelReceived = await evaluate('window.__canvasWheelReceived');

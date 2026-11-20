@@ -100,9 +100,34 @@ export function calculateFinancials(
     paybackYears = Math.round((totalSystemCost / annualSavings) * 10) / 10;
   }
 
-  // 20-Year cumulative net financial benefit
-  const twentyYearGrossSavings = annualSavings * 20;
-  const twentyYearNetSavings = Math.round(twentyYearGrossSavings - totalSystemCost);
+  // 20-Year cumulative lifecycle financial modeling:
+  // - Annual panel degradation rate: 0.5%/yr (crystalline silicon benchmark)
+  // - Annual operation & maintenance (O&M): 1% of initial CapEx per year
+  // - Central inverter replacement at Year 10: 12% of initial CapEx
+  const degradationRate = 0.005;
+  const annualOMCost = Math.round(0.01 * totalSystemCost);
+  const inverterReplacementCost = Math.round(0.12 * totalSystemCost);
+
+  let cumulativeGrossSavings = 0;
+  let cumulativeNetSavings = 0;
+
+  for (let year = 1; year <= 20; year++) {
+    const degradationFactor = Math.pow(1 - degradationRate, year - 1);
+    const yrGen = annualGenerationKWh * degradationFactor;
+    const yrSelfConsumed = Math.min(yrGen, annualConsumptionKWh);
+    const yrSurplus = Math.max(0, yrGen - annualConsumptionKWh);
+    const yrGrossSavings = yrSelfConsumed * tariff + yrSurplus * (tariff * exportCreditRatio);
+
+    cumulativeGrossSavings += yrGrossSavings;
+    let yrNet = yrGrossSavings - annualOMCost;
+    if (year === 10) {
+      yrNet -= inverterReplacementCost;
+    }
+    cumulativeNetSavings += yrNet;
+  }
+
+  const twentyYearGrossSavings = Math.round(cumulativeGrossSavings);
+  const twentyYearNetSavings = Math.round(cumulativeNetSavings - totalSystemCost);
 
   const roiPercent = totalSystemCost > 0
     ? Math.round((twentyYearNetSavings / totalSystemCost) * 100)
@@ -123,5 +148,9 @@ export function calculateFinancials(
     totalSystemCostFormatted: formatCurrency(totalSystemCost, currency),
     tariffPerKWh: tariff,
     exportCreditRatio,
+    annualOMCost,
+    inverterReplacementCost,
+    degradationRatePercent: 0.5,
+    twentyYearGrossSavings,
   };
 }

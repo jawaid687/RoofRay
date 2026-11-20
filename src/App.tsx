@@ -5,6 +5,7 @@ import { ControlPanel } from './components/panels/ControlPanel';
 import { ViewportControls } from './components/layout/ViewportControls';
 import { HeatmapLegend } from './components/ui/HeatmapLegend';
 import { DemoTourOverlay } from './components/ui/DemoTourOverlay';
+import { CameraGuidanceToast } from './components/ui/CameraGuidanceToast';
 import { useSolarStore } from './store/useSolarStore';
 
 export function App() {
@@ -160,6 +161,9 @@ export function App() {
 
           {/* Automated Hackathon Demo Banner */}
           <DemoTourOverlay />
+
+          {/* First-Time Camera Guidance Toast */}
+          <CameraGuidanceToast />
 
           {/* Subtle Viewport Watermark & Controls Tooltip */}
           <div className="absolute top-4 right-4 z-10 pointer-events-none hidden md:flex items-center gap-2 text-[10px] font-mono text-slate-500 bg-slate-950/70 px-2.5 py-1 rounded-md border border-slate-800/60">

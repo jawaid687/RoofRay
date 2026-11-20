@@ -25,7 +25,7 @@ export function Scene() {
     <div className="w-full h-full relative select-none">
       <Canvas
         shadows="soft"
-        camera={{ position: [-38, 32, 22], fov: 42, near: 0.5, far: 600 }}
+        camera={{ position: [-54, 48, 62], fov: 42, near: 0.5, far: 600 }}
         gl={{ antialias: true, alpha: false }}
         className="w-full h-full bg-slate-950"
         onCreated={({ scene, camera, gl }) => {
@@ -62,7 +62,7 @@ export function Scene() {
           minDistance={10}
           maxDistance={180}
           maxPolarAngle={Math.PI / 2 - 0.05} // don't go below ground horizon
-          target={[-16, 10, -6]} // default center on Apex Lofts
+          target={[0, 8, 5]} // default site overview framing
         />
       </Canvas>
     </div>

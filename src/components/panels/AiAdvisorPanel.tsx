@@ -339,7 +339,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
     ? Math.round(analysis.averageExposureScore * 100)
     : liveShading
     ? Math.round(liveShading.litRatio * 100)
-    : 92;
+    : null;
 
   // Toggle individual collapsible sections in assistant messages
   const toggleSection = (sectionKey: string) => {
@@ -442,7 +442,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
           }
         : liveShading
         ? {
-            annualExposurePercent: Math.round(liveShading.litRatio * 100),
+            annualExposurePercent: undefined,
             unshadedAreaM2: Math.round(building.width * building.length * liveShading.litRatio * 10) / 10,
             liveExposurePercent: Math.round(liveShading.litRatio * 100),
           }
@@ -610,7 +610,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
               <span>•</span>
               <span>{energy.panelCount} panels</span>
               <span>•</span>
-              <span className="text-amber-300">{exposureScore}% sun</span>
+              <span className="text-amber-300">{exposureScore !== null ? `${exposureScore}% sun` : 'Not Analyzed'}</span>
               <span>•</span>
               <span className="text-sky-300 font-mono">{formattedCapex}</span>
               <span>•</span>

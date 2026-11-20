@@ -221,6 +221,7 @@ export interface SolarStoreState {
   convertAutoLayoutToManual: () => void;
   movePanel: (id: string, newLocalX: number, newLocalZ: number) => boolean;
 
+  fitFullModel: () => void;
   resetToDefaultView: () => void;
   startDemoTour: () => void;
   stopDemoTour: () => void;
@@ -363,7 +364,23 @@ function getAnalysisWorker(): Worker | null {
 
 export const useSolarStore = create<SolarStoreState>((set, get) => {
   const initialBuildings = INITIAL_BUILDINGS;
-  const initialTarget = initialBuildings[0]; // Apex Lofts
+  let initialTarget = initialBuildings[0]; // Apex Lofts default fallback
+
+  if (typeof window !== 'undefined') {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlBldgId = urlParams.get('building');
+      const savedBldgId = urlBldgId || window.localStorage?.getItem('roofray_selected_building_id');
+      if (savedBldgId) {
+        const found = initialBuildings.find((b) => b.id === savedBldgId);
+        if (found) {
+          initialTarget = found;
+        }
+      }
+    } catch {
+      // ignore storage access errors
+    }
+  }
 
   // Default geographical location: San Francisco, CA
   const initialLocation: LocationState = {
@@ -463,12 +480,8 @@ export const useSolarStore = create<SolarStoreState>((set, get) => {
     monthlyConsumptionKWh: initialTarget.defaultMonthlyKWh,
     optimizationMode: 'balanced',
 
-    cameraFocusTarget: [initialTarget.position[0], initialTarget.height, initialTarget.position[2]],
-    cameraPositionTarget: [
-      initialTarget.position[0] - 22,
-      initialTarget.height + 20,
-      initialTarget.position[2] + 24,
-    ],
+    cameraFocusTarget: [0, 8, 5],
+    cameraPositionTarget: [-54, 48, 62],
     cameraResetTrigger: 0,
 
     isDemoPlaying: false,
@@ -492,11 +505,23 @@ export const useSolarStore = create<SolarStoreState>((set, get) => {
         get().cancelAnalysis();
       }
 
+      if (typeof window !== 'undefined') {
+        try {
+          if (id) {
+            window.localStorage?.setItem('roofray_selected_building_id', id);
+          } else {
+            window.localStorage?.removeItem('roofray_selected_building_id');
+          }
+        } catch {
+          // ignore storage errors
+        }
+      }
+
       if (id === null) {
         set({
           selectedBuildingId: null,
-          cameraFocusTarget: [0, 0, 0],
-          cameraPositionTarget: [45, 45, 55],
+          cameraFocusTarget: [0, 8, 5],
+          cameraPositionTarget: [-54, 48, 62],
           liveShading: null,
           annualAnalysisResult: null,
         });
@@ -629,6 +654,12 @@ export const useSolarStore = create<SolarStoreState>((set, get) => {
         globalFinancialConfig.location
       );
 
+      if (locUpdate.country === 'Bangladesh' && state.currency !== 'BDT') {
+        get().setCurrency('BDT');
+      } else if (locUpdate.country && locUpdate.country !== 'Bangladesh' && state.currency === 'BDT') {
+        get().setCurrency('USD');
+      }
+
       set({
         location: updatedLocation,
         sunState: updatedSunState,
@@ -650,8 +681,14 @@ export const useSolarStore = create<SolarStoreState>((set, get) => {
         timezone: preset.timezone,
       });
 
-      if (preset.country === 'Bangladesh' && get().currency !== 'BDT') {
-        get().setCurrency('BDT');
+      if (preset.country === 'Bangladesh') {
+        if (get().currency !== 'BDT') {
+          get().setCurrency('BDT');
+        }
+      } else {
+        if (get().currency === 'BDT') {
+          get().setCurrency('USD');
+        }
       }
     },
 
@@ -1744,11 +1781,19 @@ export const useSolarStore = create<SolarStoreState>((set, get) => {
       return true;
     },
 
+    fitFullModel: () => {
+      set((state) => ({
+        cameraFocusTarget: [0, 8, 5],
+        cameraPositionTarget: [-54, 48, 62],
+        cameraResetTrigger: state.cameraResetTrigger + 1,
+      }));
+    },
+
     resetToDefaultView: () => {
       set((state) => ({
         selectedBuildingId: null,
-        cameraFocusTarget: [0, 0, 0],
-        cameraPositionTarget: [45, 45, 55],
+        cameraFocusTarget: [0, 8, 5],
+        cameraPositionTarget: [-54, 48, 62],
         cameraResetTrigger: state.cameraResetTrigger + 1,
         isDemoPlaying: false,
         liveShading: null,
@@ -1756,11 +1801,19 @@ export const useSolarStore = create<SolarStoreState>((set, get) => {
     },
 
     startDemoTour: () => {
-      set({ isDemoPlaying: true, demoStep: 1, demoStatusText: '1/6 Selecting target building: Apex Lofts...' });
-      get().selectBuilding('bldg-3');
+      const state = get();
+      const targetBldg = state.getSelectedBuilding() || state.buildings[0];
+      if (state.selectedBuildingId !== targetBldg.id) {
+        get().selectBuilding(targetBldg.id);
+      }
+      set({
+        isDemoPlaying: true,
+        demoStep: 1,
+        demoStatusText: `1/6 Target building active: ${targetBldg.name}...`,
+      });
 
       setTimeout(() => {
-        set({ demoStep: 2, demoStatusText: '2/6 Simulating diurnal sun path & Meridian Tower shadow...' });
+        set({ demoStep: 2, demoStatusText: `2/6 Simulating diurnal sun path & shadow casting for ${targetBldg.name}...` });
         let currentHour = 8;
         const interval = setInterval(() => {
           currentHour += 0.5;
@@ -1779,9 +1832,12 @@ export const useSolarStore = create<SolarStoreState>((set, get) => {
       }, 4200);
 
       setTimeout(() => {
-        set({ demoStep: 4, demoStatusText: '4/6 Calibrating 950 kWh monthly demand & 450W bifacial modules...' });
+        set({
+          demoStep: 4,
+          demoStatusText: `4/6 Calibrating ${targetBldg.defaultMonthlyKWh} kWh monthly demand & 450W bifacial modules...`,
+        });
         get().setSelectedPanelType('panel-450w');
-        get().setMonthlyConsumption(950);
+        get().setMonthlyConsumption(targetBldg.defaultMonthlyKWh);
       }, 6200);
 
       setTimeout(async () => {
