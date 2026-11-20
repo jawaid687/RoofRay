@@ -31,28 +31,28 @@ export function OptimizationCard() {
       title: t.optimization.meetDemand,
       description: t.optimization.meetDemandDesc,
       icon: Target,
-      badge: 'Demand Match',
+      badge: t.optimization.badges.demandMatch,
     },
     {
       id: 'max_generation',
       title: t.optimization.maxGeneration,
       description: t.optimization.maxGenerationDesc,
       icon: Zap,
-      badge: 'Max Yield',
+      badge: t.optimization.badges.maxYield,
     },
     {
       id: 'lowest_cost',
       title: t.optimization.lowestCost,
       description: t.optimization.lowestCostDesc,
       icon: DollarSign,
-      badge: 'Budget Capex',
+      badge: t.optimization.badges.budgetCapex,
     },
     {
       id: 'balanced',
       title: t.optimization.balanced,
       description: t.optimization.balancedDesc,
       icon: Scale,
-      badge: 'Recommended',
+      badge: t.optimization.badges.recommended,
     },
   ];
 
@@ -111,10 +111,10 @@ export function OptimizationCard() {
           <Info className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
           <div className="space-y-0.5">
             <span className="font-semibold">
-              Analyze the rooftop before generating a solar layout.
+              {t.optimization.prerequisiteTitle}
             </span>
             <p className="text-[11px] text-amber-400/80 leading-relaxed">
-              Raycast solar exposure metrics are required to determine optimal panel placement and exclude shaded roof zones.
+              {t.optimization.prerequisiteDesc}
             </p>
           </div>
         </div>
@@ -125,9 +125,9 @@ export function OptimizationCard() {
         <div className="p-3 rounded-xl bg-amber-950/40 border border-amber-800/60 text-xs text-amber-200 flex items-start gap-2">
           <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
           <div className="space-y-0.5">
-            <span className="font-bold">Layout Outdated</span>
+            <span className="font-bold">{t.optimization.outdatedTitle}</span>
             <p className="text-[11px] text-amber-300/80 leading-relaxed">
-              Solar analysis or building settings have changed. Regenerate to update panel placement.
+              {t.optimization.outdatedDesc}
             </p>
           </div>
         </div>
@@ -166,8 +166,8 @@ export function OptimizationCard() {
             <span>
               {isGenerated
                 ? isOutdated
-                  ? 'Regenerate Solar Layout'
-                  : 'Re-optimize Layout'
+                  ? t.optimization.regenerateLayout
+                  : t.optimization.reoptimizeLayout
                 : t.optimization.runOptimization}
             </span>
           </>
@@ -179,7 +179,7 @@ export function OptimizationCard() {
         <div className="p-3 rounded-xl bg-emerald-950/30 border border-emerald-800/50 text-xs text-emerald-300 space-y-1">
           <div className="flex items-center gap-1.5 font-bold text-emerald-300">
             <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>Layout Generated Successfully</span>
+            <span>{t.optimization.layoutGeneratedSuccess}</span>
           </div>
           {layoutFeedback && (
             <p className="text-[11px] text-emerald-300/80 leading-relaxed pl-5.5">

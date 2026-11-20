@@ -21,7 +21,7 @@ interface SolarReportModalProps {
 }
 
 export function SolarReportModal({ isOpen, onClose }: SolarReportModalProps) {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const selectedBuildingId = useSolarStore((s) => s.selectedBuildingId);
   const buildings = useSolarStore((s) => s.buildings);
   const location = useSolarStore((s) => s.location);
@@ -39,7 +39,7 @@ export function SolarReportModal({ isOpen, onClose }: SolarReportModalProps) {
 
   if (!isOpen || !building) return null;
 
-  const reportDate = new Date().toLocaleDateString('en-US', {
+  const reportDate = new Date().toLocaleDateString(language === 'bn' ? 'bn-BD' : 'en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -106,7 +106,7 @@ export function SolarReportModal({ isOpen, onClose }: SolarReportModalProps) {
               <h2 className="text-base font-bold text-white flex items-center gap-1.5">
                 <span>{t.solarReportModal.title}</span>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
-                  SIMULATION ESTIMATE
+                  {t.solarReportModal.simulationEstimate}
                 </span>
               </h2>
               <span className="text-xs text-slate-400 font-mono">Date: {reportDate}</span>
@@ -120,7 +120,7 @@ export function SolarReportModal({ isOpen, onClose }: SolarReportModalProps) {
               title="Copy structured report JSON"
             >
               {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-              <span className="hidden sm:inline">{copied ? 'Copied' : t.solarReportModal.copyJson}</span>
+              <span className="hidden sm:inline">{copied ? t.solarReportModal.copied : t.solarReportModal.copyJson}</span>
             </button>
             <button
               onClick={handlePrint}
@@ -142,33 +142,33 @@ export function SolarReportModal({ isOpen, onClose }: SolarReportModalProps) {
         {/* Executive Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800/80">
-            <span className="text-[10px] font-mono text-slate-400 block">System Size</span>
+            <span className="text-[10px] font-mono text-slate-400 block">{t.solarReportModal.systemSize}</span>
             <div className="text-lg font-bold text-amber-400 mt-1">
               {energy.installedCapacityKW} <span className="text-xs text-slate-400">kW</span>
             </div>
-            <span className="text-[10px] text-slate-500">{energy.panelCount} solar modules</span>
+            <span className="text-[10px] text-slate-500">{energy.panelCount} {t.solarReportModal.solarModules || 'solar modules'}</span>
           </div>
 
           <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800/80">
-            <span className="text-[10px] font-mono text-slate-400 block">Annual Yield</span>
+            <span className="text-[10px] font-mono text-slate-400 block">{t.solarReportModal.annualYield}</span>
             <div className="text-lg font-bold text-sky-400 mt-1">
               {energy.annualGenerationKWh.toLocaleString()} <span className="text-xs text-slate-400">kWh</span>
             </div>
-            <span className="text-[10px] text-slate-500">{energy.solarCoveragePercent}% demand offset</span>
+            <span className="text-[10px] text-slate-500">{energy.solarCoveragePercent}% {t.solarReportModal.demandOffset || 'demand offset'}</span>
           </div>
 
           <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800/80">
-            <span className="text-[10px] font-mono text-slate-400 block">Turnkey Capex</span>
+            <span className="text-[10px] font-mono text-slate-400 block">{t.solarReportModal.turnkeyCapex}</span>
             <div className="text-lg font-bold text-white mt-1">
               {formatCurrency(financial.totalSystemCost, currency)}
             </div>
-            <span className="text-[10px] text-slate-500">Includes installation</span>
+            <span className="text-[10px] text-slate-500">{t.solarReportModal.includesInstallation || 'Includes installation'}</span>
           </div>
 
           <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800/80">
-            <span className="text-[10px] font-mono text-slate-400 block">Simple Payback</span>
+            <span className="text-[10px] font-mono text-slate-400 block">{t.solarReportModal.simplePayback}</span>
             <div className="text-lg font-bold text-emerald-400 mt-1">
-              {financial.paybackYears ? `${financial.paybackYears} yrs` : '—'}
+              {financial.paybackYears ? `${financial.paybackYears} ${t.solarReportModal.years || 'yrs'}` : '—'}
             </div>
             <span className="text-[10px] text-slate-500">Annual: {formatCurrency(financial.annualSavingsUSD, currency)}</span>
           </div>
@@ -180,27 +180,27 @@ export function SolarReportModal({ isOpen, onClose }: SolarReportModalProps) {
           <div className="p-4 rounded-2xl bg-slate-950/40 border border-slate-800/80 space-y-2.5">
             <div className="flex items-center gap-2 font-bold text-slate-200">
               <Building2 className="w-4 h-4 text-sky-400" />
-              <span>Rooftop & Location Profile</span>
+              <span>{t.solarReportModal.rooftopProfile}</span>
             </div>
             <div className="space-y-1.5 text-slate-300 font-mono text-[11px]">
               <div className="flex justify-between py-1 border-b border-slate-800/60">
-                <span className="text-slate-400">Target Building:</span>
+                <span className="text-slate-400">{t.solarReportModal.targetBuilding}:</span>
                 <span className="text-white">{building.name}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-800/60">
-                <span className="text-slate-400">Total Roof Dimensions:</span>
+                <span className="text-slate-400">{t.solarReportModal.totalRoofDimensions}:</span>
                 <span>{building.width}m × {building.length}m ({building.width * building.length} m²)</span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-800/60">
-                <span className="text-slate-400">Raycast Grid Resolution:</span>
-                <span>0.8m x 0.8m discretized</span>
+                <span className="text-slate-400">{t.solarReportModal.raycastResolution}:</span>
+                <span>0.8m x 0.8m</span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-800/60">
-                <span className="text-slate-400">Astronomical Site:</span>
+                <span className="text-slate-400">{t.solarReportModal.astronomicalSite}:</span>
                 <span>{location.city}, {location.country} ({location.latitude}°N, {location.longitude}°E)</span>
               </div>
               <div className="flex justify-between py-1">
-                <span className="text-slate-400">Utility Timezone:</span>
+                <span className="text-slate-400">{t.solarReportModal.utilityTimezone}:</span>
                 <span>{location.timezone}</span>
               </div>
             </div>
@@ -210,23 +210,23 @@ export function SolarReportModal({ isOpen, onClose }: SolarReportModalProps) {
           <div className="p-4 rounded-2xl bg-slate-950/40 border border-slate-800/80 space-y-2.5">
             <div className="flex items-center gap-2 font-bold text-slate-200">
               <Leaf className="w-4 h-4 text-emerald-400" />
-              <span>Decarbonization & Environmental Benefit</span>
+              <span>{t.solarReportModal.decarbonizationBenefit}</span>
             </div>
             <div className="space-y-1.5 text-slate-300 font-mono text-[11px]">
               <div className="flex justify-between py-1 border-b border-slate-800/60">
-                <span className="text-slate-400">Annual CO₂ Offset:</span>
-                <span className="text-emerald-400 font-bold">{environmental.annualCO2ReductionTonnes} Tonnes/yr</span>
+                <span className="text-slate-400">{t.solarReportModal.annualCO2Offset}:</span>
+                <span className="text-emerald-400 font-bold">{environmental.annualCO2ReductionTonnes} {t.solarReportModal.tonnesPerYear || 'Tonnes/yr'}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-800/60">
-                <span className="text-slate-400">Seedling Trees Equivalent:</span>
-                <span>~{environmental.equivalentTreesPlanted} trees grown for 10 yrs</span>
+                <span className="text-slate-400">{t.solarReportModal.seedlingTrees}:</span>
+                <span>~{environmental.equivalentTreesPlanted} {t.solarReportModal.treesEquivalent || 'trees'}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-800/60">
-                <span className="text-slate-400">Displaced Vehicle Miles:</span>
-                <span>{environmental.equivalentMilesDriven.toLocaleString()} miles avoided</span>
+                <span className="text-slate-400">{t.solarReportModal.vehicleMiles}:</span>
+                <span>{environmental.equivalentMilesDriven.toLocaleString()} miles</span>
               </div>
               <div className="flex justify-between py-1">
-                <span className="text-slate-400">Grid Emission Factor:</span>
+                <span className="text-slate-400">{t.solarReportModal.gridEmissionFactor}:</span>
                 <span>{environmental.gridEmissionFactorKgPerKWh || 0.42} kg CO₂/kWh</span>
               </div>
             </div>
@@ -258,16 +258,16 @@ export function SolarReportModal({ isOpen, onClose }: SolarReportModalProps) {
         <div className="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800/60 text-[10px] text-slate-400 space-y-1.5 leading-relaxed font-sans">
           <div className="flex items-center gap-1 font-bold text-slate-300">
             <Info className="w-3.5 h-3.5 text-sky-400" />
-            <span>Authoritative Data Sources & Legal Engineering Notice:</span>
+            <span>{t.solarReportModal.legalNoticeTitle}</span>
           </div>
           <p>
-            • <strong>Ephemeris & Radiation:</strong> NOAA Solar Position Algorithm & NASA POWER satellite-observed climatological database.
+            • <strong>{t.solarReportModal.dataSources}:</strong> {t.solarReportModal.ephemerisRadiation}
           </p>
           <p>
-            • <strong>Regulatory & Tariffs:</strong> SREDA Net Metering Guidelines (2018/2021) and BPDB 2024 Gazette Tariff Schedules.
+            • <strong>{t.solarReportModal.regulatoryTariffs}:</strong> SREDA Net Metering Guidelines 2025 / BPDB Gazette Schedules.
           </p>
           <p className="text-amber-400/90 font-medium">
-            ⚠️ DISCLAIMER: This document constitutes a preliminary feasibility simulation. A licensed structural engineer must verify rooftop load-bearing capacity and a certified electrical contractor must inspect the distribution panel before equipment procurement.
+            ⚠️ {t.solarReportModal.disclaimerText}
           </p>
         </div>
       </div>

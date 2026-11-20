@@ -98,7 +98,7 @@ export function Header() {
             title="Open printable / downloadable solar assessment report"
           >
             <FileText className="w-3.5 h-3.5 text-sky-400" />
-            <span className="hidden sm:inline">Report</span>
+            <span className="hidden sm:inline">{t.nav.exportReport || 'Report'}</span>
           </button>
 
           {/* Reset Camera Button */}

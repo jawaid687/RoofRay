@@ -51,7 +51,7 @@ interface ChatMessage {
 }
 
 export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAdvisorPanelProps) {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const selectedBuildingId = useSolarStore((s) => s.selectedBuildingId);
   const buildings = useSolarStore((s) => s.buildings);
   const location = useSolarStore((s) => s.location);
@@ -302,6 +302,20 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
   // Context-aware follow-up suggestion chips when chat has history
   const followUpChips = useMemo(() => {
     const country = (location.country || '').toLowerCase();
+    if (language === 'bn') {
+      if (country.includes('bangladesh')) {
+        return [
+          'বাংলাদেশ SREDA ২০২৫ নেট মিটারিং ও অনুমোদিত লোডের নিয়ম ব্যাখ্যা করুন',
+          '২০ বছরের নিট সাশ্রয় ও বিনিয়োগ ফেরতের হিসাব দেখান',
+          'বিপিডিবি দ্বিমুখী নেট মিটারের প্রয়োজনীয়তা কী?',
+        ];
+      }
+      return [
+        'উৎপাদনে ছাদের কাঠামোগত ছায়ার প্রভাব ব্যাখ্যা করুন',
+        '২০ বছরের ক্যাশ সাশ্রয়ের বিস্তারিত হিসাব দেখান',
+        'অগ্নিনির্বাপক সেটব্যাক ও রক্ষণাবেক্ষণ করিডোরের নিয়ম কী?',
+      ];
+    }
     if (country.includes('bangladesh')) {
       return [
         'Explain Bangladesh SREDA 2025 net metering and sanctioned load rules',
@@ -321,7 +335,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
       'Show 20-year net savings breakdown',
       'What are the setback & clearance requirements?',
     ];
-  }, [location.country]);
+  }, [location.country, language]);
 
   // Format currency
   const currencySymbol = currency === 'BDT' ? '৳' : '$';
@@ -410,6 +424,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
     const payload: SolarAdvisorRequest = {
       userQuestion: textToSend,
       conversationHistory,
+      language: language,
       selectedBuilding: {
         id: building.id,
         name: building.name,
@@ -608,13 +623,13 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
                 <span>{energy.installedCapacityKW} kW</span>
               </span>
               <span>•</span>
-              <span>{energy.panelCount} panels</span>
+              <span>{energy.panelCount} {t.aiAdvisor.panels || 'panels'}</span>
               <span>•</span>
-              <span className="text-amber-300">{exposureScore !== null ? `${exposureScore}% sun` : 'Not Analyzed'}</span>
+              <span className="text-amber-300">{exposureScore !== null ? `${exposureScore}% ${t.aiAdvisor.sun || 'sun'}` : (t.aiAdvisor.notAnalyzed || 'Not Analyzed')}</span>
               <span>•</span>
               <span className="text-sky-300 font-mono">{formattedCapex}</span>
               <span>•</span>
-              <span className="text-slate-300">{energy.solarCoveragePercent}% annual coverage</span>
+              <span className="text-slate-300">{energy.solarCoveragePercent}% {t.aiAdvisor.annualCoverage || 'annual coverage'}</span>
             </div>
           </div>
         </div>
@@ -636,7 +651,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
           <button
             onClick={() => handleClearConversation()}
             className="p-1.5 rounded-lg bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 text-slate-400 hover:text-purple-300 transition-all"
-            title="Start New Chat"
+            title={t.aiAdvisor.startNewChat || 'Start New Chat'}
           >
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
@@ -645,7 +660,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
             <button
               onClick={() => setShowClearConfirm(true)}
               className="p-1.5 rounded-lg bg-slate-900/80 hover:bg-red-950/50 border border-slate-700/80 hover:border-red-800/60 text-slate-400 hover:text-red-400 transition-all"
-              title="Clear Conversation"
+              title={t.aiAdvisor.clearConversation || 'Clear Conversation'}
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>
@@ -737,11 +752,11 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-emerald-400" />
                   <span className="text-slate-300">
-                    Grounded in RoofRay 3D Raycasting & verified engineering knowledge
+                    {t.aiAdvisor.groundedNotice || 'Grounded in RoofRay 3D Raycasting & verified engineering knowledge'}
                   </span>
                 </div>
                 <span className="text-[10px] font-mono text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded">
-                  Single Source of Truth
+                  {t.aiAdvisor.singleSourceOfTruth || 'Single Source of Truth'}
                 </span>
               </div>
             </div>
@@ -750,7 +765,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
             <div className="space-y-2.5">
               <div className="flex items-center justify-between px-1">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                  Location-Specific Questions ({location.city})
+                  {(t.aiAdvisor.locationQuestions || 'Location-Specific Questions ({city})').replace('{city}', location.city)}
                 </span>
                 <span className="text-[10px] text-purple-300 font-mono">
                   {location.country}
@@ -918,7 +933,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
                           >
                             <div className="flex items-center gap-2">
                               <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                              <span>Key Advantages & Risk Analysis</span>
+                              <span>{t.aiAdvisor.advantagesRisksTitle || 'Key Advantages & Risk Analysis'}</span>
                             </div>
                             {advOpen ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
                           </button>
@@ -927,7 +942,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
                               {/* Advantages */}
                               <div className="p-3 rounded-lg bg-emerald-950/20 border border-emerald-800/30 space-y-1.5">
                                 <span className="text-[10px] font-bold text-emerald-400 flex items-center gap-1 uppercase tracking-wider">
-                                  <span>Advantages</span>
+                                  <span>{t.aiAdvisor.advantagesTitle || 'Advantages'}</span>
                                 </span>
                                 <div className="space-y-1.5">
                                   {data.advantages?.map((adv, i) => (
@@ -943,7 +958,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
                               <div className="p-3 rounded-lg bg-amber-950/20 border border-amber-800/30 space-y-1.5">
                                 <span className="text-[10px] font-bold text-amber-400 flex items-center gap-1 uppercase tracking-wider">
                                   <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
-                                  <span>Risks & Limitations</span>
+                                  <span>{t.aiAdvisor.risksTitle || 'Risks & Limitations'}</span>
                                 </span>
                                 <div className="space-y-1.5">
                                   {data.risks?.map((risk, i) => (
@@ -967,7 +982,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
                         >
                           <div className="flex items-center gap-2">
                             <TrendingUp className="w-4 h-4 text-sky-400" />
-                            <span>Financial Performance & Economic Transparency</span>
+                            <span>{t.aiAdvisor.financialPerformanceTitle || 'Financial Performance & Economic Transparency'}</span>
                           </div>
                           {finOpen ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
                         </button>
@@ -975,27 +990,27 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
                           <div className="p-3.5 pt-0 border-t border-slate-800/50 space-y-3">
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
                               <div className="p-2.5 rounded-lg bg-slate-900/70 border border-slate-800">
-                                <span className="text-[10px] text-slate-400 block font-medium">Total Capital Cost</span>
+                                <span className="text-[10px] text-slate-400 block font-medium">{t.aiAdvisor.totalCapitalCost || 'Total Capital Cost'}</span>
                                 <span className="text-[13px] font-mono font-bold text-white mt-0.5 block">{currencySymbol}{financial.totalSystemCost.toLocaleString()}</span>
                               </div>
                               <div className="p-2.5 rounded-lg bg-slate-900/70 border border-slate-800">
-                                <span className="text-[10px] text-slate-400 block font-medium">Annual Bill Savings</span>
+                                <span className="text-[10px] text-slate-400 block font-medium">{t.aiAdvisor.annualBillSavings || 'Annual Bill Savings'}</span>
                                 <span className="text-[13px] font-mono font-bold text-emerald-400 mt-0.5 block">{currencySymbol}{(financial.annualSavings ?? financial.annualSavingsUSD ?? 0).toLocaleString()}/yr</span>
                               </div>
                               <div className="p-2.5 rounded-lg bg-slate-900/70 border border-slate-800">
-                                <span className="text-[10px] text-slate-400 block font-medium">Estimated Payback</span>
+                                <span className="text-[10px] text-slate-400 block font-medium">{t.aiAdvisor.estimatedPayback || 'Estimated Payback'}</span>
                                 <span className="text-[13px] font-mono font-bold text-amber-300 mt-0.5 block">{financial.paybackYears !== null ? `${financial.paybackYears} years` : 'N/A'}</span>
                               </div>
                               <div className="p-2.5 rounded-lg bg-slate-900/70 border border-slate-800">
-                                <span className="text-[10px] text-slate-400 block font-medium">20-Year Net Benefit</span>
+                                <span className="text-[10px] text-slate-400 block font-medium">{t.aiAdvisor.twentyYearNetBenefit || '20-Year Net Benefit'}</span>
                                 <span className="text-[13px] font-mono font-bold text-sky-300 mt-0.5 block">{currencySymbol}{(financial.twentyYearNetSavings ?? financial.twentyYearNetSavingsUSD ?? 0).toLocaleString()}</span>
                               </div>
                               <div className="p-2.5 rounded-lg bg-slate-900/70 border border-slate-800">
-                                <span className="text-[10px] text-slate-400 block font-medium">Project ROI</span>
+                                <span className="text-[10px] text-slate-400 block font-medium">{t.aiAdvisor.projectRoi || 'Project ROI'}</span>
                                 <span className="text-[13px] font-mono font-bold text-purple-300 mt-0.5 block">{financial.roiPercent}%</span>
                               </div>
                               <div className="p-2.5 rounded-lg bg-slate-900/70 border border-slate-800">
-                                <span className="text-[10px] text-slate-400 block font-medium">Annual Energy Coverage</span>
+                                <span className="text-[10px] text-slate-400 block font-medium">{t.aiAdvisor.annualEnergyCoverage || 'Annual Energy Coverage'}</span>
                                 <span className="text-[13px] font-mono font-bold text-slate-200 mt-0.5 block">{energy.solarCoveragePercent}%</span>
                               </div>
                             </div>

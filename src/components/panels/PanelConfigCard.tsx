@@ -25,7 +25,7 @@ export function PanelConfigCard() {
             <Cpu className="w-3.5 h-3.5 text-amber-400" />
             {t.panelConfig.title}
           </span>
-          <span className="text-[10px] text-slate-400 font-mono">Demo Configurations</span>
+          <span className="text-[10px] text-slate-400 font-mono">{t.panelConfig.demoConfigs}</span>
         </label>
 
         <div className="grid grid-cols-1 gap-2">
@@ -63,7 +63,7 @@ export function PanelConfigCard() {
                     {panel.length}m × {panel.width}m
                   </span>
                   <span>{panel.efficiencyPercent}% Eff</span>
-                  <span className="text-slate-300">{costFormatted}/mod</span>
+                  <span className="text-slate-300">{costFormatted}/{t.panelConfig.perModule}</span>
                 </div>
               </div>
             );
@@ -85,10 +85,10 @@ export function PanelConfigCard() {
 
         <div className="grid grid-cols-2 gap-2 pt-1 font-mono text-xs">
           <div className="bg-slate-950 p-2 rounded-lg border border-slate-800">
-            <div className="text-[10px] text-slate-400 font-sans">Active Modules</div>
+            <div className="text-[10px] text-slate-400 font-sans">{t.panelConfig.activeModules}</div>
             <div className="text-base font-bold text-white mt-0.5">
               {placedPanels.length}{' '}
-              <span className="text-xs text-slate-400 font-normal">/ {maxPossiblePanels} max</span>
+              <span className="text-xs text-slate-400 font-normal">/ {maxPossiblePanels} {t.panelConfig.max}</span>
             </div>
           </div>
 

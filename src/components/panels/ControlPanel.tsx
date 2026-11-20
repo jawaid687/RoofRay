@@ -164,7 +164,7 @@ export function ControlPanel() {
               >
                 <div className="flex items-center gap-2">
                   <Globe className="w-4 h-4 text-amber-400" />
-                  <span>1. Location, Time & Sun Ephemeris</span>
+                  <span>{t.controlPanel.section1}</span>
                 </div>
                 {openSections.location ? (
                   <ChevronDown className="w-4 h-4 text-slate-400" />
@@ -187,7 +187,7 @@ export function ControlPanel() {
               >
                 <div className="flex items-center gap-2">
                   <Building2 className="w-4 h-4 text-sky-400" />
-                  <span>2. Selected Building & Roof Geometry</span>
+                  <span>{t.controlPanel.section2}</span>
                 </div>
                 {openSections.building ? (
                   <ChevronDown className="w-4 h-4 text-slate-400" />
@@ -210,7 +210,7 @@ export function ControlPanel() {
               >
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-amber-400" />
-                  <span>3. Raycast Sunlight & Shading Analysis</span>
+                  <span>{t.controlPanel.section3}</span>
                 </div>
                 {openSections.analysis ? (
                   <ChevronDown className="w-4 h-4 text-slate-400" />
@@ -233,7 +233,7 @@ export function ControlPanel() {
               >
                 <div className="flex items-center gap-2">
                   <Cpu className="w-4 h-4 text-sky-400" />
-                  <span>4. Solar Panel Hardware Configuration</span>
+                  <span>{t.controlPanel.section4}</span>
                 </div>
                 {openSections.panels ? (
                   <ChevronDown className="w-4 h-4 text-slate-400" />
@@ -256,7 +256,7 @@ export function ControlPanel() {
               >
                 <div className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-amber-400" />
-                  <span>5. Electricity Consumption Target</span>
+                  <span>{t.controlPanel.section5}</span>
                 </div>
                 {openSections.demand ? (
                   <ChevronDown className="w-4 h-4 text-slate-400" />
@@ -279,7 +279,7 @@ export function ControlPanel() {
               >
                 <div className="flex items-center gap-2">
                   <Target className="w-4 h-4 text-emerald-400" />
-                  <span>6. Optimization Strategy & Layout</span>
+                  <span>{t.controlPanel.section6}</span>
                 </div>
                 {openSections.optimization ? (
                   <ChevronDown className="w-4 h-4 text-slate-400" />
@@ -306,9 +306,9 @@ export function ControlPanel() {
           <div className="space-y-4">
             <FinancialSummary onNavigateToPlanner={() => handleTabChange('planner')} />
             <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 text-xs text-slate-400 space-y-1.5">
-              <div className="font-semibold text-slate-300">Engineering Assumptions</div>
+              <div className="font-semibold text-slate-300">{t.controlPanel.engineeringAssumptions}</div>
               <p className="text-[11px] leading-relaxed">
-                Calculated assuming 4.6 peak sun-hours/day, 82% system performance ratio, $0.165/kWh grid power rate, and $1,850/kW turnkey installation cost. Self-consumed electricity offsets retail utility tariffs directly.
+                {t.controlPanel.assumptionsDesc}
               </p>
             </div>
           </div>
