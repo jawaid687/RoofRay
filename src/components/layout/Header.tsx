@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useSolarStore } from '../../store/useSolarStore';
+import { useGuidanceStore } from '../../store/useGuidanceStore';
 import { useRouter } from '../../router/Router';
 import { useLanguage } from '../../i18n/useLanguage';
-import { Sun, Play, RotateCcw, Building2, Home, FileText } from 'lucide-react';
+import { Sun, Play, RotateCcw, Building2, Home, FileText, HelpCircle } from 'lucide-react';
 import { SolarReportModal } from '../ui/SolarReportModal';
 
 export function Header() {
@@ -13,6 +14,7 @@ export function Header() {
   const startDemoTour = useSolarStore((s) => s.startDemoTour);
   const isDemoPlaying = useSolarStore((s) => s.isDemoPlaying);
   const selectBuilding = useSolarStore((s) => s.selectBuilding);
+  const openHelpModal = useGuidanceStore((s) => s.openHelpModal);
 
   const { navigate } = useRouter();
   const { language, toggleLanguage, t } = useLanguage();
@@ -49,7 +51,7 @@ export function Header() {
           </div>
 
           {/* Building Selector Dropdown */}
-          <div className="hidden lg:flex items-center ml-4 pl-4 border-l border-slate-800">
+          <div data-tour="building-selector" className="hidden lg:flex items-center ml-4 pl-4 border-l border-slate-800">
             <div className="flex items-center gap-2 text-xs text-slate-300">
               <Building2 className="w-4 h-4 text-sky-400" />
               <span className="text-slate-400">{t.nav.activeBuilding}</span>
@@ -101,12 +103,25 @@ export function Header() {
 
           {/* Reset Camera Button */}
           <button
+            data-tour="reset-camera"
             onClick={resetToDefaultView}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-900/60 hover:bg-slate-800 text-slate-300 text-xs font-medium transition-all"
             title="Reset Orbit Camera to Neighborhood Overview"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span className="hidden md:inline">{t.nav.resetCamera}</span>
+          </button>
+
+          {/* Guide & Help Button */}
+          <button
+            id="tour-guide-help"
+            data-tour="guide-help"
+            onClick={openHelpModal}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-purple-500/40 bg-purple-950/30 hover:bg-purple-900/40 text-purple-200 hover:text-white text-xs font-semibold transition-all shadow-sm"
+            title="Open interactive tutorials and navigation guides"
+          >
+            <HelpCircle className="w-3.5 h-3.5 text-purple-400" />
+            <span className="hidden md:inline">{t.nav.guideHelp || 'Guide & Help'}</span>
           </button>
 
           {/* Run Demo Button (Primary Hackathon CTA) */}

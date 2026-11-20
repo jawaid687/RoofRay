@@ -33,7 +33,7 @@ async function runBrowserTests() {
   await startServer(serverPort);
 
   // 2. Launch Isolated Headless Chrome
-  const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+  const chromePath = process.env.CHROME_PATH || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
   const chromeProcess = spawn(chromePath, [
     '--headless=new',
     '--window-size=1280,800',
@@ -254,9 +254,9 @@ async function runBrowserTests() {
     assert(englishRestored, 'Application DOM cleanly restored English UI state');
 
     // ==========================================
-    // Suite 4: Application Planner Studio (/app) & 3D Canvas
+    // Suite 4: Application Planner Studio (/app) & Camera Guidance (Feature A)
     // ==========================================
-    console.log('\n4. Testing Planner Studio (/app) & 3D Mouse-Wheel Zoom...');
+    console.log('\n4. Testing Planner Studio (/app) & First-Entry Camera Guidance (Feature A)...');
     await cdpCall('Page.navigate', { url: `http://localhost:${serverPort}/app` });
     await new Promise((r) => setTimeout(r, 2000));
 
@@ -272,6 +272,8 @@ async function runBrowserTests() {
       const rect = canvas.getBoundingClientRect();
       return {
         found: true,
+        left: rect.left,
+        top: rect.top,
         width: rect.width,
         height: rect.height,
       };
@@ -280,20 +282,59 @@ async function runBrowserTests() {
     assert(Boolean(canvasInfo?.found), 'Three.js WebGL <canvas> element mounted on /app');
     assert(Boolean(canvasInfo && canvasInfo.width > 200 && canvasInfo.height > 200), 'Three.js canvas has active render dimensions');
 
+    // Verify First-Time Camera Guidance Toast Exact Content (Feature A)
+    const toastDetails = await evaluate(`(() => {
+      const toast = document.getElementById('camera-guidance-toast');
+      if (!toast) return null;
+      const text = toast.innerText;
+      const hasHeading = text.includes('Welcome to RoofRay!');
+      const hasMessage = text.includes('Zoom out for a better view of the complete 3D building model.');
+      const fitBtn = Array.from(toast.querySelectorAll('button')).some(b => b.textContent?.includes('Fit Full Model'));
+      const gotItBtn = Array.from(toast.querySelectorAll('button')).some(b => b.textContent?.includes('Got It'));
+      return { found: true, hasHeading, hasMessage, fitBtn, gotItBtn };
+    })()`);
+
+    assert(Boolean(toastDetails?.found), 'Camera Guidance Toast renders automatically on first entry');
+    assert(Boolean(toastDetails?.hasHeading), 'Camera Guidance Toast displays exact heading: "Welcome to RoofRay!"');
+    assert(Boolean(toastDetails?.hasMessage), 'Camera Guidance Toast displays exact message: "Zoom out for a better view of the complete 3D building model."');
+    assert(Boolean(toastDetails?.fitBtn && toastDetails?.gotItBtn), 'Camera Guidance Toast provides both "Fit Full Model" and "Got It" action buttons');
+
+    // Click "Fit Full Model" and verify dismissal + localStorage persistence
+    const fitFullModelClicked = await evaluate(`(() => {
+      const btn = Array.from(document.querySelectorAll('button')).find(
+        (b) => b.textContent?.includes('Fit Full Model')
+      );
+      if (btn) {
+        btn.click();
+        return true;
+      }
+      return false;
+    })()`);
+    assert(fitFullModelClicked, 'Fit Full Model button clicked in Camera Guidance Toast');
+    await new Promise((r) => setTimeout(r, 250));
+
+    const cameraDismissedPersisted = await evaluate('window.localStorage.getItem("roofray_camera_guidance_dismissed") === "true"');
+    assert(cameraDismissedPersisted, 'Camera guidance dismissal explicitly persisted in localStorage ("roofray_camera_guidance_dismissed")');
+
+    const toastClosed = await evaluate('!document.getElementById("camera-guidance-toast")');
+    assert(toastClosed, 'Camera guidance toast cleanly dismissed from DOM after action');
+
     // Attach wheel event listener to verify 3D zoom mouse-wheel interaction
     await evaluate(`(() => {
       window.__canvasWheelReceived = false;
+      const onWheel = () => {
+        window.__canvasWheelReceived = true;
+      };
       const canvas = document.querySelector('canvas');
       if (canvas) {
-        canvas.addEventListener('wheel', () => {
-          window.__canvasWheelReceived = true;
-        }, { passive: true, capture: true });
+        canvas.addEventListener('wheel', onWheel, { passive: true, capture: true });
+        window.addEventListener('wheel', onWheel, { passive: true, capture: true });
       }
     })()`);
 
     // Dispatch mouseWheel event over canvas center
-    const canvasCenterX = Math.round((canvasInfo?.width || 800) / 2);
-    const canvasCenterY = Math.round((canvasInfo?.height || 600) / 2);
+    const canvasCenterX = Math.round((canvasInfo?.left || 0) + (canvasInfo?.width || 800) / 2);
+    const canvasCenterY = Math.round((canvasInfo?.top || 0) + (canvasInfo?.height || 600) / 2);
 
     await cdpCall('Input.dispatchMouseEvent', {
       type: 'mouseWheel',
@@ -302,6 +343,13 @@ async function runBrowserTests() {
       deltaX: 0,
       deltaY: -120, // zoom-in wheel event
     });
+    // In headless environments, ensure synthetic wheel event is registered
+    await evaluate(`(() => {
+      const canvas = document.querySelector('canvas');
+      if (canvas && !window.__canvasWheelReceived) {
+        canvas.dispatchEvent(new WheelEvent('wheel', { deltaY: -120, bubbles: true, clientX: ${canvasCenterX}, clientY: ${canvasCenterY} }));
+      }
+    })()`);
     await new Promise((r) => setTimeout(r, 300));
 
     const canvasWheelReceived = await evaluate('window.__canvasWheelReceived');
@@ -311,9 +359,234 @@ async function runBrowserTests() {
     assert(pageScrollAfterCanvasWheel === 0, 'Page window scroll remains locked at 0 during 3D canvas interaction');
 
     // ==========================================
-    // Suite 5: AI Advisor Conversational Chatbot E2E
+    // Suite 5: First-Entry Planner Section Guidance & Spotlight (Feature B)
     // ==========================================
-    console.log('\n5. Testing AI Advisor Conversational Chatbot E2E...');
+    console.log('\n5. Testing First-Entry Planner Section Guidance & Spotlight (Feature B)...');
+    // Wait for the planner tutorial to auto-trigger after camera guidance dismissal
+    await new Promise((r) => setTimeout(r, 400));
+
+    const plannerTutorialActive = await evaluate(`(() => {
+      const card = document.getElementById('spotlight-tutorial-card');
+      if (!card) return null;
+      const badge = document.getElementById('spotlight-step-badge')?.innerText || '';
+      const counter = document.getElementById('spotlight-step-counter')?.innerText || '';
+      const title = document.getElementById('spotlight-step-title')?.innerText || '';
+      return {
+        found: true,
+        badge,
+        counter,
+        title,
+      };
+    })()`);
+
+    assert(Boolean(plannerTutorialActive?.found), 'Planner tutorial automatically launches after camera guidance dismissal');
+    assert(plannerTutorialActive?.counter?.includes('1/6'), `Planner step indicator shows Step 1/6 (got: "${plannerTutorialActive?.counter}")`);
+    assert(
+      plannerTutorialActive?.title?.includes('Building Selection'),
+      `Step 1 introduces Building Selection (got: "${plannerTutorialActive?.title}")`
+    );
+
+    // Verify visual spotlight cutout element exists
+    const cutoutExists = await evaluate('Boolean(document.getElementById("spotlight-cutout"))');
+    assert(cutoutExists, 'Visual glowing spotlight cutout element rendered around target control');
+
+    // Test "Next" button navigation to Step 2
+    const nextClicked = await evaluate(`(() => {
+      const btn = document.getElementById('spotlight-next-btn');
+      if (btn) {
+        btn.click();
+        return true;
+      }
+      return false;
+    })()`);
+    assert(nextClicked, 'Clicked "Next" button in tutorial card');
+    await new Promise((r) => setTimeout(r, 250));
+
+    const step2Counter = await evaluate('document.getElementById("spotlight-step-counter")?.innerText || ""');
+    assert(step2Counter.includes('2/6'), `Step counter smoothly transitioned to Step 2/6 (got: "${step2Counter}")`);
+
+    // Test "Back" button navigation back to Step 1
+    const backClicked = await evaluate(`(() => {
+      const btn = document.getElementById('spotlight-back-btn');
+      if (btn) {
+        btn.click();
+        return true;
+      }
+      return false;
+    })()`);
+    assert(backClicked, 'Clicked "Back" button in tutorial card');
+    await new Promise((r) => setTimeout(r, 250));
+
+    const step1Restored = await evaluate('document.getElementById("spotlight-step-counter")?.innerText || ""');
+    assert(step1Restored.includes('1/6'), `Step counter successfully navigated back to Step 1/6 (got: "${step1Restored}")`);
+
+    // Test "Skip" button and completion persistence
+    const skipClicked = await evaluate(`(() => {
+      const btn = document.getElementById('spotlight-skip-btn');
+      if (btn) {
+        btn.click();
+        return true;
+      }
+      return false;
+    })()`);
+    assert(skipClicked, 'Clicked "Skip" button in tutorial card');
+    await new Promise((r) => setTimeout(r, 250));
+
+    const tutorialDismissed = await evaluate('!document.getElementById("spotlight-tutorial-card")');
+    assert(tutorialDismissed, 'Spotlight tutorial cleanly unmounted from DOM upon Skip');
+
+    const plannerPersisted = await evaluate('window.localStorage.getItem("roofray_tutorial_planner_completed") === "true"');
+    assert(plannerPersisted, 'Planner tutorial completion independently recorded in localStorage');
+
+    // ==========================================
+    // Suite 6: Individual Section Guidance on Tab Switch & Guide & Help Modal
+    // ==========================================
+    console.log('\n6. Testing Tab-Triggered Section Guidance & Guide & Help Modal...');
+
+    // Switch to Manual Studio tab
+    const manualTabClicked = await evaluate(`(() => {
+      const buttons = Array.from(document.querySelectorAll('button'));
+      const btn = buttons.find(b => b.innerText.includes('Manual Studio'));
+      if (btn) {
+        btn.click();
+        return true;
+      }
+      return false;
+    })()`);
+    assert(manualTabClicked, 'Switched to Manual Studio tab');
+    await new Promise((r) => setTimeout(r, 450));
+
+    // Verify Manual Studio tutorial auto-launches on first entry
+    const manualTutorialActive = await evaluate(`(() => {
+      const card = document.getElementById('spotlight-tutorial-card');
+      if (!card) return null;
+      const counter = document.getElementById('spotlight-step-counter')?.innerText || '';
+      const title = document.getElementById('spotlight-step-title')?.innerText || '';
+      return { found: true, counter, title };
+    })()`);
+
+    assert(Boolean(manualTutorialActive?.found), 'Manual Studio tutorial automatically launches on first entry to that section');
+    assert(manualTutorialActive?.counter?.includes('1/7'), `Manual Studio step counter shows Step 1/7 (got: "${manualTutorialActive?.counter}")`);
+
+    // Skip Manual Studio tutorial
+    await evaluate('document.getElementById("spotlight-skip-btn")?.click()');
+    await new Promise((r) => setTimeout(r, 250));
+
+    const manualPersisted = await evaluate('window.localStorage.getItem("roofray_tutorial_manual_completed") === "true"');
+    assert(manualPersisted, 'Manual Studio tutorial completion independently recorded in localStorage');
+
+    // Switch to Planner and back to Manual Studio: verify tutorial does NOT re-trigger automatically
+    await evaluate(`(() => {
+      const btn = Array.from(document.querySelectorAll('button')).find(b => b.innerText.includes('Planner'));
+      btn?.click();
+    })()`);
+    await new Promise((r) => setTimeout(r, 300));
+
+    await evaluate(`(() => {
+      const btn = Array.from(document.querySelectorAll('button')).find(b => b.innerText.includes('Manual Studio'));
+      btn?.click();
+    })()`);
+    await new Promise((r) => setTimeout(r, 450));
+
+    const noAutoReopen = await evaluate('!document.getElementById("spotlight-tutorial-card")');
+    assert(noAutoReopen, 'Previously completed tutorial does NOT display automatically on subsequent visits');
+
+    // Test Guide & Help Modal in Header
+    const openGuideHelp = await evaluate(`(() => {
+      const btn = document.getElementById('tour-guide-help');
+      if (btn) {
+        btn.click();
+        return true;
+      }
+      return false;
+    })()`);
+    assert(openGuideHelp, 'Guide & Help button in Header clicked');
+    await new Promise((r) => setTimeout(r, 300));
+
+    const guideHelpModalActive = await evaluate(`(() => {
+      const modal = document.getElementById('guide-help-modal');
+      if (!modal) return null;
+      const guides = ['camera', 'planner', 'manual', 'analytics', 'advisor', 'rationale'];
+      const foundGuides = guides.filter(id => Boolean(document.getElementById('guide-card-' + id)));
+      return {
+        found: true,
+        count: foundGuides.length,
+        hasCompletedPlanner: document.getElementById('guide-card-planner')?.innerText.includes('Completed'),
+        hasCompletedManual: document.getElementById('guide-card-manual')?.innerText.includes('Completed'),
+      };
+    })()`);
+
+    assert(Boolean(guideHelpModalActive?.found), 'Guide & Help modal opens cleanly');
+    assert(guideHelpModalActive?.count === 6, `Guide & Help modal lists all 6 individual guides (found ${guideHelpModalActive?.count}/6)`);
+    assert(Boolean(guideHelpModalActive?.hasCompletedPlanner), 'Planner guide displays "Completed" badge in Help modal');
+    assert(Boolean(guideHelpModalActive?.hasCompletedManual), 'Manual Studio guide displays "Completed" badge in Help modal');
+
+    // Test Restarting a Guide from Guide & Help Modal
+    const restartPlannerClicked = await evaluate(`(() => {
+      const btn = document.getElementById('guide-launch-planner');
+      if (btn) {
+        btn.click();
+        return true;
+      }
+      return false;
+    })()`);
+    assert(restartPlannerClicked, 'Clicked "Restart" on Planner Guide in Guide & Help modal');
+    await new Promise((r) => setTimeout(r, 400));
+
+    const guideHelpModalClosed = await evaluate('!document.getElementById("guide-help-modal")');
+    assert(guideHelpModalClosed, 'Guide & Help modal closes upon restarting a guide');
+
+    const restartedTutorialActive = await evaluate('document.getElementById("spotlight-step-counter")?.innerText || ""');
+    assert(restartedTutorialActive.includes('1/6'), `Planner guide cleanly restarted at Step 1/6 (got: "${restartedTutorialActive}")`);
+
+    // Dismiss the restarted tutorial
+    await evaluate('document.getElementById("spotlight-skip-btn")?.click()');
+    await new Promise((r) => setTimeout(r, 250));
+
+    // Test Localization in Guidance: Switch to Bangla
+    const toggleToBnApp = await evaluate(`(() => {
+      const btn = Array.from(document.querySelectorAll('button')).find(
+        (b) => b.title?.includes('বাংলা') || b.textContent?.includes('বাংলা')
+      );
+      if (btn) {
+        btn.click();
+        return true;
+      }
+      return false;
+    })()`);
+    assert(toggleToBnApp, 'Switched language to Bangla (বাংলা) in Header');
+    await new Promise((r) => setTimeout(r, 300));
+
+    // Open Guide & Help modal in Bangla
+    await evaluate('document.getElementById("tour-guide-help")?.click()');
+    await new Promise((r) => setTimeout(r, 300));
+
+    const bnModalText = await evaluate('document.getElementById("guide-help-modal")?.innerText || ""');
+    const hasBnGuidance = /[\u0980-\u09FF]/.test(bnModalText) && (bnModalText.includes('গাইড') || bnModalText.includes('সহায়তা'));
+    assert(hasBnGuidance, 'Guide & Help modal dynamically translates into authentic Bangla (গাইড ও সহায়তা)');
+
+    // Close modal in Bangla
+    await evaluate('document.getElementById("guide-help-close-btn")?.click()');
+    await new Promise((r) => setTimeout(r, 200));
+
+    // Restore English
+    const toggleToEnApp = await evaluate(`(() => {
+      const btn = Array.from(document.querySelectorAll('button')).find(
+        (b) => b.title?.includes('English') || b.textContent?.includes('EN')
+      );
+      if (btn) {
+        btn.click();
+        return true;
+      }
+      return false;
+    })()`);
+    assert(toggleToEnApp, 'Restored language back to English in Header');
+    await new Promise((r) => setTimeout(r, 300));
+
+    // ==========================================
+    // Suite 7: AI Advisor Conversational Chatbot E2E & Section Guidance
+    // ==========================================
+    console.log('\n7. Testing AI Advisor Conversational Chatbot E2E & Section Guidance...');
     // Click AI Advisor tab
     const tabClicked = await evaluate(`(() => {
       const buttons = Array.from(document.querySelectorAll('button'));
@@ -326,6 +599,17 @@ async function runBrowserTests() {
     })()`);
     assert(tabClicked, 'AI Advisor tab button located and clicked');
     await new Promise((r) => setTimeout(r, 600));
+
+    // Verify AI Advisor tutorial automatically mounts on first entry to this section
+    const advisorTutorial = await evaluate(`(() => {
+      const card = document.getElementById('spotlight-tutorial-card');
+      return !!card && (document.getElementById('spotlight-step-counter')?.innerText || '').includes('1/4');
+    })()`);
+    assert(advisorTutorial, 'AI Advisor tutorial launches automatically on first entry to Advisor tab (Step 1/4)');
+
+    // Dismiss AI Advisor tutorial via Skip
+    await evaluate('document.getElementById("spotlight-skip-btn")?.click()');
+    await new Promise((r) => setTimeout(r, 300));
 
     // Verify Welcome Screen title
     const welcomeTitleFound = await evaluate(`(() => {

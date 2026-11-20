@@ -187,6 +187,11 @@ export interface FinancialResult {
   totalSystemCostFormatted?: string;
   tariffPerKWh?: number;
   exportCreditRatio?: number;
+  // Lifecycle assumption parameters (disclosed to user)
+  annualOMCost?: number;
+  inverterReplacementCost?: number;
+  degradationRatePercent?: number;
+  twentyYearGrossSavings?: number;
 }
 
 export interface EnvironmentalResult {

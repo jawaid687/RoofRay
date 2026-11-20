@@ -14,6 +14,7 @@ export interface TranslationSchema {
     resetCamera: string;
     runDemo: string;
     activeBuilding: string;
+    guideHelp: string;
   };
   // Landing Page
   hero: {
@@ -369,6 +370,39 @@ export interface TranslationSchema {
     finish: string;
     exit: string;
   };
+  cameraGuidance: {
+    heading: string;
+    message: string;
+    fitFullModel: string;
+    gotIt: string;
+  };
+  guideHelp: {
+    title: string;
+    subtitle: string;
+    button: string;
+    close: string;
+    cameraGuide: string;
+    cameraDesc: string;
+    plannerGuide: string;
+    plannerDesc: string;
+    manualGuide: string;
+    manualDesc: string;
+    economicsGuide: string;
+    economicsDesc: string;
+    advisorGuide: string;
+    advisorDesc: string;
+    whyPlanGuide: string;
+    whyPlanDesc: string;
+    startGuide: string;
+    completed: string;
+  };
+  tourUI: {
+    next: string;
+    back: string;
+    skip: string;
+    finish: string;
+    stepOf: string;
+  };
   common: {
     loading: string;
     error: string;
@@ -397,6 +431,7 @@ export const translations: Record<Language, TranslationSchema> = {
       resetCamera: 'Reset Camera',
       runDemo: 'Run Demo',
       activeBuilding: 'Active Building:',
+      guideHelp: 'Guide & Help',
     },
     hero: {
       badge: 'International AI Builders Congress 2026 • Idea to Unicorn',
@@ -752,6 +787,39 @@ export const translations: Record<Language, TranslationSchema> = {
       finish: 'Finish Tour',
       exit: 'Exit Tour',
     },
+    cameraGuidance: {
+      heading: 'Welcome to RoofRay!',
+      message: 'Zoom out for a better view of the complete 3D building model.',
+      fitFullModel: 'Fit Full Model',
+      gotIt: 'Got It',
+    },
+    guideHelp: {
+      title: 'Guide & Help',
+      subtitle: 'Interactive step-by-step guidance for RoofRay modules',
+      button: 'Guide & Help',
+      close: 'Close',
+      cameraGuide: 'Camera & 3D Navigation Guide',
+      cameraDesc: 'Explore orbit rotation, panning, zoom, and full neighborhood framing.',
+      plannerGuide: 'Planner Guide',
+      plannerDesc: 'Learn building selection, ephemeris sun paths, and 3D raycasting.',
+      manualGuide: 'Manual Studio Guide',
+      manualDesc: 'Master panel placement, rotation, setbacks, and heuristic layout.',
+      economicsGuide: 'Economics Guide',
+      economicsDesc: 'Understand CapEx, payback, tariffs, net metering, and 20-year ROI.',
+      advisorGuide: 'AI Advisor Guide',
+      advisorDesc: 'Consult the conversational AI engineer grounded in regional regulations.',
+      whyPlanGuide: 'Why Plan Guide',
+      whyPlanDesc: 'Review engineering rationale, obstacle setbacks, and shade avoidance.',
+      startGuide: 'Start Tutorial',
+      completed: 'Completed',
+    },
+    tourUI: {
+      next: 'Next',
+      back: 'Back',
+      skip: 'Skip Tour',
+      finish: 'Finish',
+      stepOf: 'Step',
+    },
     common: {
       loading: 'Loading...',
       error: 'Error',
@@ -778,6 +846,7 @@ export const translations: Record<Language, TranslationSchema> = {
       resetCamera: 'ক্যামেরা রিসেট',
       runDemo: 'ডেমো দেখুন',
       activeBuilding: 'সক্রিয় ভবন:',
+      guideHelp: 'নির্দেশিকা ও সাহায্য',
     },
     hero: {
       badge: 'ইন্টারন্যাশনাল এআই বিল্ডার্স কংগ্রেস ২০২৬ • আইডিয়া টু ইউনিকর্ন',
@@ -1132,6 +1201,39 @@ export const translations: Record<Language, TranslationSchema> = {
       previous: 'পূর্ববর্তী',
       finish: 'ট্যুর সম্পন্ন',
       exit: 'ট্যুর বন্ধ করুন',
+    },
+    cameraGuidance: {
+      heading: 'Welcome to RoofRay!',
+      message: 'Zoom out for a better view of the complete 3D building model.',
+      fitFullModel: 'Fit Full Model',
+      gotIt: 'Got It',
+    },
+    guideHelp: {
+      title: 'নির্দেশিকা ও সাহায্য',
+      subtitle: 'রুফরে মডিউলসমূহের ইন্টারঅ্যাক্টিভ ধাপে ধাপে নির্দেশিকা',
+      button: 'নির্দেশিকা ও সাহায্য',
+      close: 'বন্ধ করুন',
+      cameraGuide: 'ক্যামেরা ও ৩ডি নেভিগেশন গাইড',
+      cameraDesc: 'অরবিট রোটেশন, প্যানিং, জুম এবং সম্পূর্ণ এলাকা দেখার নিয়ম জানুন।',
+      plannerGuide: 'প্ল্যানার গাইড',
+      plannerDesc: 'বিল্ডিং নির্বাচন, সৌর গতিপথ ও ৩ডি রে-কাস্টিং বিশ্লেষণ শিখুন।',
+      manualGuide: 'ম্যানুয়াল স্টুডিও গাইড',
+      manualDesc: 'প্যানেল বসানো, ঘোরানো, নিরাপত্তা দূরত্ব ও অপ্টিমাইজেশন কৌশল জানুন।',
+      economicsGuide: 'ইকোনমিক্স গাইড',
+      economicsDesc: 'ক্যাপেক্স, পে-ব্যাক, ট্যারিফ, নেট-মিটারিং ও ২০ বছরের লাভ-ক্ষতি বুঝুন।',
+      advisorGuide: 'এআই উপদেষ্টা গাইড',
+      advisorDesc: 'স্থানীয় বিধিমালায় প্রশিক্ষিত এআই ইঞ্জিনিয়ারের সাথে পরামর্শ করুন।',
+      whyPlanGuide: 'হোয়াই প্ল্যান গাইড',
+      whyPlanDesc: 'প্রকৌশলগত যৌক্তিকতা, বাধা দূরীকরণ ও ছায়া পরিহারের কারণ বুঝুন।',
+      startGuide: 'টিউটোরিয়াল শুরু করুন',
+      completed: 'সম্পন্ন',
+    },
+    tourUI: {
+      next: 'পরবর্তী',
+      back: 'পূর্ববর্তী',
+      skip: 'টিউটোরিয়াল বাদ দিন',
+      finish: 'সম্পন্ন',
+      stepOf: 'ধাপ',
     },
     common: {
       loading: 'লোড হচ্ছে...',

@@ -17,7 +17,7 @@ export function RecommendationCard({ onNavigateToPlanner }: RecommendationCardPr
   // Empty state when no solar plan has been generated yet
   if (!hasPanels) {
     return (
-      <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 text-center space-y-4">
+      <div data-tour="why-placement" className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 text-center space-y-4">
         <div className="w-12 h-12 mx-auto rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
           <HelpCircle className="w-6 h-6 text-emerald-400" />
         </div>
@@ -55,7 +55,7 @@ export function RecommendationCard({ onNavigateToPlanner }: RecommendationCardPr
         </div>
       )}
 
-      <div className="p-4 rounded-xl bg-gradient-to-b from-sky-950/40 to-slate-900/60 border border-sky-800/40 space-y-3">
+      <div data-tour="why-placement" className="p-4 rounded-xl bg-gradient-to-b from-sky-950/40 to-slate-900/60 border border-sky-800/40 space-y-3">
         {/* Title */}
         <div className="flex items-center gap-2">
           <Lightbulb className="w-4 h-4 text-amber-400 shrink-0" />
@@ -75,7 +75,7 @@ export function RecommendationCard({ onNavigateToPlanner }: RecommendationCardPr
         </p>
 
         {/* Why this recommendation section */}
-        <div className="pt-2 border-t border-slate-800/80 space-y-2">
+        <div data-tour="why-shading" className="pt-2 border-t border-slate-800/80 space-y-2">
           <div className="text-[11px] font-semibold text-slate-200 flex items-center gap-1.5">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
             <span>Key Selection Factors</span>
@@ -92,7 +92,7 @@ export function RecommendationCard({ onNavigateToPlanner }: RecommendationCardPr
 
         {/* Spatial Exclusions (Shade & Obstacle explainability) */}
         {recommendation.exclusions.length > 0 && (
-          <div className="pt-2 border-t border-slate-800/80 space-y-2">
+          <div data-tour="why-obstacles" className="pt-2 border-t border-slate-800/80 space-y-2">
             <div className="text-[11px] font-semibold text-slate-200 flex items-center gap-1.5">
               <AlertOctagon className="w-3.5 h-3.5 text-amber-400 shrink-0" />
               <span>Spatial Exclusions & Shading Analysis</span>
@@ -109,7 +109,7 @@ export function RecommendationCard({ onNavigateToPlanner }: RecommendationCardPr
         )}
 
         {/* Technical Highlights */}
-        <div className="pt-2 border-t border-slate-800/80 space-y-2">
+        <div data-tour="why-advantages" className="pt-2 border-t border-slate-800/80 space-y-2">
           <div className="text-[11px] font-semibold text-slate-200 flex items-center gap-1.5">
             <Cpu className="w-3.5 h-3.5 text-sky-400 shrink-0" />
             <span>Installation Specifications & Compliance</span>

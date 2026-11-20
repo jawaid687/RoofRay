@@ -32,7 +32,7 @@ export interface SolarAdvisorRequest {
     northOffsetDeg?: number;
   };
   solarAnalysis?: {
-    annualExposurePercent: number;
+    annualExposurePercent?: number;
     unshadedAreaM2: number;
     recommendedZoneAreaM2?: number;
     averageAnnualKWhPerM2?: number;
@@ -893,7 +893,7 @@ STRUCTURED SOLAR CONTEXT:
 - Annual Consumption Demand: ${payload.energyProfile.annualConsumptionKWh} kWh/yr
 - Solar Demand Coverage: ${payload.energyProfile.solarCoveragePercent}%
 - Grid Export Surplus: ${payload.energyProfile.surplusKWh} kWh/yr
-- Shading Exposure: ${payload.solarAnalysis?.annualExposurePercent !== undefined ? `${payload.solarAnalysis.annualExposurePercent}% annual exposure` : `${payload.solarAnalysis?.liveExposurePercent ?? 100}% live unshaded`} (${payload.solarAnalysis?.unshadedAreaM2 ?? payload.selectedBuilding.width * payload.selectedBuilding.length} m² usable area)
+- Shading Exposure: ${payload.solarAnalysis?.annualExposurePercent !== undefined ? `${payload.solarAnalysis.annualExposurePercent}% annual exposure (${payload.solarAnalysis.unshadedAreaM2 ?? payload.selectedBuilding.width * payload.selectedBuilding.length} m² usable area)` : payload.solarAnalysis?.liveExposurePercent !== undefined ? `${payload.solarAnalysis.liveExposurePercent}% instantaneous sunlit exposure at simulated sun position (${payload.solarAnalysis.unshadedAreaM2 ?? payload.selectedBuilding.width * payload.selectedBuilding.length} m² unshaded area)` : 'Not Analyzed (Rooftop raycast simulation has not been run for this building yet)'}
 - Financial Capital Cost: ${currencySymbol}${payload.financialResult.totalSystemCost.toLocaleString()}
 - Applied Electricity Tariff: ${currencySymbol}${payload.financialResult.tariffPerKWh !== undefined ? payload.financialResult.tariffPerKWh : 'N/A'}/kWh
 - Annual Bill Savings: ${currencySymbol}${annualSavings.toLocaleString()}/yr

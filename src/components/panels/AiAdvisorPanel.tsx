@@ -339,7 +339,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
     ? Math.round(analysis.averageExposureScore * 100)
     : liveShading
     ? Math.round(liveShading.litRatio * 100)
-    : 92;
+    : null;
 
   // Toggle individual collapsible sections in assistant messages
   const toggleSection = (sectionKey: string) => {
@@ -442,7 +442,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
           }
         : liveShading
         ? {
-            annualExposurePercent: Math.round(liveShading.litRatio * 100),
+            annualExposurePercent: undefined,
             unshadedAreaM2: Math.round(building.width * building.length * liveShading.litRatio * 10) / 10,
             liveExposurePercent: Math.round(liveShading.litRatio * 100),
           }
@@ -590,7 +590,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
     <div className="h-full flex flex-col bg-slate-950 text-slate-100 overflow-hidden relative font-sans">
       {/* 1. TOP HEADER / PROJECT CONTEXT INDICATOR */}
       <div className="shrink-0 p-3 bg-gradient-to-r from-slate-900/90 via-slate-900/80 to-purple-950/40 border-b border-slate-800/80 flex items-center justify-between gap-2 z-10">
-        <div className="flex items-center gap-2.5 min-w-0">
+        <div data-tour="advisor-context" className="flex items-center gap-2.5 min-w-0">
           <div className="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400 shrink-0 shadow-sm shadow-purple-500/20">
             <Sparkles className="w-4 h-4 animate-pulse" />
           </div>
@@ -610,7 +610,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
               <span>•</span>
               <span>{energy.panelCount} panels</span>
               <span>•</span>
-              <span className="text-amber-300">{exposureScore}% sun</span>
+              <span className="text-amber-300">{exposureScore !== null ? `${exposureScore}% sun` : 'Not Analyzed'}</span>
               <span>•</span>
               <span className="text-sky-300 font-mono">{formattedCapex}</span>
               <span>•</span>
@@ -623,6 +623,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
         <div className="flex items-center gap-1 shrink-0">
           {onOpenReportModal && (
             <button
+              data-tour="advisor-report"
               onClick={onOpenReportModal}
               className="px-2 py-1.5 rounded-lg bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-white text-[11px] font-semibold flex items-center gap-1 transition-all"
               title="Open full printable engineering report"
@@ -713,7 +714,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
         {messages.length === 0 && (
           <div className="py-4 space-y-5 animate-in fade-in duration-300 max-w-2xl mx-auto">
             {/* Assistant Welcome Banner */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-indigo-950/40 via-slate-900/90 to-purple-950/30 border border-purple-500/20 space-y-3 shadow-lg shadow-purple-950/10">
+            <div data-tour="advisor-recommendations" className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-indigo-950/40 via-slate-900/90 to-purple-950/30 border border-purple-500/20 space-y-3 shadow-lg shadow-purple-950/10">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-purple-600/30">
                   <Bot className="w-5 h-5" />
@@ -1189,7 +1190,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
       )}
 
       {/* 4. FIXED MESSAGE COMPOSER AT BOTTOM */}
-      <div className="shrink-0 p-3 bg-slate-950/95 border-t border-slate-800/80 backdrop-blur-sm space-y-2 z-10">
+      <div data-tour="advisor-chat" className="shrink-0 p-3 bg-slate-950/95 border-t border-slate-800/80 backdrop-blur-sm space-y-2 z-10">
         {/* Error notification banner */}
         {errorMsg && (
           <div className="p-2 rounded-xl bg-red-950/40 border border-red-800/60 text-[11px] text-red-200 flex items-center justify-between gap-2">
