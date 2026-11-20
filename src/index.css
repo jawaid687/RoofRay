@@ -9,10 +9,11 @@
 html, body {
   margin: 0;
   padding: 0;
-  background-color: #070b14;
-  color: #f8fafc;
+  background-color: #080c15;
+  color: #f1f5f9;
   font-family: 'Inter', 'Hind Siliguri', 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Landing page mode: enable natural full-page vertical scrolling for document */
@@ -29,59 +30,163 @@ body.app-mode {
   overflow: hidden;
 }
 
-/* Custom engineering scrollbars */
+/* Precision engineering scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.6);
+  background: #0b1120;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(51, 65, 85, 0.7);
-  border-radius: 9999px;
+  background: #1e293b;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 0.9);
+  background: #334155;
 }
 
-/* Glassmorphism panel styling */
+/* Technical CAD / Blueprint subtle grid backgrounds */
+.cad-grid-bg {
+  background-size: 24px 24px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
+
+.cad-grid-dense {
+  background-size: 12px 12px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+}
+
+/* Clean, crisp surface panel styling (replaces murky glassmorphism) */
 .glass-panel {
-  background: rgba(13, 20, 36, 0.82);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(11, 17, 32, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
 }
 
 .glass-panel-subtle {
-  background: rgba(19, 29, 50, 0.65);
+  background: rgba(14, 21, 38, 0.7);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .glass-card-interactive {
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.15s ease-out;
 }
 .glass-card-interactive:hover {
-  background: rgba(30, 41, 69, 0.75);
-  border-color: rgba(245, 158, 11, 0.3);
+  background: rgba(22, 32, 56, 0.85);
+  border-color: rgba(245, 158, 11, 0.35);
   transform: translateY(-1px);
 }
 
-/* Custom glow accents */
+/* Restrained, crisp elevation accents */
 .solar-glow {
-  box-shadow: 0 0 20px -3px rgba(245, 158, 11, 0.35);
+  box-shadow: 0 2px 12px -2px rgba(245, 158, 11, 0.25);
 }
 
 .solar-glow-lg {
-  box-shadow: 0 0 35px -5px rgba(245, 158, 11, 0.45);
+  box-shadow: 0 4px 20px -2px rgba(245, 158, 11, 0.3);
 }
 
 .cyan-glow {
-  box-shadow: 0 0 20px -3px rgba(56, 189, 248, 0.35);
+  box-shadow: 0 2px 12px -2px rgba(56, 189, 248, 0.25);
 }
+
+/* ========================================================================= */
+/* EXECUTIVE SOLAR REPORT PRINT STYLESHEET */
+/* ========================================================================= */
+@media print {
+  @page {
+    margin: 12mm 15mm;
+    size: A4 portrait;
+  }
+
+  /* Reset body and hide web layout chrome */
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    overflow: visible !important;
+  }
+
+  body.app-mode {
+    overflow: visible !important;
+    height: auto !important;
+    width: auto !important;
+  }
+
+  /* Hide background elements, navigation, 3D viewport, and modal overlay controls */
+  header,
+  nav,
+  aside,
+  canvas,
+  .print-hide,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Unfold modal container into natural full-width white document */
+  .report-modal-backdrop {
+    position: static !important;
+    background: #ffffff !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    display: block !important;
+    z-index: auto !important;
+  }
+
+  .report-modal-container {
+    max-width: 100% !important;
+    width: 100% !important;
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  /* Print-specific card and text overrides */
+  .report-card {
+    background: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    box-shadow: none !important;
+  }
+
+  .report-card-highlight {
+    background: #f1f5f9 !important;
+    border: 1px solid #94a3b8 !important;
+    color: #0f172a !important;
+  }
+
+  .report-text-muted {
+    color: #475569 !important;
+  }
+
+  .report-text-dark {
+    color: #0f172a !important;
+  }
+
+  .report-border {
+    border-color: #cbd5e1 !important;
+  }
+}
+

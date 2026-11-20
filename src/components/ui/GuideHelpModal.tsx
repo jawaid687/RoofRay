@@ -37,42 +37,42 @@ export function GuideHelpModal() {
   const guideItems: GuideItem[] = [
     {
       id: 'camera',
-      icon: <Compass className="w-5 h-5 text-purple-400" />,
+      icon: <Compass className="w-4 h-4 text-amber-400" />,
       titleKey: t.guideHelp?.cameraGuide || 'Camera & 3D Navigation Guide',
       descKey: t.guideHelp?.cameraDesc || 'Explore orbit rotation, panning, zoom, and full neighborhood framing.',
       isSection: false,
     },
     {
       id: 'planner',
-      icon: <Building2 className="w-5 h-5 text-amber-400" />,
+      icon: <Building2 className="w-4 h-4 text-amber-400" />,
       titleKey: t.guideHelp?.plannerGuide || 'Planner Guide',
       descKey: t.guideHelp?.plannerDesc || 'Learn building selection, ephemeris sun paths, and 3D raycasting.',
       isSection: true,
     },
     {
       id: 'manual',
-      icon: <MousePointer className="w-5 h-5 text-purple-400" />,
+      icon: <MousePointer className="w-4 h-4 text-amber-400" />,
       titleKey: t.guideHelp?.manualGuide || 'Manual Studio Guide',
       descKey: t.guideHelp?.manualDesc || 'Master panel placement, rotation, setbacks, and heuristic layout.',
       isSection: true,
     },
     {
       id: 'analytics',
-      icon: <BarChart3 className="w-5 h-5 text-sky-400" />,
+      icon: <BarChart3 className="w-4 h-4 text-sky-400" />,
       titleKey: t.guideHelp?.economicsGuide || 'Economics Guide',
       descKey: t.guideHelp?.economicsDesc || 'Understand CapEx, payback, tariffs, net metering, and 20-year ROI.',
       isSection: true,
     },
     {
       id: 'advisor',
-      icon: <Sparkles className="w-5 h-5 text-indigo-400" />,
+      icon: <Sparkles className="w-4 h-4 text-amber-400" />,
       titleKey: t.guideHelp?.advisorGuide || 'AI Advisor Guide',
       descKey: t.guideHelp?.advisorDesc || 'Consult the conversational AI engineer grounded in regional regulations.',
       isSection: true,
     },
     {
       id: 'rationale',
-      icon: <HelpCircle className="w-5 h-5 text-emerald-400" />,
+      icon: <HelpCircle className="w-4 h-4 text-emerald-400" />,
       titleKey: t.guideHelp?.whyPlanGuide || 'Why Plan Guide',
       descKey: t.guideHelp?.whyPlanDesc || 'Review engineering rationale, obstacle setbacks, and shade avoidance.',
       isSection: true,
@@ -89,15 +89,15 @@ export function GuideHelpModal() {
   };
 
   return (
-    <div id="guide-help-modal" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-fade-in">
+    <div id="guide-help-modal" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
       <div
-        className="w-full max-w-xl glass-panel bg-slate-900/95 border border-purple-500/30 rounded-2xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden"
+        className="w-full max-w-xl glass-panel bg-[#0d1527] border border-slate-700/80 rounded-2xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-300">
+            <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
               <HelpCircle className="w-4 h-4" />
             </div>
             <div>
@@ -121,7 +121,7 @@ export function GuideHelpModal() {
         </div>
 
         {/* Guides List */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-2.5">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-2.5">
           {guideItems.map((item) => {
             const completed = item.id === 'camera' ? isCameraCompleted() : isSectionCompleted(item.id);
 
@@ -130,7 +130,7 @@ export function GuideHelpModal() {
                 key={item.id}
                 id={`guide-card-${item.id}`}
                 data-guide-id={item.id}
-                className="p-3.5 rounded-xl border border-slate-800/80 bg-slate-950/50 hover:bg-slate-900/80 hover:border-purple-500/30 transition-all flex items-center justify-between gap-3 group"
+                className="p-3.5 rounded-xl border border-slate-800 bg-[#080d19] hover:bg-slate-900/90 hover:border-slate-700 transition-all flex items-center justify-between gap-3 group"
               >
                 <div className="flex items-start gap-3 min-w-0">
                   <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 shrink-0 mt-0.5">
@@ -138,7 +138,7 @@ export function GuideHelpModal() {
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <h4 className="text-xs font-bold text-slate-200 group-hover:text-purple-300 transition-colors truncate">
+                      <h4 className="text-xs font-bold text-slate-200 group-hover:text-white transition-colors truncate">
                         {item.titleKey}
                       </h4>
                       {completed && (
@@ -158,11 +158,15 @@ export function GuideHelpModal() {
                   id={`guide-launch-${item.id}`}
                   data-guide-launch={item.id}
                   onClick={() => handleLaunch(item)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold shrink-0 flex items-center gap-1.5 transition-all bg-purple-600/20 hover:bg-purple-600/40 text-purple-200 border border-purple-500/40 active:scale-95"
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold shrink-0 flex items-center gap-1.5 transition-all active:scale-95 ${
+                    completed
+                      ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
+                      : 'bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold'
+                  }`}
                 >
                   {completed ? (
                     <>
-                      <RotateCcw className="w-3 h-3" />
+                      <RotateCcw className="w-3 h-3 text-amber-400" />
                       <span>Restart</span>
                     </>
                   ) : (
@@ -178,7 +182,7 @@ export function GuideHelpModal() {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3 border-t border-slate-800/80 bg-slate-950/60 flex items-center justify-between text-[11px] text-slate-500">
+        <div className="px-5 py-3 border-t border-slate-800 bg-[#080d19] flex items-center justify-between text-[11px] text-slate-500">
           <span>Tutorials can be reviewed anytime without losing simulation progress.</span>
           <button
             id="guide-help-footer-close-btn"

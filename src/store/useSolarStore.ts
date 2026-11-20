@@ -226,6 +226,12 @@ export interface SolarStoreState {
   startDemoTour: () => void;
   stopDemoTour: () => void;
 
+  // Project Persistence & Sharing (DDIA Durability)
+  exportProjectState: () => string;
+  importProjectState: (jsonStr: string) => boolean;
+  saveActiveProjectToStorage: () => void;
+  restoreActiveProjectFromStorage: () => boolean;
+
   // Internal Accessor Helpers
   getSelectedBuilding: () => Building | undefined;
   getCurrentAnalysis: () => SolarAnalysisResult | undefined;
@@ -1903,6 +1909,104 @@ export const useSolarStore = create<SolarStoreState>((set, get) => {
 
     stopDemoTour: () => {
       set({ isDemoPlaying: false, demoStep: 0, demoStatusText: '' });
+    },
+
+    // Project Persistence & Sharing (DDIA Durability)
+    exportProjectState: () => {
+      const state = get();
+      const currentBldg = state.getSelectedBuilding();
+      const currentPanel = state.getCurrentPanelType();
+      const projectData = {
+        name: currentBldg ? `${currentBldg.name} Solar Plan` : 'RoofRay Solar Project',
+        buildingId: state.selectedBuildingId || 'building-1',
+        location: {
+          city: state.location.city,
+          country: state.location.country,
+          latitude: state.location.latitude,
+          longitude: state.location.longitude,
+          timezone: state.location.timezone,
+          northOffsetDeg: state.location.northOffsetDeg,
+        },
+        panelConfig: {
+          panelId: currentPanel.id,
+          panelName: currentPanel.name,
+          wattage: currentPanel.wattage,
+          tiltDegrees: state.placedPanels[0]?.tiltDegrees ?? Math.min(45, Math.max(10, Math.abs(state.location.latitude))),
+          orientation: state.panelOrientation,
+        },
+        placedPanels: state.placedPanels,
+        financialParams: {
+          currency: state.currency,
+          tariffPerKWh: state.customElectricityTariff ?? 0.15,
+          exportCreditRatio: state.customExportCreditRatio ?? 0.5,
+        },
+        simulationSummary: {
+          installedCapacityKW: state.energyProfile.installedCapacityKW,
+          panelCount: state.energyProfile.panelCount,
+          annualGenerationKWh: state.energyProfile.annualGenerationKWh,
+          annualConsumptionKWh: state.energyProfile.annualConsumptionKWh,
+          solarCoveragePercent: state.energyProfile.solarCoveragePercent,
+          surplusKWh: state.energyProfile.surplusKWh,
+          totalSystemCost: state.financialResult.totalSystemCost,
+          annualSavings: state.financialResult.annualSavingsUSD,
+          paybackYears: state.financialResult.paybackYears,
+          twentyYearNetSavings: state.financialResult.twentyYearNetSavingsUSD,
+          roiPercent: state.financialResult.roiPercent,
+          annualCO2ReductionTonnes: state.environmentalResult.annualCO2ReductionTonnes,
+          equivalentTreesPlanted: state.environmentalResult.equivalentTreesPlanted,
+        },
+      };
+      return JSON.stringify(projectData, null, 2);
+    },
+
+    importProjectState: (jsonStr: string) => {
+      try {
+        const data = JSON.parse(jsonStr);
+        if (!data || typeof data !== 'object') return false;
+        
+        if (data.buildingId) {
+          get().selectBuilding(data.buildingId);
+        }
+        if (data.location) {
+          get().setLocation(data.location);
+        }
+        if (data.panelConfig?.panelId) {
+          get().setSelectedPanelType(data.panelConfig.panelId);
+        }
+        if (data.financialParams?.currency) {
+          get().setCurrency(data.financialParams.currency);
+        }
+        if (data.financialParams?.tariffPerKWh !== undefined) {
+          get().setCustomFinancials({ tariff: data.financialParams.tariffPerKWh });
+        }
+        if (Array.isArray(data.placedPanels)) {
+          get().setPlacedPanelsWithHistory(data.placedPanels);
+        }
+        return true;
+      } catch {
+        return false;
+      }
+    },
+
+    saveActiveProjectToStorage: () => {
+      if (typeof window === 'undefined' || !window.localStorage) return;
+      try {
+        const exported = get().exportProjectState();
+        localStorage.setItem('roof_ray_active_project_v1', exported);
+      } catch {
+        // Ignore localStorage write failures
+      }
+    },
+
+    restoreActiveProjectFromStorage: () => {
+      if (typeof window === 'undefined' || !window.localStorage) return false;
+      try {
+        const saved = localStorage.getItem('roof_ray_active_project_v1');
+        if (!saved) return false;
+        return get().importProjectState(saved);
+      } catch {
+        return false;
+      }
     },
 
     // Internal Accessors

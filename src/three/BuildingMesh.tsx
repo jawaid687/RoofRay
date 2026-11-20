@@ -21,7 +21,6 @@ export function BuildingMesh({ building }: BuildingMeshProps) {
 
   // Manual placement state & actions
   const placementMode = useSolarStore((s) => s.placementMode);
-  const ghostPanel = useSolarStore((s) => s.ghostPanel);
   const updateGhostPosition = useSolarStore((s) => s.updateGhostPosition);
   const clearGhostPanel = useSolarStore((s) => s.clearGhostPanel);
   const addPlacedPanel = useSolarStore((s) => s.addPlacedPanel);
@@ -93,23 +92,32 @@ export function BuildingMesh({ building }: BuildingMeshProps) {
       return;
     }
 
-    if (placementMode === 'place' && ghostPanel?.isValid) {
-      const panelType = currentPanelType;
-      const newPanel: PlacedPanel = {
-        id: `manual-panel-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-        gridCol: 0,
-        gridRow: 0,
-        localX: ghostPanel.localX,
-        localZ: ghostPanel.localZ,
-        width: ghostPanel.orientation === 'portrait' ? panelType.width : panelType.length,
-        length: ghostPanel.orientation === 'portrait' ? panelType.length : panelType.width,
-        orientation: ghostPanel.orientation,
-        tiltDegrees: 10,
-        wattage: panelType.wattage,
-        exposureScore: ghostPanel.exposureScore,
-        annualKWh: ghostPanel.annualKWh,
-      };
-      addPlacedPanel(newPanel);
+    if (placementMode === 'place') {
+      const localX = e.point.x - x;
+      const localZ = e.point.z - z;
+      updateGhostPosition(localX, localZ);
+      const activeGhost = useSolarStore.getState().ghostPanel;
+
+      if (activeGhost?.isValid) {
+        const panelType = currentPanelType;
+        const newPanel: PlacedPanel = {
+          id: `manual-panel-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          gridCol: 0,
+          gridRow: 0,
+          localX: activeGhost.localX,
+          localZ: activeGhost.localZ,
+          width: activeGhost.orientation === 'portrait' ? panelType.width : panelType.length,
+          length: activeGhost.orientation === 'portrait' ? panelType.length : panelType.width,
+          orientation: activeGhost.orientation,
+          tiltDegrees: 10,
+          wattage: panelType.wattage,
+          exposureScore: activeGhost.exposureScore,
+          annualKWh: activeGhost.annualKWh,
+        };
+        addPlacedPanel(newPanel);
+        // Refresh ghost preview against newly placed panel
+        updateGhostPosition(localX, localZ);
+      }
     }
   };
 
@@ -178,7 +186,13 @@ export function BuildingMesh({ building }: BuildingMeshProps) {
           onPointerMove={handleRoofPointerMove}
           onPointerDown={handleRoofPointerDown}
           onPointerUp={handleRoofPointerUp}
+          onPointerOver={() => {
+            if (placementMode === 'place') {
+              document.body.style.cursor = 'crosshair';
+            }
+          }}
           onPointerLeave={() => {
+            document.body.style.cursor = 'default';
             if (placementMode === 'place') {
               clearGhostPanel();
             }

@@ -188,7 +188,7 @@ export const useGuidanceStore = create<GuidanceState>((set, get) => {
           if (!get().isCameraGuidanceOpen && !get().activeTutorial && get().activeSectionTab === newTab) {
             get().startSectionTutorial(newTab);
           }
-        }, 350);
+        }, 80);
       }
     },
   };

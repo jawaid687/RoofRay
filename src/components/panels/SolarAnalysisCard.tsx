@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSolarStore } from '../../store/useSolarStore';
 import { useLanguage } from '../../i18n/useLanguage';
-import { Sparkles, Loader2, AlertTriangle, CheckCircle2, Info, XCircle, Calendar, CloudSun, ChevronDown, ChevronUp, Database } from 'lucide-react';
+import { Sparkles, Loader2, AlertTriangle, CheckCircle2, Info, XCircle, Calendar, CloudSun, ChevronDown, ChevronUp, Database, Zap } from 'lucide-react';
 import { MetricCard } from '../ui/MetricCard';
 import { fetchNasaSolarResource, SolarResourceData } from '../../services/solarResourceService';
 
@@ -170,8 +170,9 @@ export function SolarAnalysisCard() {
             </span>
           </div>
           {analysisExecutionTimeMs !== null && (
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 whitespace-nowrap">
-              ⚡ {analysisExecutionTimeMs} ms
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 whitespace-nowrap flex items-center gap-1">
+              <Zap className="w-3 h-3 text-emerald-400" />
+              <span>{analysisExecutionTimeMs} ms</span>
             </span>
           )}
         </div>
@@ -190,14 +191,11 @@ export function SolarAnalysisCard() {
 
       {/* Not Analyzed Empty Prompt */}
       {!isAnalyzed && !isBusy && !isStale && (
-        <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-center space-y-2">
-          <Info className="w-5 h-5 text-sky-400/60 mx-auto" />
+        <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 text-center space-y-1.5">
+          <Info className="w-4 h-4 text-sky-400/80 mx-auto" />
           <div className="text-xs font-semibold text-slate-300">
-            Run solar analysis to evaluate rooftop exposure.
+            Click above to raycast solar exposure.
           </div>
-          <p className="text-[11px] text-slate-400 max-w-xs mx-auto leading-relaxed">
-            Click above to raycast diurnal sun angles, detect parapet & high-rise shadows, and find the highest-yield installation zones.
-          </p>
         </div>
       )}
 
@@ -378,30 +376,28 @@ export function SolarAnalysisCard() {
                       </div>
                     )}
 
-                    <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800/80 space-y-1 text-[10px] text-slate-400 leading-relaxed font-sans">
+                    <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800/80 space-y-1 text-[10px] text-slate-400 font-sans">
                       <div className="flex items-center gap-1 font-semibold text-slate-300">
                         <Database className="w-3 h-3 text-sky-400" />
                         <span>{t.solarAnalysis.sourceDistinctionNotice}</span>
                       </div>
-                      <p>
-                        • <strong>Clear-Sky Simulation:</strong> Pure geometric raycasting of rooftop obstacles and surrounding towers (NOAA ephemeris).
+                      <p className="text-slate-400">
+                        Raycast geometric shading (NOAA) & 30-yr satellite climatology ({nasaData.source}).
                       </p>
-                      <p>
-                        • <strong>Weather-Informed Climatology:</strong> 30-year satellite observations from {nasaData.source} (Retrieved: {nasaData.retrievalDate}, Lat: {nasaData.latitude}°, Lon: {nasaData.longitude}°).
-                      </p>
-                      <p className="text-amber-400/90 font-medium">
-                        ⚠️ Both clear-sky simulation and satellite climatology are engineering estimates, not metered production.
+                      <p className="text-amber-400/90 font-medium flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3 shrink-0 text-amber-400" />
+                        <span>Estimates for planning and feasibility screening.</span>
                       </p>
                     </div>
                   </>
                 ) : (
-                  <div className="p-3 rounded-lg bg-slate-900/40 border border-slate-800 text-[11px] text-slate-400 space-y-1">
-                    <div className="text-amber-300 font-semibold flex items-center gap-1.5">
+                  <div className="p-2.5 rounded-lg bg-slate-900/40 border border-slate-800 text-[10px] text-slate-400 space-y-0.5">
+                    <div className="text-amber-300 font-semibold flex items-center gap-1.5 text-xs">
                       <Database className="w-3.5 h-3.5" />
-                      <span>NASA POWER Service Offline / Unavailable</span>
+                      <span>Satellite Climatology Offline</span>
                     </div>
-                    <p className="text-[10px] text-slate-400 leading-relaxed">
-                      External satellite climatology could not be retrieved. The application continues running pure astronomical clear-sky raycasting simulation with zero interruption.
+                    <p className="text-slate-400">
+                      Operating in astronomical clear-sky raycasting mode.
                     </p>
                   </div>
                 )}

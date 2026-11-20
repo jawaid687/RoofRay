@@ -107,29 +107,17 @@ export function OptimizationCard() {
 
       {/* Prerequisite Check Banner if Analysis Not Done */}
       {!isAnalysisReady && (
-        <div className="p-3 rounded-xl bg-amber-950/30 border border-amber-800/50 text-xs text-amber-300 flex items-start gap-2">
-          <Info className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-          <div className="space-y-0.5">
-            <span className="font-semibold">
-              {t.optimization.prerequisiteTitle}
-            </span>
-            <p className="text-[11px] text-amber-400/80 leading-relaxed">
-              {t.optimization.prerequisiteDesc}
-            </p>
-          </div>
+        <div className="p-2.5 rounded-lg bg-amber-950/30 border border-amber-800/50 text-xs text-amber-300 flex items-center gap-2">
+          <Info className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+          <span className="text-[11px] font-medium">{t.optimization.prerequisiteDesc || 'Run solar analysis first to evaluate exposure.'}</span>
         </div>
       )}
 
       {/* Outdated Layout Warning */}
       {isOutdated && isAnalysisReady && (
-        <div className="p-3 rounded-xl bg-amber-950/40 border border-amber-800/60 text-xs text-amber-200 flex items-start gap-2">
-          <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-          <div className="space-y-0.5">
-            <span className="font-bold">{t.optimization.outdatedTitle}</span>
-            <p className="text-[11px] text-amber-300/80 leading-relaxed">
-              {t.optimization.outdatedDesc}
-            </p>
-          </div>
+        <div className="p-2.5 rounded-lg bg-amber-950/40 border border-amber-800/60 text-xs text-amber-200 flex items-center gap-2">
+          <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+          <span className="text-[11px] font-medium">{t.optimization.outdatedDesc || 'Settings updated — re-optimization suggested.'}</span>
         </div>
       )}
 

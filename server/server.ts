@@ -1,6 +1,7 @@
 import http from 'http';
 import fs from 'fs';
 import path from 'path';
+import zlib from 'zlib';
 import { fileURLToPath } from 'url';
 
 // Robust, zero-dependency .env loader supporting Node 18+ (process.loadEnvFile is Node 20.6+)
@@ -39,7 +40,23 @@ export function loadEnvFileCompat(filePath: string = '.env'): void {
 
 loadEnvFileCompat();
 
-import { handleSolarAdvisorRequest, validateAdvisorPayload, checkRateLimit, resolveGeminiModel } from '../src/server/advisorService.js';
+import {
+  handleSolarAdvisorRequest,
+  validateAdvisorPayload,
+  checkRateLimit,
+  resolveGeminiModel,
+  advisorCircuitBreaker,
+  getRateLimitStats,
+} from '../src/server/advisorService.js';
+
+import {
+  saveProject,
+  getProject,
+  listProjects,
+  deleteProject,
+  validateProjectPayload,
+  isValidProjectId,
+} from './projectStore.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -102,14 +119,65 @@ function checkDailyAiQuota(): boolean {
   return true;
 }
 
+// Track active sockets for graceful shutdown
+const activeSockets = new Set<import('net').Socket>();
+let isShuttingDown = false;
+
+// HTTP Compression Streamer Helper (Node built-in zlib)
+function sendCompressedStream(
+  req: http.IncomingMessage,
+  res: http.ServerResponse,
+  filePath: string,
+  contentType: string,
+  cacheControl: string
+): void {
+  const acceptEncoding = (req.headers['accept-encoding'] || '') as string;
+  const isCompressible = /^(text\/|application\/(javascript|json)|image\/svg\+xml)/.test(contentType);
+
+  res.setHeader('Cache-Control', cacheControl);
+
+  if (isCompressible && acceptEncoding.includes('gzip')) {
+    res.setHeader('Content-Encoding', 'gzip');
+    res.setHeader('Vary', 'Accept-Encoding');
+    res.writeHead(200, { 'Content-Type': contentType });
+    const rawStream = fs.createReadStream(filePath);
+    const gzip = zlib.createGzip({ level: 6 });
+    rawStream.pipe(gzip).pipe(res);
+  } else if (isCompressible && acceptEncoding.includes('deflate')) {
+    res.setHeader('Content-Encoding', 'deflate');
+    res.setHeader('Vary', 'Accept-Encoding');
+    res.writeHead(200, { 'Content-Type': contentType });
+    const rawStream = fs.createReadStream(filePath);
+    const deflate = zlib.createDeflate();
+    rawStream.pipe(deflate).pipe(res);
+  } else {
+    res.writeHead(200, { 'Content-Type': contentType });
+    fs.createReadStream(filePath).pipe(res);
+  }
+}
+
 export const server = http.createServer(async (req, res) => {
+  if (isShuttingDown) {
+    res.writeHead(503, { 'Content-Type': 'application/json; charset=UTF-8', 'Connection': 'close' });
+    res.end(JSON.stringify({ error: 'SERVER_SHUTTING_DOWN', message: 'Server is shutting down' }));
+    return;
+  }
+
   const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
   
-  // Extract client IP safely behind Render reverse proxy
+  // Extract client IP safely behind reverse proxy
   const forwarded = req.headers['x-forwarded-for'];
   const clientIp = typeof forwarded === 'string'
     ? forwarded.split(',')[0].trim()
     : req.socket.remoteAddress || '127.0.0.1';
+
+  // Security Headers (Defense-in-depth)
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  if (req.headers['x-forwarded-proto'] === 'https') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
 
   // Configured CORS headers (no wildcards)
   const origin = req.headers.origin;
@@ -117,7 +185,7 @@ export const server = http.createServer(async (req, res) => {
     if (isOriginAllowed(origin)) {
       res.setHeader('Access-Control-Allow-Origin', origin);
       res.setHeader('Vary', 'Origin');
-      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
       res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     } else if (req.method === 'OPTIONS') {
       res.writeHead(403, { 'Content-Type': 'application/json; charset=UTF-8' });
@@ -133,8 +201,25 @@ export const server = http.createServer(async (req, res) => {
   }
 
   // ==========================================
-  // 1. Health Endpoint (/api/ai/health)
+  // 1. Health Endpoints (/api/ai/health, /api/health/liveness, /api/health/readiness)
   // ==========================================
+  if (url.pathname === '/api/health/liveness') {
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=UTF-8' });
+    res.end(JSON.stringify({ status: 'ok', liveness: true }));
+    return;
+  }
+
+  if (url.pathname === '/api/health/readiness') {
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=UTF-8' });
+    res.end(JSON.stringify({
+      status: 'ok',
+      readiness: true,
+      uptime: process.uptime(),
+      circuitBreaker: advisorCircuitBreaker.getState(),
+    }));
+    return;
+  }
+
   if (url.pathname === '/api/ai/health' || url.pathname === '/api/health') {
     if (req.method !== 'GET') {
       res.writeHead(405, { 'Content-Type': 'application/json; charset=UTF-8', 'Allow': 'GET, OPTIONS' });
@@ -153,17 +238,23 @@ export const server = http.createServer(async (req, res) => {
       JSON.stringify({
         status: 'ok',
         service: 'RoofRay AI Solar Advisor Production Server',
-        version: '3.3.0',
+        version: '3.4.0',
         timestamp: new Date().toISOString(),
+        uptimeSeconds: Math.floor(process.uptime()),
+        memoryUsage: process.memoryUsage(),
         aiProvider: 'Google Gemini',
         modelConfigured: resolveGeminiModel(),
         keyConfigured: isConfigured,
         authMethod: 'x-goog-api-key header (secured)',
+        circuitBreaker: advisorCircuitBreaker.getStats(),
+        rateLimiterStats: getRateLimitStats(),
         dailyQuota: {
           limitPerInstance: MAX_DAILY_AI_REQUESTS,
           consumed: dailyAiRequestsCount,
           storage: 'in-memory (single process instance)',
         },
+        liveness: true,
+        readiness: true,
       })
     );
     return;
@@ -253,7 +344,132 @@ export const server = http.createServer(async (req, res) => {
   }
 
   // ==========================================
-  // 3. Block unmatched /api/* routes from SPA fallback
+  // 3. Project Persistence API (/api/projects & /api/projects/:id)
+  // ==========================================
+  if (url.pathname === '/api/projects' || url.pathname.startsWith('/api/projects/')) {
+    const segments = url.pathname.slice('/api/projects'.length).split('/').filter(Boolean);
+    const projectId = segments[0];
+
+    // List projects: GET /api/projects
+    if (!projectId && req.method === 'GET') {
+      try {
+        const projects = await listProjects();
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=UTF-8' });
+        res.end(JSON.stringify({ success: true, projects }));
+      } catch {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=UTF-8' });
+        res.end(JSON.stringify({ error: 'STORAGE_ERROR', message: 'Failed to list saved projects' }));
+      }
+      return;
+    }
+
+    // Save project: POST /api/projects
+    if (!projectId && req.method === 'POST') {
+      const contentType = req.headers['content-type'] || '';
+      if (!contentType.includes('application/json')) {
+        res.writeHead(415, { 'Content-Type': 'application/json; charset=UTF-8' });
+        res.end(JSON.stringify({ error: 'UNSUPPORTED_MEDIA_TYPE', message: 'Content-Type must be application/json' }));
+        return;
+      }
+
+      let bodyText = '';
+      let isOversized = false;
+
+      req.on('data', (chunk) => {
+        bodyText += chunk;
+        if (bodyText.length > 100 * 1024 && !isOversized) {
+          isOversized = true;
+          res.writeHead(413, { 'Content-Type': 'application/json; charset=UTF-8' });
+          res.end(JSON.stringify({ error: 'PAYLOAD_TOO_LARGE', message: 'Project payload exceeds 100KB limit' }));
+          req.destroy();
+        }
+      });
+
+      req.on('end', async () => {
+        if (isOversized) return;
+        try {
+          let projectData: any;
+          try {
+            projectData = JSON.parse(bodyText);
+          } catch {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=UTF-8' });
+            res.end(JSON.stringify({ error: 'INVALID_JSON', message: 'Request body is not valid JSON' }));
+            return;
+          }
+
+          const validation = validateProjectPayload(projectData);
+          if (!validation.valid) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=UTF-8' });
+            res.end(JSON.stringify({ error: 'INVALID_PAYLOAD', message: validation.error }));
+            return;
+          }
+
+          const saved = await saveProject(projectData, projectData.id);
+          res.writeHead(201, { 'Content-Type': 'application/json; charset=UTF-8' });
+          res.end(JSON.stringify({ success: true, project: saved }));
+        } catch (err: any) {
+          res.writeHead(500, { 'Content-Type': 'application/json; charset=UTF-8' });
+          res.end(JSON.stringify({ error: 'SAVE_FAILED', message: err.message || 'Failed to save project' }));
+        }
+      });
+      return;
+    }
+
+    // Get project: GET /api/projects/:id
+    if (projectId && req.method === 'GET') {
+      if (!isValidProjectId(projectId)) {
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=UTF-8' });
+        res.end(JSON.stringify({ error: 'INVALID_PROJECT_ID', message: 'Invalid project ID format' }));
+        return;
+      }
+
+      try {
+        const project = await getProject(projectId);
+        if (!project) {
+          res.writeHead(404, { 'Content-Type': 'application/json; charset=UTF-8' });
+          res.end(JSON.stringify({ error: 'NOT_FOUND', message: `Project not found: ${projectId}` }));
+          return;
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=UTF-8' });
+        res.end(JSON.stringify({ success: true, project }));
+      } catch {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=UTF-8' });
+        res.end(JSON.stringify({ error: 'READ_FAILED', message: 'Failed to read project' }));
+      }
+      return;
+    }
+
+    // Delete project: DELETE /api/projects/:id
+    if (projectId && req.method === 'DELETE') {
+      if (!isValidProjectId(projectId)) {
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=UTF-8' });
+        res.end(JSON.stringify({ error: 'INVALID_PROJECT_ID', message: 'Invalid project ID format' }));
+        return;
+      }
+
+      try {
+        const deleted = await deleteProject(projectId);
+        if (!deleted) {
+          res.writeHead(404, { 'Content-Type': 'application/json; charset=UTF-8' });
+          res.end(JSON.stringify({ error: 'NOT_FOUND', message: `Project not found: ${projectId}` }));
+          return;
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=UTF-8' });
+        res.end(JSON.stringify({ success: true, message: `Project ${projectId} deleted` }));
+      } catch {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=UTF-8' });
+        res.end(JSON.stringify({ error: 'DELETE_FAILED', message: 'Failed to delete project' }));
+      }
+      return;
+    }
+
+    res.writeHead(405, { 'Content-Type': 'application/json; charset=UTF-8', 'Allow': 'GET, POST, DELETE, OPTIONS' });
+    res.end(JSON.stringify({ error: 'METHOD_NOT_ALLOWED', message: 'Method not supported on /api/projects' }));
+    return;
+  }
+
+  // ==========================================
+  // 4. Block unmatched /api/* routes from SPA fallback
   // ==========================================
   if (url.pathname.startsWith('/api/')) {
     res.writeHead(404, { 'Content-Type': 'application/json; charset=UTF-8' });
@@ -262,7 +478,7 @@ export const server = http.createServer(async (req, res) => {
   }
 
   // ==========================================
-  // 4. Static Asset & SPA Serving from dist/
+  // 5. Static Asset & SPA Serving from dist/ with GZIP / Deflate Compression
   // ==========================================
   if (fs.existsSync(DIST_DIR)) {
     let rawPath: string;
@@ -309,9 +525,9 @@ export const server = http.createServer(async (req, res) => {
         const ext = path.extname(resolvedPath).toLowerCase();
         const mime = MIME_TYPES[ext] || 'application/octet-stream';
         const isHashedAsset = rawPath.startsWith('/assets/');
-        res.setHeader('Cache-Control', isHashedAsset ? 'public, max-age=31536000, immutable' : 'no-cache');
-        res.writeHead(200, { 'Content-Type': mime });
-        fs.createReadStream(resolvedPath).pipe(res);
+        const cacheControl = isHashedAsset ? 'public, max-age=31536000, immutable' : 'no-cache';
+        
+        sendCompressedStream(req, res, resolvedPath, mime, cacheControl);
         return;
       }
 
@@ -324,9 +540,7 @@ export const server = http.createServer(async (req, res) => {
     // SPA Route Fallback (e.g. / or /app or direct page refresh) -> serve index.html
     const indexPath = path.resolve(DIST_DIR, 'index.html');
     if (fs.existsSync(indexPath)) {
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=UTF-8' });
-      fs.createReadStream(indexPath).pipe(res);
+      sendCompressedStream(req, res, indexPath, 'text/html; charset=UTF-8', 'no-cache, no-store, must-revalidate');
       return;
     }
   }
@@ -347,16 +561,79 @@ export const server = http.createServer(async (req, res) => {
   `);
 });
 
-export function startServer(port: number = PORT): Promise<http.Server> {
+// Socket tracking for graceful connection draining
+server.on('connection', (socket) => {
+  activeSockets.add(socket);
+  socket.on('close', () => activeSockets.delete(socket));
+});
+
+export function shutdownServer(timeoutMs: number = 10000): Promise<void> {
+  if (isShuttingDown) return Promise.resolve();
+  isShuttingDown = true;
+  console.log('🔄 Initiating graceful server shutdown...');
+
   return new Promise((resolve) => {
-    server.listen(port, () => {
-      console.log(`🚀 RoofRay AI Solar Server running on port ${port}`);
-      console.log(`   Local URL:    http://localhost:${port}/`);
-      console.log(`   App URL:      http://localhost:${port}/app`);
-      console.log(`   Health check: http://localhost:${port}/api/ai/health`);
-      console.log(`   API Endpoint: http://localhost:${port}/api/ai/solar-advisor`);
-      resolve(server);
+    server.close((err) => {
+      isShuttingDown = false;
+      if (err) {
+        console.error('Error during server close:', err);
+      } else {
+        console.log('✅ Server connection listener closed.');
+      }
+      resolve();
     });
+
+    // Close idle keep-alive sockets gracefully
+    for (const socket of activeSockets) {
+      socket.end();
+    }
+
+    // Force close any remaining sockets if timeout exceeded
+    setTimeout(() => {
+      for (const socket of activeSockets) {
+        socket.destroy();
+      }
+      resolve();
+    }, timeoutMs).unref();
+  });
+}
+
+// Register process signal handlers for production container lifecycles
+process.on('SIGTERM', () => {
+  console.log('Received SIGTERM signal.');
+  shutdownServer().then(() => process.exit(0));
+});
+
+process.on('SIGINT', () => {
+  console.log('Received SIGINT signal.');
+  shutdownServer().then(() => process.exit(0));
+});
+
+export function startServer(port: number = PORT): Promise<http.Server> {
+  if (server.listening) {
+    return Promise.resolve(server);
+  }
+  return new Promise((resolve, reject) => {
+    const onError = (err: any) => {
+      server.removeListener('listening', onListening);
+      reject(err);
+    };
+    const onListening = () => {
+      server.removeListener('error', onError);
+      const addr = server.address();
+      const actualPort = typeof addr === 'object' && addr ? addr.port : port;
+      console.log(`🚀 RoofRay AI Solar Server running on port ${actualPort}`);
+      console.log(`   Local URL:    http://localhost:${actualPort}/`);
+      console.log(`   App URL:      http://localhost:${actualPort}/app`);
+      console.log(`   Health check: http://localhost:${actualPort}/api/ai/health`);
+      console.log(`   API Endpoint: http://localhost:${actualPort}/api/ai/solar-advisor`);
+      console.log(`   Projects API: http://localhost:${actualPort}/api/projects`);
+      resolve(server);
+    };
+
+    server.once('error', onError);
+    server.once('listening', onListening);
+    server.listen(port);
   });
 }
 

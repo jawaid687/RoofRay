@@ -17,6 +17,7 @@ import {
   Play,
   Pause,
   RotateCw,
+  Info,
 } from 'lucide-react';
 
 export function LocationTimeCard() {
@@ -171,10 +172,10 @@ export function LocationTimeCard() {
           )}
         </select>
 
-        {/* Illustrative Geometry Disclaimer (PRD & Rules 4.A, 10) */}
-        <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[10px] text-amber-300/90 leading-relaxed flex items-start gap-2">
-          <span className="shrink-0 text-xs">ℹ️</span>
-          <span>{t.locationTime.simulatedArchetypeNotice}</span>
+        {/* Illustrative Geometry Disclaimer */}
+        <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[10px] text-amber-300/90 flex items-center gap-1.5">
+          <Info className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+          <span className="truncate">{t.locationTime.simulatedArchetypeNotice}</span>
         </div>
 
         {/* Advanced Coordinates Form */}

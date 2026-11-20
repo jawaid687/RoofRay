@@ -1,5 +1,6 @@
 import http from 'http';
-import { server, startServer } from '../server/server.ts';
+import fs from 'fs';
+import { server, startServer, shutdownServer } from '../server/server.ts';
 import { parseNasaPowerPayload, fetchNasaSolarResource } from '../src/services/solarResourceService.ts';
 import { formatCurrency, getCurrencySymbol, getDefaultFinancialParams } from '../src/utils/currency.ts';
 import { calculateFinancials } from '../src/calculations/financial.ts';
@@ -199,8 +200,134 @@ async function runValidation() {
       body: 'plain text',
     });
     assert(resWrongType.status === 415, 'Non-JSON content type rejected with HTTP 415');
+
+    // Security Test: Standard Defense-in-Depth Headers
+    assert(resRoot.headers.get('x-content-type-options') === 'nosniff', 'X-Content-Type-Options: nosniff header present');
+    assert(resRoot.headers.get('x-frame-options') === 'SAMEORIGIN', 'X-Frame-Options: SAMEORIGIN header present');
+    assert(resRoot.headers.get('referrer-policy') === 'strict-origin-when-cross-origin', 'Referrer-Policy header present');
+
+    // Performance Test: HTTP Gzip Compression
+    const cssFile = fs.existsSync('dist/assets')
+      ? (fs.readdirSync('dist/assets').find(f => f.endsWith('.css')) || '')
+      : '';
+    const gzipTargetPath = cssFile ? `/assets/${cssFile}` : '/';
+
+    const rawGzipRes = await new Promise((resolve) => {
+      const req = http.request({
+        host: 'localhost',
+        port: testPort,
+        path: gzipTargetPath,
+        method: 'GET',
+        headers: { 'Accept-Encoding': 'gzip' }
+      }, (res) => {
+        resolve({ status: res.statusCode, headers: res.headers });
+      });
+      req.end();
+    });
+    if (rawGzipRes.status === 200) {
+      assert(rawGzipRes.headers['content-encoding'] === 'gzip', 'Compressible static asset served with Content-Encoding: gzip');
+      assert(rawGzipRes.headers['vary'] === 'Accept-Encoding', 'Vary: Accept-Encoding header set on compressed response');
+    }
+
+    // Health & Observability: Liveness & Readiness Probes
+    assert(typeof healthJson.uptimeSeconds === 'number', 'Health check reports process uptime in seconds');
+    assert(typeof healthJson.memoryUsage === 'object', 'Health check reports memory usage');
+    assert(healthJson.circuitBreaker?.state === 'CLOSED', 'Circuit breaker is monitored in health metadata');
+    assert(healthJson.liveness === true, 'Liveness flag present in health check');
+    assert(healthJson.readiness === true, 'Readiness flag present in health check');
+
+    const resLiveness = await fetch(`http://localhost:${testPort}/api/health/liveness`);
+    assert(resLiveness.status === 200, 'GET /api/health/liveness returns HTTP 200');
+    const livenessJson = await resLiveness.json();
+    assert(livenessJson.liveness === true, 'Liveness probe reports true');
+
+    const resReadiness = await fetch(`http://localhost:${testPort}/api/health/readiness`);
+    assert(resReadiness.status === 200, 'GET /api/health/readiness returns HTTP 200');
+    const readinessJson = await resReadiness.json();
+    assert(readinessJson.readiness === true, 'Readiness probe reports true');
+
+    // DDIA Data Layer: Project Persistence API Endpoints
+    const testProjectPayload = {
+      name: 'Integration Test Solar Layout',
+      buildingId: 'building-1',
+      location: {
+        city: 'San Francisco',
+        country: 'United States',
+        latitude: 37.7749,
+        longitude: -122.4194,
+        timezone: 'America/Los_Angeles',
+      },
+      panelConfig: {
+        panelId: 'panel-1',
+        panelName: 'Mono PERC 400W',
+        wattage: 400,
+        tiltDegrees: 20,
+        orientation: 'portrait',
+      },
+      placedPanels: [
+        { id: 'panel-01', x: 5, y: 5, width: 1.13, height: 1.72, orientation: 'portrait', tiltDeg: 20, azimuthDeg: 180, efficiency: 0.20, wattage: 400 }
+      ],
+      financialParams: {
+        currency: 'USD',
+        tariffPerKWh: 0.28,
+        exportCreditRatio: 0.5,
+      },
+      simulationSummary: {
+        installedCapacityKW: 0.4,
+        panelCount: 1,
+        annualGenerationKWh: 580,
+        annualConsumptionKWh: 3000,
+        solarCoveragePercent: 19.3,
+        surplusKWh: 0,
+        totalSystemCost: 1120,
+        annualSavings: 162.4,
+        paybackYears: 6.9,
+        twentyYearNetSavings: 2128,
+        roiPercent: 190,
+        annualCO2ReductionTonnes: 0.24,
+        equivalentTreesPlanted: 4,
+      }
+    };
+
+    const resSaveProject = await fetch(`http://localhost:${testPort}/api/projects`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(testProjectPayload),
+    });
+    assert(resSaveProject.status === 201, 'POST /api/projects returns HTTP 201 Created');
+    const saveProjectJson = await resSaveProject.json();
+    assert(saveProjectJson.success === true && typeof saveProjectJson.project?.id === 'string', 'Project saved with valid ID');
+    const createdProjectId = saveProjectJson.project.id;
+
+    // GET /api/projects (List)
+    const resListProjects = await fetch(`http://localhost:${testPort}/api/projects`);
+    assert(resListProjects.status === 200, 'GET /api/projects returns HTTP 200');
+    const listProjectsJson = await resListProjects.json();
+    assert(Array.isArray(listProjectsJson.projects), 'Projects list is an array');
+    assert(listProjectsJson.projects.some(p => p.id === createdProjectId), 'Saved project is listed in project catalog');
+
+    // GET /api/projects/:id (Read)
+    const resGetProject = await fetch(`http://localhost:${testPort}/api/projects/${createdProjectId}`);
+    assert(resGetProject.status === 200, 'GET /api/projects/:id returns HTTP 200');
+    const getProjectJson = await resGetProject.json();
+    assert(getProjectJson.project.id === createdProjectId, 'Retrieved project ID matches created ID');
+    assert(getProjectJson.project.name === 'Integration Test Solar Layout', 'Retrieved project name matches');
+
+    // Security: Malicious Project ID traversal
+    const resBadProjId = await fetch(`http://localhost:${testPort}/api/projects/..%2f..%2fetc`);
+    assert(resBadProjId.status === 400 || resBadProjId.status === 403 || resBadProjId.status === 404, 'Invalid/traversal project ID safely rejected');
+
+    // DELETE /api/projects/:id
+    const resDeleteProject = await fetch(`http://localhost:${testPort}/api/projects/${createdProjectId}`, {
+      method: 'DELETE',
+    });
+    assert(resDeleteProject.status === 200, 'DELETE /api/projects/:id returns HTTP 200');
+
+    // Verify deletion
+    const resGetDeleted = await fetch(`http://localhost:${testPort}/api/projects/${createdProjectId}`);
+    assert(resGetDeleted.status === 404, 'GET deleted project returns HTTP 404 Not Found');
   } finally {
-    await new Promise((resolve) => server.close(resolve));
+    await shutdownServer(1000);
   }
 
   // ----------------------------------------------------

@@ -312,14 +312,18 @@ export function FinancialSummary({ onNavigateToPlanner }: FinancialSummaryProps)
               </div>
             </div>
 
-            {/* Assumptions & Limitations Callout */}
-            <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800 text-[10px] text-slate-400 space-y-1 leading-relaxed">
-              <span className="font-semibold text-slate-300 block">{t.financialSummary.disclosuresTitle}</span>
-              <p>• <strong>Flat Tariff Model:</strong> {t.financialSummary.flatTariffDisclosure}</p>
-              <p>• <strong>Simplified Payback:</strong> {t.financialSummary.paybackDisclosure}</p>
-              <p>• <strong>Net-Metering Policy:</strong> {t.financialSummary.netMeteringDisclosure}</p>
-              <p className="text-amber-400/90 font-medium">• <strong>Simulation Estimate:</strong> {t.financialSummary.simulationEstimateDisclosure}</p>
-            </div>
+            {/* Assumptions & Limitations Collapsible */}
+            <details className="group rounded-lg bg-slate-900/40 border border-slate-800 text-[10px] text-slate-400">
+              <summary className="p-2 font-medium text-slate-300 cursor-pointer flex items-center justify-between select-none">
+                <span>{t.financialSummary.disclosuresTitle}</span>
+                <span className="text-slate-500 group-open:rotate-180 transition-transform">▾</span>
+              </summary>
+              <div className="p-2.5 pt-0 space-y-1 border-t border-slate-800/40 text-slate-400">
+                <p>• <strong>Tariff & Net Metering:</strong> Single-rate flat tariff with statutory export credit.</p>
+                <p>• <strong>Payback:</strong> Initial system cost ÷ Year-1 net savings.</p>
+                <p className="text-amber-400/90">• <strong>Estimate:</strong> Feasibility screening model, not metered billing.</p>
+              </div>
+            </details>
 
             <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between">
               <div className="flex items-center gap-1.5 text-[10px] text-slate-400">

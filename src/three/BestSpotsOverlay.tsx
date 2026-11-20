@@ -79,10 +79,11 @@ export function BestSpotsOverlay({ building }: BestSpotsOverlayProps) {
 
             {/* 3D Floating Rank Badge */}
             <Html
-              position={[0, 0.35, 0]}
+              position={[0, 0.45, 0]}
               center
               distanceFactor={24}
-              className="pointer-events-none select-none z-40"
+              style={{ pointerEvents: 'none', userSelect: 'none' }}
+              className="pointer-events-none select-none z-30"
             >
               <div
                 className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono shadow-lg flex items-center gap-1 backdrop-blur-md border ${

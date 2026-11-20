@@ -93,12 +93,49 @@ export interface SolarAdvisorResponse {
 }
 
 // In-memory sliding window rate limiter: 30 requests per minute per IP
+// Hardened with periodic pruning & max-tracked-IP LRU eviction to prevent unbounded memory growth
 const rateLimitMap = new Map<string, number[]>();
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const MAX_REQUESTS_PER_WINDOW = 30;
+const MAX_TRACKED_IPS = 10000;
+let checkCounter = 0;
+
+export function cleanupRateLimitStore(now: number = Date.now()): number {
+  let prunedCount = 0;
+  for (const [ip, timestamps] of rateLimitMap.entries()) {
+    const valid = timestamps.filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
+    if (valid.length === 0) {
+      rateLimitMap.delete(ip);
+      prunedCount++;
+    } else if (valid.length !== timestamps.length) {
+      rateLimitMap.set(ip, valid);
+    }
+  }
+  return prunedCount;
+}
+
+export function resetRateLimitStore(): void {
+  rateLimitMap.clear();
+}
+
+export function getRateLimitStats() {
+  return {
+    trackedIpsCount: rateLimitMap.size,
+    maxTrackedIps: MAX_TRACKED_IPS,
+    windowMs: RATE_LIMIT_WINDOW_MS,
+    maxRequestsPerWindow: MAX_REQUESTS_PER_WINDOW,
+  };
+}
 
 export function checkRateLimit(clientIp: string): boolean {
   const now = Date.now();
+  checkCounter++;
+  
+  // Periodic proactive eviction every 250 requests or if map exceeds threshold
+  if (checkCounter % 250 === 0 || rateLimitMap.size > 2000) {
+    cleanupRateLimitStore(now);
+  }
+
   const timestamps = rateLimitMap.get(clientIp) || [];
   const validTimestamps = timestamps.filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
 
@@ -107,10 +144,80 @@ export function checkRateLimit(clientIp: string): boolean {
     return false; // Exceeded limit
   }
 
+  // LRU protection against unbounded growth: evict oldest entry if capacity reached
+  if (!rateLimitMap.has(clientIp) && rateLimitMap.size >= MAX_TRACKED_IPS) {
+    const oldestKey = rateLimitMap.keys().next().value;
+    if (oldestKey) rateLimitMap.delete(oldestKey);
+  }
+
   validTimestamps.push(now);
   rateLimitMap.set(clientIp, validTimestamps);
   return true;
 }
+
+// ==============================================================================
+// Circuit Breaker for Upstream LLM / Gemini Service (Release-It & DDIA Pattern)
+// ==============================================================================
+export type CircuitBreakerState = 'CLOSED' | 'OPEN' | 'HALF_OPEN';
+
+export class CircuitBreaker {
+  private state: CircuitBreakerState = 'CLOSED';
+  private failureCount: number = 0;
+  private lastFailureTime: number = 0;
+  private readonly failureThreshold: number;
+  private readonly cooldownMs: number;
+
+  constructor(failureThreshold: number = 3, cooldownMs: number = 30000) {
+    this.failureThreshold = failureThreshold;
+    this.cooldownMs = cooldownMs;
+  }
+
+  getState(): CircuitBreakerState {
+    if (this.state === 'OPEN') {
+      const now = Date.now();
+      if (now - this.lastFailureTime >= this.cooldownMs) {
+        this.state = 'HALF_OPEN';
+      }
+    }
+    return this.state;
+  }
+
+  canExecute(): boolean {
+    const currentState = this.getState();
+    return currentState === 'CLOSED' || currentState === 'HALF_OPEN';
+  }
+
+  recordSuccess(): void {
+    this.failureCount = 0;
+    this.state = 'CLOSED';
+  }
+
+  recordFailure(): void {
+    this.failureCount++;
+    this.lastFailureTime = Date.now();
+    if (this.failureCount >= this.failureThreshold) {
+      this.state = 'OPEN';
+    }
+  }
+
+  reset(): void {
+    this.state = 'CLOSED';
+    this.failureCount = 0;
+    this.lastFailureTime = 0;
+  }
+
+  getStats() {
+    return {
+      state: this.getState(),
+      failureCount: this.failureCount,
+      lastFailureTime: this.lastFailureTime ? new Date(this.lastFailureTime).toISOString() : null,
+      failureThreshold: this.failureThreshold,
+      cooldownMs: this.cooldownMs,
+    };
+  }
+}
+
+export const advisorCircuitBreaker = new CircuitBreaker(3, 30000);
 
 export function validateAdvisorPayload(body: any): { valid: boolean; error?: string } {
   if (!body || typeof body !== 'object') {
@@ -976,7 +1083,45 @@ Provide a comprehensive, conversational assessment formatted as valid JSON adher
   "sources": [{"title": "Source title", "authorOrg": "Publishing entity", "url": "URL if known", "relevance": "Why relevant"}]
 }`;
 
-  // 4. Dispatch to Gemini API via secured header
+  // 4. Dispatch to Gemini API via secured header (Guarded by Circuit Breaker)
+  if (!advisorCircuitBreaker.canExecute()) {
+    console.warn(`[RoofRay Advisor] Circuit breaker is OPEN. Fast-failing to deterministic advisory.`);
+    if (payload.language === 'bn') {
+      return {
+        configured: true,
+        summary: 'সার্ভিস সুরক্ষা নিশ্চিত করতে সার্কিট ব্রেকার সক্রিয়। আপনার ফিজিক্যাল সৌর হিসাব ও সিমুলেশন সম্পূর্ণ কার্যকর রয়েছে।',
+        recommendations: [
+          'সরাসরি থ্রি-ডি রেইকাস্ট সিমুলেশন ও ফিনান্সিয়াল অ্যানালিটিক্স ট্যাব পর্যালোচনা করুন।',
+          'সার্ভার সংযোগ ও Google AI Studio কোটা কিছু সময় পর আবার যাচাই করুন।',
+        ],
+        advantages: [],
+        risks: ['সার্কিট ব্রেকার সক্রিয় (আপস্ট্রিম সার্ভিস ত্রুটি প্রতিরোধে ফাস্ট-ফেইল)।'],
+        assumptions: ['ফিজিক্যাল সৌর হিসাব ও সিমুলেশন সম্পূর্ণ অপরিবর্তিত ও নির্ভুল রয়েছে।'],
+        next_steps: ['৩০ সেকেন্ড বিরতির পর পুনরায় অনুরোধ পাঠান।'],
+        sources: formattedSources,
+        timestamp: new Date().toISOString(),
+        error: 'CIRCUIT_BREAKER_OPEN',
+        modelUsed: effectiveModel,
+      };
+    }
+    return {
+      configured: true,
+      summary: 'Upstream AI service is temporarily degraded (Circuit Breaker OPEN). Fast-failing to deterministic engineering advisory without latency.',
+      recommendations: [
+        'Review the deterministic 3D raycast metrics and financial tabs directly.',
+        'Wait for the automatic 30-second cooldown period before re-evaluating.',
+      ],
+      advantages: [],
+      risks: ['External AI provider unavailable (circuit breaker engaged).'],
+      assumptions: ['Physical solar calculations remain accurate, deterministic, and unaffected.'],
+      next_steps: ['Retry the inquiry after the cooldown period has elapsed.'],
+      sources: formattedSources,
+      timestamp: new Date().toISOString(),
+      error: 'CIRCUIT_BREAKER_OPEN',
+      modelUsed: effectiveModel,
+    };
+  }
+
   let execResult = await executeGeminiRequest(effectiveModel, effectiveKey, systemPrompt, userPrompt);
 
   // Temporary 503 handling: allow at most one bounded retry on the SAME configured model
@@ -985,6 +1130,15 @@ Provide a comprehensive, conversational assessment formatted as valid JSON adher
     console.warn(`[RoofRay Advisor] Model "${effectiveModel}" returned HTTP 503. Performing bounded retry in 1500ms...`);
     await new Promise((resolve) => setTimeout(resolve, 1500));
     execResult = await executeGeminiRequest(effectiveModel, effectiveKey, systemPrompt, userPrompt);
+  }
+
+  if (execResult.ok && execResult.candidateText) {
+    advisorCircuitBreaker.recordSuccess();
+  } else {
+    // Record failure in circuit breaker for upstream outages or timeouts
+    if (execResult.httpStatus >= 500 || execResult.errorCode === 'TIMEOUT' || execResult.errorCode === 'NETWORK_ERROR') {
+      advisorCircuitBreaker.recordFailure();
+    }
   }
 
   if (!execResult.ok || !execResult.candidateText) {

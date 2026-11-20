@@ -602,24 +602,24 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
   }
 
   return (
-    <div className="h-full flex flex-col bg-slate-950 text-slate-100 overflow-hidden relative font-sans">
+    <div className="h-full flex flex-col bg-[#080c15] text-slate-100 overflow-hidden relative font-sans">
       {/* 1. TOP HEADER / PROJECT CONTEXT INDICATOR */}
-      <div className="shrink-0 p-3 bg-gradient-to-r from-slate-900/90 via-slate-900/80 to-purple-950/40 border-b border-slate-800/80 flex items-center justify-between gap-2 z-10">
+      <div className="shrink-0 p-3 bg-[#0c1424] border-b border-slate-800 flex items-center justify-between gap-2 z-10">
         <div data-tour="advisor-context" className="flex items-center gap-2.5 min-w-0">
-          <div className="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400 shrink-0 shadow-sm shadow-purple-500/20">
-            <Sparkles className="w-4 h-4 animate-pulse" />
+          <div className="w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+            <Sparkles className="w-3.5 h-3.5" />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
               <h3 className="text-xs font-bold text-white truncate flex items-center gap-1">
                 <span>{building.name}</span>
-                <span className="text-slate-400 font-normal">·</span>
+                <span className="text-slate-500 font-normal">·</span>
                 <span className="text-slate-300 font-medium">{location.city}, {location.country}</span>
               </h3>
             </div>
             <div className="flex items-center gap-1.5 text-[10px] text-slate-400 truncate mt-0.5">
               <span className="inline-flex items-center gap-1 text-emerald-400 font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                 <span>{energy.installedCapacityKW} kW</span>
               </span>
               <span>•</span>
@@ -650,7 +650,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
 
           <button
             onClick={() => handleClearConversation()}
-            className="p-1.5 rounded-lg bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 text-slate-400 hover:text-purple-300 transition-all"
+            className="p-1.5 rounded-lg bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 text-slate-400 hover:text-white transition-all"
             title={t.aiAdvisor.startNewChat || 'Start New Chat'}
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -673,7 +673,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
               title={isWide ? (t.aiAdvisor.collapseChat || 'Collapse Chat') : (t.aiAdvisor.expandChat || 'Expand Chat')}
               aria-label={isWide ? 'Collapse chat view' : 'Expand chat view'}
             >
-              {isWide ? <Minimize2 className="w-3.5 h-3.5 text-purple-400" /> : <Maximize2 className="w-3.5 h-3.5 text-purple-400" />}
+              {isWide ? <Minimize2 className="w-3.5 h-3.5 text-amber-400" /> : <Maximize2 className="w-3.5 h-3.5 text-amber-400" />}
               <span className="hidden sm:inline">{isWide ? (t.aiAdvisor.collapseChat || 'Collapse') : (t.aiAdvisor.expandChat || 'Expand')}</span>
             </button>
           )}
@@ -682,16 +682,16 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
 
       {/* Inquiry Location Discrepancy Banner */}
       {inquiryLocation && inquiryLocation !== `${location.city}, ${location.country}` && (
-        <div className="shrink-0 px-3 py-1.5 bg-purple-950/40 border-b border-purple-800/40 text-[11px] text-purple-200 flex items-center justify-between">
+        <div className="shrink-0 px-3 py-1.5 bg-amber-950/30 border-b border-amber-800/40 text-[11px] text-amber-200 flex items-center justify-between">
           <div className="flex items-center gap-1.5 truncate">
-            <MapPin className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+            <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
             <span>
               Target Inquiry: <strong className="text-white">{inquiryLocation}</strong> (Applying 3D building geometry to {inquiryLocation} solar ephemeris)
             </span>
           </div>
           <button
             onClick={() => setInquiryLocation(null)}
-            className="text-[10px] text-purple-300 hover:text-white ml-2 underline shrink-0"
+            className="text-[10px] text-amber-300 hover:text-white ml-2 underline shrink-0"
           >
             Reset
           </button>
@@ -729,17 +729,14 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
         {messages.length === 0 && (
           <div className="py-4 space-y-5 animate-in fade-in duration-300 max-w-2xl mx-auto">
             {/* Assistant Welcome Banner */}
-            <div data-tour="advisor-recommendations" className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-indigo-950/40 via-slate-900/90 to-purple-950/30 border border-purple-500/20 space-y-3 shadow-lg shadow-purple-950/10">
+            <div data-tour="advisor-recommendations" className="p-4 sm:p-5 rounded-xl bg-[#0c1322] border border-slate-800 space-y-3 shadow-md">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-purple-600/30">
+                <div className="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
                   <Bot className="w-5 h-5" />
                 </div>
                 <div>
                   <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
                     <span>{t.aiAdvisor.welcomeTitle || 'Your AI Solar Engineering Assistant'}</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 font-mono font-normal">
-                      Gemini 3.5 Flash-Lite
-                    </span>
                   </h3>
                   <p className="text-xs text-slate-400 mt-0.5">
                     {t.aiAdvisor.welcomeDesc || 'Ask questions about rooftop solar potential, panel optimization, shading, energy generation and financial performance.'}
@@ -748,14 +745,14 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
               </div>
 
               {/* Active Simulation Context Card */}
-              <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80 flex items-center justify-between text-xs">
+              <div className="p-2.5 rounded-lg bg-[#080d19] border border-slate-800 flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-emerald-400" />
                   <span className="text-slate-300">
                     {t.aiAdvisor.groundedNotice || 'Grounded in RoofRay 3D Raycasting & verified engineering knowledge'}
                   </span>
                 </div>
-                <span className="text-[10px] font-mono text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded">
+                <span className="text-[10px] font-mono text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded">
                   {t.aiAdvisor.singleSourceOfTruth || 'Single Source of Truth'}
                 </span>
               </div>
@@ -767,23 +764,23 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
                 <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                   {(t.aiAdvisor.locationQuestions || 'Location-Specific Questions ({city})').replace('{city}', location.city)}
                 </span>
-                <span className="text-[10px] text-purple-300 font-mono">
+                <span className="text-[10px] text-amber-400 font-mono">
                   {location.country}
                 </span>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {suggestedPrompts.map((sp) => {
                   const Icon = sp.icon;
                   return (
                     <button
                       key={sp.id}
                       onClick={() => handleSendMessage(sp.text)}
-                      className="p-3.5 rounded-xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-purple-500/40 text-left transition-all group flex items-start gap-3 shadow-sm hover:shadow-md"
+                      className="p-3 rounded-xl bg-[#0c1322] hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 text-left transition-all group flex items-start gap-2.5 shadow-sm"
                     >
-                      <div className={`p-2 rounded-lg bg-slate-950 border border-slate-800 ${sp.color} shrink-0 group-hover:scale-105 transition-transform`}>
-                        <Icon className="w-4 h-4" />
+                      <div className={`p-1.5 rounded-lg bg-slate-900 border border-slate-800 ${sp.color} shrink-0`}>
+                        <Icon className="w-3.5 h-3.5" />
                       </div>
-                      <span className="text-[12px] sm:text-[13px] text-slate-200 group-hover:text-white leading-snug font-medium">
+                      <span className="text-[12px] text-slate-200 group-hover:text-white leading-snug font-medium">
                         {sp.text}
                       </span>
                     </button>
@@ -801,16 +798,16 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
           if (isUser) {
             return (
               <div key={msg.id} className="flex justify-end items-end gap-2 group">
-                <div className="max-w-[85%] sm:max-w-[78%] p-3.5 sm:p-4 rounded-2xl rounded-tr-sm bg-gradient-to-br from-indigo-700/60 via-indigo-600/50 to-purple-800/40 border border-indigo-400/50 text-white shadow-md space-y-1.5">
-                  <p className="text-[13px] sm:text-[14px] leading-relaxed whitespace-pre-wrap font-sans text-slate-50">
+                <div className="max-w-[85%] sm:max-w-[78%] p-3.5 rounded-xl rounded-tr-sm bg-[#141f36] border border-sky-500/30 text-white shadow-sm space-y-1">
+                  <p className="text-[13px] leading-relaxed whitespace-pre-wrap font-sans text-slate-100">
                     {msg.text}
                   </p>
-                  <div className="text-[10px] text-indigo-200/80 text-right font-mono">
+                  <div className="text-[10px] text-slate-400 text-right font-mono">
                     {msg.timestamp}
                   </div>
                 </div>
-                <div className="w-8 h-8 rounded-xl bg-indigo-600/50 border border-indigo-400/50 flex items-center justify-center text-indigo-100 shrink-0 shadow-sm">
-                  <User className="w-4 h-4" />
+                <div className="w-7 h-7 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-200 shrink-0">
+                  <User className="w-3.5 h-3.5" />
                 </div>
               </div>
             );
@@ -825,22 +822,22 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
           const sourcesOpen = expandedSections[`${msg.id}-sources`] ?? false;
 
           return (
-            <div key={msg.id} className="flex justify-start items-start gap-2.5 sm:gap-3 group">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-white shrink-0 shadow-md shadow-purple-600/20 mt-0.5">
-                <Bot className="w-4 h-4" />
+            <div key={msg.id} className="flex justify-start items-start gap-2.5 group">
+              <div className="w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0 mt-0.5">
+                <Bot className="w-3.5 h-3.5" />
               </div>
 
               <div className="max-w-[92%] sm:max-w-[88%] space-y-3">
                 {/* Assistant Message Container */}
-                <div className="p-4 sm:p-5 rounded-2xl rounded-tl-sm bg-slate-900/95 border border-purple-500/40 text-slate-100 shadow-xl shadow-purple-950/25 space-y-3.5">
+                <div className="p-4 rounded-xl rounded-tl-sm bg-[#0c1424] border border-slate-700/80 text-slate-100 shadow-md space-y-3">
                   {/* Assistant Header Row */}
-                  <div className="flex items-center justify-between text-xs pb-1.5 border-b border-slate-800/80">
+                  <div className="flex items-center justify-between text-xs pb-1.5 border-b border-slate-800">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-white flex items-center gap-1.5 text-xs">
                         <span>RoofRay Advisor</span>
                       </span>
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 font-mono font-medium">
-                        {data?.modelUsed || 'gemini-3.5-flash-lite'}
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-slate-900 text-slate-300 border border-slate-800 font-mono font-medium">
+                        Solar AI
                       </span>
                     </div>
 
@@ -947,7 +944,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
                                 <div className="space-y-1.5">
                                   {data.advantages?.map((adv, i) => (
                                     <div key={i} className="flex items-start gap-2 text-[12px] text-slate-200">
-                                      <span className="text-emerald-400 shrink-0 font-bold">✓</span>
+                                      <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
                                       <span className="leading-relaxed">{adv}</span>
                                     </div>
                                   ))}
@@ -1078,12 +1075,12 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
                         <div className="rounded-xl border border-slate-800 bg-slate-950/60 overflow-hidden">
                           <button
                             onClick={() => toggleSection(`${msg.id}-sources`)}
-                            className="w-full p-3 flex items-center justify-between text-xs font-bold text-purple-300 hover:bg-slate-900/60 transition-colors"
+                            className="w-full p-3 flex items-center justify-between text-xs font-bold text-sky-300 hover:bg-slate-900/60 transition-colors"
                           >
                             <div className="flex items-center gap-2">
-                              <Info className="w-4 h-4 text-purple-400" />
+                              <Info className="w-4 h-4 text-sky-400" />
                               <span>{t.aiAdvisor.citationsGrounding || 'Technical Citations Grounding'}</span>
-                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-mono">
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-mono">
                                 {data.sources.length} sources
                               </span>
                             </div>
@@ -1168,18 +1165,18 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
         {/* 3. THINKING / LOADING INDICATOR */}
         {loading && (
           <div className="flex justify-start items-start gap-2.5 animate-in fade-in duration-200">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-white shrink-0 shadow-md shadow-purple-600/30">
-              <Bot className="w-4 h-4 animate-spin" />
+            <div className="w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+              <Bot className="w-3.5 h-3.5 animate-spin" />
             </div>
-            <div className="p-4 rounded-2xl rounded-tl-sm bg-slate-900/95 border border-purple-500/40 text-slate-200 shadow-md space-y-1.5 max-w-sm">
+            <div className="p-3.5 rounded-xl rounded-tl-sm bg-[#0c1424] border border-slate-700/80 text-slate-200 shadow-sm space-y-1 max-w-sm">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-purple-300">
+                <span className="text-xs font-semibold text-amber-300">
                   {t.aiAdvisor.analyzing || 'Analyzing your solar data...'}
                 </span>
                 <div className="flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: '300ms' }}></span>
                 </div>
               </div>
               <p className="text-[11px] text-slate-400 leading-relaxed">
@@ -1197,7 +1194,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
       {userScrolledUp && (
         <button
           onClick={() => scrollToBottom(true)}
-          className="absolute right-4 bottom-20 z-20 px-3 py-1.5 rounded-full bg-purple-600/90 hover:bg-purple-500 text-white text-xs font-semibold shadow-lg shadow-purple-600/30 flex items-center gap-1.5 transition-all"
+          className="absolute right-4 bottom-20 z-20 px-3 py-1.5 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white text-xs font-semibold shadow-lg flex items-center gap-1.5 transition-all"
         >
           <span>↓</span>
           <span>{t.aiAdvisor.scrollToBottom || 'New message'}</span>
@@ -1205,7 +1202,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
       )}
 
       {/* 4. FIXED MESSAGE COMPOSER AT BOTTOM */}
-      <div data-tour="advisor-chat" className="shrink-0 p-3 bg-slate-950/95 border-t border-slate-800/80 backdrop-blur-sm space-y-2 z-10">
+      <div data-tour="advisor-chat" className="shrink-0 p-3 bg-[#0a0f1d] border-t border-slate-800 space-y-2 z-10">
         {/* Error notification banner */}
         {errorMsg && (
           <div className="p-2 rounded-xl bg-red-950/40 border border-red-800/60 text-[11px] text-red-200 flex items-center justify-between gap-2">
@@ -1229,7 +1226,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
               <button
                 key={idx}
                 onClick={() => handleSendMessage(chip)}
-                className="px-2.5 py-1 rounded-full bg-slate-900/90 hover:bg-purple-950/60 border border-slate-800 hover:border-purple-500/40 text-slate-300 hover:text-purple-200 whitespace-nowrap transition-all shrink-0 font-medium"
+                className="px-2.5 py-1 rounded-full bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white whitespace-nowrap transition-all shrink-0 font-medium"
               >
                 {chip}
               </button>
@@ -1238,7 +1235,7 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
         )}
 
         {/* Composer Input Box */}
-        <div className="relative flex items-end gap-2 bg-slate-900/90 border border-slate-800 rounded-xl p-1.5 focus-within:border-purple-500 focus-within:ring-1 focus-within:ring-purple-500/30 transition-all">
+        <div className="relative flex items-end gap-2 bg-slate-900/90 border border-slate-800 rounded-xl p-1.5 focus-within:border-amber-400/80 focus-within:ring-1 focus-within:ring-amber-400/20 transition-all">
           <textarea
             ref={textareaRef}
             rows={2}
@@ -1252,13 +1249,13 @@ export function AiAdvisorPanel({ onOpenReportModal, isWide, onToggleWide }: AiAd
           <button
             onClick={() => handleSendMessage()}
             disabled={!input.trim() || loading}
-            className="p-2 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-md shadow-purple-600/20 shrink-0 mb-0.5"
+            className="p-2 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm shrink-0 mb-0.5 active:scale-95"
             title="Send to AI Solar Advisor (Enter)"
           >
             {loading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
             ) : (
-              <Send className="w-4 h-4" />
+              <Send className="w-4 h-4 fill-slate-950" />
             )}
           </button>
         </div>
