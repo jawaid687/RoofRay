@@ -338,7 +338,7 @@ export const server = http.createServer(async (req, res) => {
     <html lang="en">
     <head><title>RoofRay Production Server</title></head>
     <body style="font-family:sans-serif;background:#090d16;color:#e2e8f0;padding:40px;line-height:1.6">
-      <h1 style="color:#fbbf24">RoofRay V3 Production Server</h1>
+      <h1 style="color:#fbbf24">RoofRay Production Server</h1>
       <p>Frontend assets are not yet compiled in <code>dist/</code>.</p>
       <p>Run <code>npm run build</code> to compile the client application before starting in production.</p>
       <p>API status: <a style="color:#38bdf8" href="/api/ai/health">/api/ai/health</a></p>

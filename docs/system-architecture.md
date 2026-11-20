@@ -1,4 +1,4 @@
-# RoofRay V3 — System Architecture
+# RoofRay — System Architecture
 
 **Track:** International AI Builders Congress 2026 — Idea to Unicorn  
 **Architecture Classification:** Decoupled Client-Side Physical Simulation Engine with Secure Server-Side AI Knowledge Gateway  

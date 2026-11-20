@@ -1,4 +1,4 @@
-# RoofRay V3 — Problem Definition & Value Proposition
+# RoofRay — Problem Definition & Value Proposition
 
 **Track:** International AI Builders Congress 2026 — Idea to Unicorn  
 **Domain:** ClimateSphere AI / CleanTech SaaS  

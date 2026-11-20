@@ -2,11 +2,11 @@ import { useSolarStore } from '../../store/useSolarStore';
 import { useLanguage } from '../../i18n/useLanguage';
 import { PANEL_TYPES } from '../../data/panelTypes';
 import { formatCurrency } from '../../utils/currency';
+import { RoofRayLogo } from './RoofRayLogo';
 import {
   Printer,
   Copy,
   X,
-  Sun,
   ShieldCheck,
   Building2,
   Leaf,
@@ -47,7 +47,7 @@ export function SolarReportModal({ isOpen, onClose }: SolarReportModalProps) {
 
   const handleCopyJSON = () => {
     const reportData = {
-      project: 'RoofRay V3 Solar Rooftop Feasibility Assessment',
+      project: 'RoofRay Solar Rooftop Feasibility Assessment',
       competition: 'International AI Builders Congress 2026 • Idea to Unicorn',
       date: reportDate,
       location: {
@@ -98,10 +98,8 @@ export function SolarReportModal({ isOpen, onClose }: SolarReportModalProps) {
       <div className="relative w-full max-w-3xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl p-6 md:p-8 space-y-6 text-slate-100 max-h-[90vh] overflow-y-auto">
         {/* Modal Actions */}
         <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
-              <Sun className="w-4 h-4" />
-            </div>
+          <div className="flex items-center gap-2.5">
+            <RoofRayLogo size={32} />
             <div>
               <h2 className="text-base font-bold text-white flex items-center gap-1.5">
                 <span>{t.solarReportModal.title}</span>

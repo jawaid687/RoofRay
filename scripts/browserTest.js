@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 async function runBrowserTests() {
-  console.log('🌐 Starting RoofRay V3.4 Headless Browser E2E Test Suite...\n');
+  console.log('🌐 Starting RoofRay Headless Browser E2E Test Suite...\n');
 
   let passed = 0;
   let failed = 0;

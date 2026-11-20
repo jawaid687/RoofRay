@@ -1,4 +1,4 @@
-# RoofRay V3 — Team Roles & Governance Template
+# RoofRay — Team Roles & Governance Template
 
 **Competition:** International AI Builders Congress 2026  
 **Track:** Idea to Unicorn — Team Project  

@@ -1,4 +1,4 @@
-# RoofRay V3 — Privacy, Security & Threat Modeling
+# RoofRay — Privacy, Security & Threat Modeling
 
 **Track:** International AI Builders Congress 2026 — Idea to Unicorn  
 **Standard:** Enterprise Security, Server Secret Isolation & Data Minimization  

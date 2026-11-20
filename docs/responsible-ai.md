@@ -1,4 +1,4 @@
-# RoofRay V3 — Responsible AI, Safety & Explainability
+# RoofRay — Responsible AI, Safety & Explainability
 
 **Track:** International AI Builders Congress 2026 — Idea to Unicorn  
 **Standard:** Ethical AI, Truthfulness, Explainability & Safeguards  

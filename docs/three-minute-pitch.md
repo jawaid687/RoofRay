@@ -1,4 +1,4 @@
-# RoofRay V3 — Three-Minute Competition Pitch Script
+# RoofRay — Three-Minute Competition Pitch Script
 
 **Competition:** International AI Builders Congress 2026  
 **Track:** Idea to Unicorn — Team Project  
@@ -28,7 +28,7 @@ Yet today, rooftop solar planning is plagued by manual friction. Conducting a pr
 
 ---
 
-### [0:30 – 1:00] Solution: Introducing RoofRay V3
+### [0:30 – 1:00] Solution: Introducing RoofRay
 "Meet **RoofRay**: an AI-powered 3D solar planning, simulation, and recommendation platform. 
 
 RoofRay transforms pre-engineering from a two-week headache into a **two-minute browser experience**. We don't rely on flat 2D satellite photos. Instead, RoofRay constructs an interactive 3D digital twin of the rooftop, runs hardware-accelerated raycasting across a discretized 0.8-meter grid, simulates real-time diurnal shadows using verified NOAA astronomical ephemeris, and optimizes panel placement to maximize yield while strictly enforcing safety setbacks."

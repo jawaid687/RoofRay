@@ -1,4 +1,4 @@
-# RoofRay V3 — AI Architecture & Knowledge Retrieval (RAG)
+# RoofRay — AI Architecture & Knowledge Retrieval (RAG)
 
 **Track:** International AI Builders Congress 2026 — Idea to Unicorn  
 **Topic:** Physics-Grounded Retrieval-Augmented Generation Architecture  

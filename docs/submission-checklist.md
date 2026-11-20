@@ -1,4 +1,4 @@
-# RoofRay V3 — Competition Submission Checklist & Audit Matrix
+# RoofRay — Competition Submission Checklist & Audit Matrix
 
 **Competition:** International AI Builders Congress 2026  
 **Track:** Idea to Unicorn — Team Project  

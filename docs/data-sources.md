@@ -1,4 +1,4 @@
-# RoofRay V3 — Data Sources & Scientific References
+# RoofRay — Data Sources & Scientific References
 
 **Track:** International AI Builders Congress 2026 — Idea to Unicorn  
 **Standard:** Verifiable Source Attribution & Methodology Documentation  
